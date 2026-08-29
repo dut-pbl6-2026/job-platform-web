@@ -10,3 +10,9 @@ obj/
 *.nupkg
 mise.toml.local
 INFISICAL_TOKEN
+.vite/
+*.log
+coverage/
+.env.development.local
+.env.production.local
+
