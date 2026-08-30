@@ -77,14 +77,14 @@ api.interceptors.response.use(
   }
 );
 
-// Typed helpers
+// Typed helpers — 2026 best practice: register returns 201 RegisterResponse(userId), not tokens
 export async function register(payload: { email: string; password: string; fullName: string; role?: string }) {
   const { data } = await api.post("/auth/register", payload);
-  return data as { accessToken: string; refreshToken: string; userId: string; email: string; fullName: string; role: string };
+  return data as { userId: string; message: string };
 }
-export async function login(payload: { email: string; password: string }) {
+export async function login(payload: { email: string; password: string; rememberMe?: boolean }) {
   const { data } = await api.post("/auth/login", payload);
-  return data as { accessToken: string; refreshToken: string; userId: string; email: string; fullName: string; role: string };
+  return data as { accessToken: string; refreshToken: string; user: { id: string; email: string; fullName: string; role: string } };
 }
 export async function fetchMe() {
   const { data } = await api.get("/auth/me");

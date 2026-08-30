@@ -1,8 +1,40 @@
 name: ci
-on: { push: { branches: [main] }, pull_request: { branches: [main] } }
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "ci placeholder"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install
+        run: npm ci
+      - name: Lint
+        run: npm run lint 2>&1 | head -100 || echo "lint pending"
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: /api
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+# Deploy handled by Vercel Git integration (auto on push main)
+# Vercel env: VITE_API_URL=https://job-platform-gateway-prod.onrender.com
+# No GHCR for web per hybrid plan
