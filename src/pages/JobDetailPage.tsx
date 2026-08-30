@@ -17,9 +17,11 @@ export default function JobDetailPage() {
     if (!id) return;
     let alive = true;
     setLoading(true);
+    setErr(null);
+    setJob(null);
     fetchJobById(id)
       .then((j) => { if (alive) { if (!j) setErr("Việc làm không tồn tại"); else setJob(j); } })
-      .catch((e) => { if (alive) setErr(e.message); })
+      .catch((e) => { if (alive) setErr(e?.message || "Load failed"); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [id]);
