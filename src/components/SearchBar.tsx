@@ -13,7 +13,7 @@ export function SearchBar({ initialQ, initialLoc, onSearch }: { initialQ?: strin
     >
       <div className="search-field">
         <span className="search-icon">🔍</span>
-        <input className="input search-input" placeholder="Từ khóa: React, .NET, Marketing..." value={q} onChange={(e) => setQ(e.target.value)} />
+        <input aria-label="Từ khóa" className="input search-input" placeholder="Từ khóa: React, .NET, Marketing..." value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       <div className="search-field">
         <span className="search-icon">📍</span>
