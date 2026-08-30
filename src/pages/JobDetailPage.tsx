@@ -40,14 +40,14 @@ export default function JobDetailPage() {
       <AppHeader />
       <div className="container detail-layout">
         <div className="detail-main">
-          <Link to="/jobs" className="hint" style={{ display: "inline-flex", gap: 6, marginBottom: 12 }}>← Quay lại</Link>
+          <Link to="/jobs" className="hint detail-back">← Quay lại</Link>
           <div className="card">
             <div className="job-detail-head">
               <div className="job-logo lg">{job.company.name.slice(0, 2).toUpperCase()}</div>
               <div>
                 <h1 className="detail-title">{job.title}</h1>
                 <div className="hint">{job.company.name} • {job.location} • {timeAgo(job.createdAt)}</div>
-                <div className="job-tags" style={{ marginTop: 8 }}>
+                <div className="job-tags detail-job-tags">
                   <span className="tag">{job.category.name}</span>
                   <span className="tag">{job.employmentType}</span>
                   <span className="tag">{job.experienceLevel}</span>
@@ -65,29 +65,29 @@ export default function JobDetailPage() {
 
             <div className="detail-section">
               <h3>Mô tả công việc</h3>
-              <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{job.description}</p>
+              <p className="detail-prewrap">{job.description || "Chưa cập nhật"}</p>
             </div>
             <div className="detail-section">
               <h3>Yêu cầu</h3>
-              <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{job.requirements}</p>
+              <p className="detail-prewrap">{job.requirements?.trim() ? job.requirements : "Chưa cập nhật"}</p>
             </div>
             <div className="detail-section">
               <h3>Quyền lợi</h3>
-              <p style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{job.benefits}</p>
+              <p className="detail-prewrap">{job.benefits?.trim() ? job.benefits : "Chưa cập nhật"}</p>
             </div>
             <div className="hint">Lượt xem: {job.viewCount} • Cập nhật: {new Date(job.updatedAt).toLocaleDateString("vi-VN")}</div>
           </div>
         </div>
         <aside className="detail-side">
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>Công ty</h3>
-            <div style={{ fontWeight: 700 }}>{job.company.name} {job.company.verified && <span className="badge-verify">✓ Verified</span>}</div>
+            <h3 className="detail-company-name">Công ty</h3>
+            <div className="detail-company-head">{job.company.name} {job.company.verified && <span className="badge-verify">✓ Verified</span>}</div>
             <div className="hint">{job.company.industry} • {job.company.address}</div>
             {job.company.website && <a href={job.company.website} target="_blank" rel="noreferrer" style={{ fontSize: 13 }}>{job.company.website}</a>}
-            <div style={{ marginTop: 12, fontSize: 13, color: "#64748b" }}>Mã công ty: <code>{job.companyId}</code></div>
+            <div className="detail-company-meta">Mã công ty: <code>{job.companyId}</code></div>
           </div>
-          <div className="card" style={{ marginTop: 16 }}>
-            <h4 style={{ margin: "0 0 8px" }}>Thông tin chung</h4>
+          <div className="card detail-side-card">
+            <h4 className="detail-side-title">Thông tin chung</h4>
             <div className="kv"><span>Địa điểm</span><strong>{job.location}</strong></div>
             <div className="kv"><span>Danh mục</span><strong>{job.category.name}</strong></div>
             <div className="kv"><span>Loại hình</span><strong>{job.employmentType}</strong></div>

@@ -8,9 +8,13 @@ const companies = [
   { id: "c5", name: "Tiki", logoUrl: "", industry: "Sales", verified: false, address: "Hồ Chí Minh" },
 ];
 
+// Mock categoryId uses lowercase name as id; real API uses UUIDs.
+// Mock search supports filtering by both category.name and categoryId for parity.
+// Seeded 9 categories to match backend (was 6, added Sales, Hospitality, Others).
 const cats = [
   { id: "it", name: "IT" }, { id: "finance", name: "Finance" }, { id: "marketing", name: "Marketing" },
   { id: "healthcare", name: "Healthcare" }, { id: "education", name: "Education" }, { id: "engineering", name: "Engineering" },
+  { id: "sales", name: "Sales" }, { id: "hospitality", name: "Hospitality" }, { id: "others", name: "Others" },
 ];
 
 function mk(i: number, o: Partial<Job> & Pick<Job, "title">): Job {

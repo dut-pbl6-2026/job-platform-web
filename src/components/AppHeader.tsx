@@ -6,9 +6,9 @@ export function AppHeader() {
   const nav = useNavigate();
   return (
     <header className="topbar">
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <Link to="/jobs" style={{ display: "flex", alignItems: "center", gap: 10, color: "inherit", textDecoration: "none" }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#2563eb,#7c3aed)", display: "grid", placeItems: "center", color: "white", fontWeight: 700, fontSize: 13 }}>JP</div>
+      <div className="topbar-left">
+        <Link to="/jobs" className="topbar-brand">
+          <div className="topbar-logo">JP</div>
           <strong>Job Platform</strong>
         </Link>
         <nav className="nav-links">
@@ -16,17 +16,17 @@ export function AppHeader() {
           {isAuthenticated && <Link to="/dashboard">Dashboard</Link>}
         </nav>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div className="topbar-right">
         {!isAuthenticated ? (
           <>
-            <Link className="btn btn-ghost" to="/login" style={{ height: 36, padding: "0 14px" }}>Đăng nhập</Link>
-            <Link className="btn btn-primary" to="/register" style={{ height: 36, padding: "0 14px" }}>Đăng ký</Link>
+            <Link className="btn btn-ghost btn-sm" to="/login">Đăng nhập</Link>
+            <Link className="btn btn-primary btn-sm" to="/register">Đăng ký</Link>
           </>
         ) : (
           <>
-            <span className="hint" style={{ fontWeight: 600 }}>{user?.fullName}</span>
+            <span className="hint user-name">{user?.fullName}</span>
             <span className="badge">{user?.role}</span>
-            <button className="btn btn-ghost" style={{ height: 36, padding: "0 14px" }} onClick={async () => { await logout(); nav("/login"); }}>Đăng xuất</button>
+            <button className="btn btn-ghost btn-sm" onClick={async () => { await logout(); nav("/login"); }}>Đăng xuất</button>
           </>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { fetchJobs } from "../lib/jobsApi";
+import { fetchCategories, fetchJobs } from "../lib/jobsApi";
 import type { PaginatedJobs } from "../types/job";
 import { JobCard } from "../components/JobCard";
 import { SearchBar } from "../components/SearchBar";
@@ -13,7 +13,8 @@ import { AppHeader } from "../components/AppHeader";
 // Đổi thành 20 chỉ cần sửa JOB_PAGE_SIZE.
 const JOB_PAGE_SIZE = 9;
 
-const CATS = ["", "IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering"];
+// Fallback chips if API not yet available — must include all 9 backend seeded categories
+const FALLBACK_CATS = ["", "IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering", "Sales", "Hospitality", "Others"];
 
 export default function JobListPage() {
   const [sp, setSp] = useSearchParams();
@@ -25,6 +26,45 @@ export default function JobListPage() {
   const [data, setData] = useState<PaginatedJobs | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [cats, setCats] = useState<string[]>(FALLBACK_CATS);
+  const [catsLoading, setCatsLoading] = useState(true);
+  const [catsErr, setCatsErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    setCatsLoading(true); setCatsErr(null);
+    fetchCategories()
+      .then((list) => {
+        if (!alive) return;
+        if (Array.isArray(list) && list.length > 0) {
+          // deduplicate by name, keep fallback order if API incomplete
+          const names = [...new Set(list.map((c) => c.name).filter(Boolean))];
+          // Ensure missing seeded categories still appear (Sales, Hospitality, Others)
+          const merged = ["", ...names];
+          // Add any missing from fallback
+          for (const f of FALLBACK_CATS) if (f && !merged.includes(f)) merged.push(f);
+          setCats(merged);
+        }
+      })
+      .catch((e) => { if (alive) setCatsErr(e?.message || "Load categories failed"); })
+      .finally(() => { if (alive) setCatsLoading(false); });
+    return () => { alive = false; };
+  }, []);
+
+  function retryCats() {
+    setCatsLoading(true); setCatsErr(null);
+    fetchCategories()
+      .then((list) => {
+        if (Array.isArray(list) && list.length > 0) {
+          const names = [...new Set(list.map((c) => c.name).filter(Boolean))];
+          const merged = ["", ...names];
+          for (const f of FALLBACK_CATS) if (f && !merged.includes(f)) merged.push(f);
+          setCats(merged);
+        }
+      })
+      .catch((e) => setCatsErr(e?.message || "Load categories failed"))
+      .finally(() => setCatsLoading(false));
+  }
 
   useEffect(() => {
     let alive = true;
@@ -53,9 +93,11 @@ export default function JobListPage() {
           <p>{data ? `${data.total} việc làm đang tuyển` : "Kết nối ứng viên & nhà tuyển dụng"} — SRS WEB-01-02 / SEARCH-01</p>
           <SearchBar initialQ={q} initialLoc={location} onSearch={(nq, nloc) => update({ q: nq, location: nloc, page: "0" })} />
           <div className="filter-row">
-            {CATS.map((c) => (
+            {cats.map((c) => (
               <button key={c || "all"} className={`chip ${category === c ? "chip-active" : ""}`} onClick={() => update({ category: c, page: "0" })}>{c || "Tất cả"}</button>
             ))}
+            {catsLoading && <span className="hint" style={{ alignSelf: "center" }}>Đang tải danh mục…</span>}
+            {catsErr && <><span className="hint" style={{ color: "#dc2626", alignSelf: "center" }}>Lỗi danh mục</span><button className="chip" onClick={retryCats}>Thử lại</button></>}
           </div>
         </div>
 

@@ -20,7 +20,7 @@ export function SearchBar({ initialQ, initialLoc, onSearch }: { initialQ?: strin
       </div>
       <div className="search-field">
         <span className="search-icon">📍</span>
-        <input className="input search-input" placeholder="Địa điểm: Hà Nội, HCM..." value={loc} onChange={(e) => setLoc(e.target.value)} />
+        <input aria-label="Địa điểm" className="input search-input" placeholder="Địa điểm: Hà Nội, HCM..." value={loc} onChange={(e) => setLoc(e.target.value)} />
       </div>
       <button className="btn btn-primary search-btn" type="submit">Tìm kiếm</button>
     </form>
