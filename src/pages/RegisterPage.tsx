@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail, validateFullName, validatePassword } from "../lib/validation";
+import { toApiRole } from "../lib/roles";
 
 function strength(pwd: string): { score: number; label: string; color: string } {
   if (!pwd) return { score: 0, label: "", color: "#e2e8f0" };
@@ -44,7 +45,7 @@ export default function RegisterPage() {
     setFieldErr({});
     setLoading(true);
     try {
-      await register({ email: email.trim(), password: pwd, fullName: fullName.trim(), role });
+      await register({ email: email.trim(), password: pwd, fullName: fullName.trim(), role: toApiRole(role) });
       nav("/dashboard");
     } catch (ex: any) {
       const data = ex?.response?.data;
@@ -85,9 +86,10 @@ export default function RegisterPage() {
             <label className="label">Vai trò</label>
             <select className="select" value={role} onChange={e => setRole(e.target.value)}>
               <option value="User">Ứng viên (User)</option>
-              <option value="Employer">Nhà tuyển dụng (Employer)</option>
+              <option value="Recruiter">Nhà tuyển dụng (Recruiter)</option>
+              {/* Employer kept as alias for backward compat, mapped to Recruiter via toApiRole */}
             </select>
-            <span className="hint">Chọn vai trò phù hợp với nhu cầu của bạn</span>
+            <span className="hint">SRS ROLES-01: User / Recruiter / Admin — Employer là alias cũ của Recruiter</span>
           </div>
 
           <div className="field">

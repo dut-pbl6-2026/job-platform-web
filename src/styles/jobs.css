@@ -1,0 +1,63 @@
+.container{max-width:1120px;margin:0 auto;padding:24px 20px}
+.hero{background:white;border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px}
+.hero h1{margin:0 0 6px;font-size:26px;letter-spacing:-.02em}
+.hero p{margin:0 0 14px;color:var(--muted);font-size:13px}
+.search-bar{display:flex;gap:10px;flex-wrap:wrap}
+.search-field{position:relative;flex:1;min-width:220px}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px}
+.search-input{padding-left:30px !important;width:100%}
+.search-btn{min-width:120px}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:white;font-size:13px;cursor:pointer}
+.chip-active{background:var(--text);color:white;border-color:var(--text)}
+.job-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:900px){.job-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.job-grid{grid-template-columns:1fr}}
+.job-card{display:flex;flex-direction:column;gap:10px;background:white;border:1px solid var(--border);border-radius:14px;padding:14px;text-decoration:none;color:inherit;transition:.15s}
+.job-card:hover{box-shadow:0 8px 24px rgba(15,23,42,.08);transform:translateY(-1px)}
+.job-card-head{display:flex;gap:10px;align-items:center}
+.job-logo{width:40px;height:40px;border-radius:10px;background:#f1f5f9;display:grid;place-items:center;font-weight:700;font-size:12px;color:#334155}
+.job-logo.lg{width:52px;height:52px;font-size:14px}
+.job-title{margin:0;font-size:14px;font-weight:700;line-height:1.3}
+.job-company{font-size:12px;color:var(--muted)}
+.badge-verify{font-size:10px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;padding:1px 6px;border-radius:999px;margin-left:6px}
+.job-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:11px;padding:3px 8px;border-radius:999px;background:#f8fafc;border:1px solid var(--border);color:#334155}
+.job-desc{font-size:12px;color:#475569;line-height:1.6;min-height:36px}
+.job-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;gap:8px}
+.job-salary{font-weight:700;font-size:13px;color:#0f172a}
+.job-time{font-size:11px;color:var(--muted)}
+.pagination{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:18px}
+.nav-links{display:flex;gap:14px;font-size:14px;font-weight:500}
+.nav-links a{color:var(--muted)}
+.nav-links a:hover{color:var(--text)}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
+.topbar-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:grid;place-items:center;color:white;font-weight:700;font-size:13px}
+.btn-sm{height:36px;padding:0 14px}
+.user-name{font-weight:600}
+.detail-back{display:inline-flex;gap:6px;margin-bottom:12px}
+.detail-company-name{margin-top:0}
+.detail-side-title{margin:0 0 8px}
+.detail-company-head{font-weight:700}
+.detail-company-meta{margin-top:12px;font-size:13px;color:#64748b}
+.detail-job-tags{margin-top:8px}
+.detail-side-card{margin-top:16px}
+.detail-prewrap{white-space:pre-wrap;line-height:1.7}
+.skeleton-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.skeleton-card{height:160px;background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 37%,#f1f5f9 63%);background-size:400% 100%;animation:shimmer 1.2s infinite;border-radius:14px}
+.skeleton-detail{height:400px;background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 37%,#f1f5f9 63%);background-size:400% 100%;animation:shimmer 1.2s infinite;border-radius:14px}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.empty{text-align:center;padding:40px;background:white;border:1px dashed var(--border);border-radius:14px}
+.detail-layout{display:grid;grid-template-columns:1fr 320px;gap:16px}
+@media (max-width:900px){.detail-layout{grid-template-columns:1fr}}
+.detail-main{display:flex;flex-direction:column;gap:16px}
+.job-detail-head{display:flex;gap:12px;align-items:center}
+.detail-title{margin:0;font-size:22px;letter-spacing:-.02em}
+.detail-salary{font-weight:800;color:#2563eb;margin:10px 0 6px}
+.detail-actions{display:flex;gap:10px;margin:12px 0}
+.detail-section h3{margin:0 0 6px;font-size:14px}
+.detail-section p{margin:0;color:#334155;font-size:13px}
+.detail-side .kv{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #f1f5f9}
+.detail-side .kv span{color:var(--muted)}
