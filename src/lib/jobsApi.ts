@@ -12,6 +12,7 @@ function mockSearch(params: JobSearchParams): PaginatedJobs {
     const hitCat = !cat || j.category.name.toLowerCase() === cat || j.categoryId === cat;
     return hitQ && hitLoc && hitCat;
   });
+  // SRS SEARCH-01-04: size 1..100, default 20 server; client may choose 9 for 3-col grid
   const page = Math.max(0, params.page ?? 0);
   const size = Math.min(100, Math.max(1, params.size ?? 10));
   const total = filtered.length;

@@ -7,6 +7,12 @@ import { SearchBar } from "../components/SearchBar";
 import { Pagination } from "../components/Pagination";
 import { AppHeader } from "../components/AppHeader";
 
+// SRS SEARCH-01-04: page 0-based, size 1..100, default 20 (server)
+// Design choice: size=9 fits 3-col grid (3x3) on desktop, still within 1..100 spec.
+// Server default 20 vẫn tôn trọng nếu client không gửi size; client chọn 9 để tối ưu UI.
+// Đổi thành 20 chỉ cần sửa JOB_PAGE_SIZE.
+const JOB_PAGE_SIZE = 9;
+
 const CATS = ["", "IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering"];
 
 export default function JobListPage() {
@@ -23,7 +29,7 @@ export default function JobListPage() {
   useEffect(() => {
     let alive = true;
     setLoading(true); setErr(null);
-    fetchJobs({ q, location, category: category || undefined, page, size: 9 })
+    fetchJobs({ q, location, category: category || undefined, page, size: JOB_PAGE_SIZE })
       .then((d) => { if (alive) setData(d); })
       .catch((e) => { if (alive) setErr(e.message || "Load failed"); })
       .finally(() => { if (alive) setLoading(false); });

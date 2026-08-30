@@ -4,6 +4,7 @@ import { fetchJobById, formatSalary, timeAgo } from "../lib/jobsApi";
 import type { Job } from "../types/job";
 import { AppHeader } from "../components/AppHeader";
 import { useAuth } from "../contexts/AuthContext";
+import { isRecruiter, isUser } from "../lib/roles";
 
 export default function JobDetailPage() {
   const { id } = useParams();
@@ -31,8 +32,8 @@ export default function JobDetailPage() {
   if (!job) return null;
 
   const isOwner = isAuthenticated && user && job.recruiterId && user.id === job.recruiterId;
-  const canApply = isAuthenticated && user?.role === "User";
-  const isEmployer = user?.role === "Employer" || user?.role === "Recruiter";
+  const canApply = isAuthenticated && isUser(user?.role);
+  const isEmployer = isRecruiter(user?.role); // canonical Recruiter; Employer alias handled via normalizeRole
 
   return (
     <>

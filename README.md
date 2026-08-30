@@ -9,8 +9,8 @@ React + Vite — part of **Vietnam Job Platform** (`pbl6`) under [`dut-pbl6-2026
 
 ## Features — AUTH-01 + JOB-01 / SEARCH-01 / WEB-01 (PBL6-12/13)
 
-- **Auth**: `POST /api/auth/register` — pwd `8+1upper+1num` (SRS), role `User|Employer`, fullName 2..128; `POST /api/auth/login` — JWT `access 60m` + `refresh 30d` (SHA256 rotation, `Http: Bearer`); `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/auth/me` (protected); client axios interceptor + `ProtectedRoute`/`GuestOnly`
-- **Jobs (WEB-01-02/03, JOB-01, SEARCH-01)**: `GET /api/search/jobs?q=&location=&page=&size=` (SEARCH-01), `GET /api/jobs/{id}` (JOB-01-05), `GET /api/categories` (JOB-01-06); UI `JobListPage` (search bar + cards title/company/location/salary + pagination) + `JobDetailPage` (full description/company/Apply if User + Edit if owner); AppHeader nav `/jobs`
+- **Auth**: `POST /api/auth/register` — pwd `8+1upper+1num` (SRS), role `User/Recruiter/Admin` (`Employer` alias → `Recruiter`), fullName 2..128; `POST /api/auth/login` — JWT `access 60m` + `refresh 30d` (SHA256 rotation, `Http: Bearer`); `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/auth/me` (protected); client axios interceptor + `ProtectedRoute`/`GuestOnly`
+- **Jobs (WEB-01-02/03, JOB-01, SEARCH-01)**: `GET /api/search/jobs?q=&location=&page=&size=` (SEARCH-01-04: `page` 0-based, `size` 1..100 default 20 server — client dùng `JOB_PAGE_SIZE=9` cho grid 3×3, vẫn trong spec, đổi lên 20 chỉ cần sửa hằng), `GET /api/jobs/{id}` (JOB-01-05), `GET /api/categories` (JOB-01-06); UI `JobListPage` (`JobListPage.tsx:12` `JOB_PAGE_SIZE=9`) + `JobDetailPage` (Apply nếu `isUser`, Edit nếu `isRecruiter` + owner); roles canonical `User/Recruiter/Admin` (`lib/roles.ts:1`, `Employer` alias deprecated)
 
 ## Setup
 
