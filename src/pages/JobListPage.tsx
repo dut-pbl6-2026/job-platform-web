@@ -14,8 +14,8 @@ export default function JobListPage() {
   const q = sp.get("q") || "";
   const location = sp.get("location") || "";
   const category = sp.get("category") || "";
-  const page = Math.max(0, Number(sp.get("page") || 0));
-
+  const pageParam = Number(sp.get("page"));
+  const page = Number.isFinite(pageParam) && pageParam >= 0 ? pageParam : 0;
   const [data, setData] = useState<PaginatedJobs | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
