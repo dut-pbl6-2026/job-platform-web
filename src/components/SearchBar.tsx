@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function SearchBar({ initialQ, initialLoc, onSearch }: { initialQ?: string; initialLoc?: string; onSearch: (q: string, loc: string) => void }) {
   const [q, setQ] = useState(initialQ || "");
   const [loc, setLoc] = useState(initialLoc || "");
+
+  useEffect(() => setQ(initialQ || ""), [initialQ]);
+  useEffect(() => setLoc(initialLoc || ""), [initialLoc]);
   return (
     <form
       className="search-bar"
