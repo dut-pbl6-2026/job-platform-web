@@ -62,3 +62,7 @@ vite.config.ts        -> proxy /api -> http://localhost:5001 (gateway)
 
 - Add `ForgotPasswordPage` + `ResetPasswordPage` (15min TTL)
 - Add `YARP gateway` route `/api/auth/*` -> `auth-svc:5001`, forward `X-User-Id/Role`
+
+## Deploy (Vercel jp-web — TM3 Bao)
+- Service: `jp-web` `https://jp-web.vercel.app` `Vercel` `VITE_API_BASE_URL=https://jp-gateway.onrender.com/api`
+- Hook: Vercel Git auto `push main`

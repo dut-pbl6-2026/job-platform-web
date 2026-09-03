@@ -40,8 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(me);
   }, []);
 
+  // Best practice 2026: register 201 userId then explicit login (avoids contract drift)
   const register = useCallback(async (p: { email: string; password: string; fullName: string; role?: string }) => {
-    const res = await apiRegister(p);
+    await apiRegister(p);
+    const res = await apiLogin({ email: p.email, password: p.password });
     setTokens(res.accessToken, res.refreshToken);
     const me = await fetchMe();
     setUser(me);
