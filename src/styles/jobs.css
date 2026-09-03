@@ -38,7 +38,8 @@
 .job-salary{font-weight:800;font-size:13px;color:var(--primary);background:var(--primary-soft);padding:4px 8px;border-radius:8px}
 .job-time{font-size:11px;color:var(--muted);background:#f8fafc;padding:3px 8px;border-radius:999px;border:1px solid #f1f5f9}
 .pagination{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:18px}
-.pagination .btn{border-radius:10px}
+.pagination .btn{border-radius:10px;width:42px}
+.pagination .btn-text{width:75px}
 .nav-links{display:flex;gap:14px;font-size:14px;font-weight:600}
 .nav-links a{color:var(--muted);transition:.15s}
 .nav-links a:hover{color:var(--primary)}
