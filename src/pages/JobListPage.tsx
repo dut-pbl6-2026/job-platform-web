@@ -8,13 +8,22 @@ import { Pagination } from "../components/Pagination";
 import { AppHeader } from "../components/AppHeader";
 
 // SRS SEARCH-01-04: page 0-based, size 1..100, default 20 (server)
-// Design choice: size=9 fits 3-col grid (3x3) on desktop, still within 1..100 spec.
-// Server default 20 vẫn tôn trọng nếu client không gửi size; client chọn 9 để tối ưu UI.
-// Đổi thành 20 chỉ cần sửa JOB_PAGE_SIZE.
 const JOB_PAGE_SIZE = 9;
 
 // Fallback chips if API not yet available — must include all 9 backend seeded categories
 const FALLBACK_CATS = ["", "IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering", "Sales", "Hospitality", "Others"];
+
+// Hero categories like TopCV left panel (display label -> backend category value)
+const HERO_CATS: { label: string; value: string }[] = [
+  { label: "Kinh doanh/Bán hàng", value: "Sales" },
+  { label: "Marketing/PR/Quảng cáo", value: "Marketing" },
+  { label: "Chăm sóc khách hàng (Custome...", value: "Others" },
+  { label: "Nhân sự/Hành chính/Pháp chế", value: "Healthcare" },
+  { label: "Công nghệ Thông tin", value: "IT" },
+  { label: "Lao động phổ thông", value: "Engineering" },
+];
+
+const LOC_PILLS = ["Tất cả", "Hà Nội", "Thành phố Hồ Chí Minh (cũ)", "Miền Bắc", "Miền Nam"];
 
 export default function JobListPage() {
   const [sp, setSp] = useSearchParams();
@@ -29,6 +38,8 @@ export default function JobListPage() {
   const [cats, setCats] = useState<string[]>(FALLBACK_CATS);
   const [catsLoading, setCatsLoading] = useState(true);
   const [catsErr, setCatsErr] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"vanphong" | "phothong">("vanphong");
+  const [heroPage, setHeroPage] = useState(1);
 
   useEffect(() => {
     let alive = true;
@@ -37,11 +48,8 @@ export default function JobListPage() {
       .then((list) => {
         if (!alive) return;
         if (Array.isArray(list) && list.length > 0) {
-          // deduplicate by name, keep fallback order if API incomplete
           const names = [...new Set(list.map((c) => c.name).filter(Boolean))];
-          // Ensure missing seeded categories still appear (Sales, Hospitality, Others)
           const merged = ["", ...names];
-          // Add any missing from fallback
           for (const f of FALLBACK_CATS) if (f && !merged.includes(f)) merged.push(f);
           setCats(merged);
         }
@@ -87,18 +95,67 @@ export default function JobListPage() {
   return (
     <>
       <AppHeader />
-      <div className="container">
-        <div className="hero">
-          <h1>Tìm việc mơ ước</h1>
-          <p>{data ? `${data.total} việc làm đang tuyển` : "Kết nối ứng viên & nhà tuyển dụng"} — SRS WEB-01-02 / SEARCH-01</p>
-          <SearchBar initialQ={q} initialLoc={location} onSearch={(nq, nloc) => update({ q: nq, location: nloc, page: "0" })} />
-          <div className="filter-row">
-            {cats.map((c) => (
-              <button key={c || "all"} className={`chip ${category === c ? "chip-active" : ""}`} onClick={() => update({ category: c, page: "0" })}>{c || "Tất cả"}</button>
-            ))}
-            {catsLoading && <span className="hint" style={{ alignSelf: "center" }}>Đang tải danh mục…</span>}
-            {catsErr && <><span className="hint" style={{ color: "#dc2626", alignSelf: "center" }}>Lỗi danh mục</span><button className="chip" onClick={retryCats}>Thử lại</button></>}
+      {/* TopCV Hero */}
+      <div className="topcv-hero">
+        <div className="container" style={{ position: "relative", paddingTop: 18, paddingBottom: 28 }}>
+          <h1 className="topcv-hero-title">TopCV - Tạo CV, Tìm việc làm, Tuyển dụng hiệu quả</h1>
+          <div className="topcv-search-wrap">
+            <SearchBar initialQ={q} initialLoc={location} onSearch={(nq, nloc) => update({ q: nq, location: nloc, page: "0" })} />
           </div>
+
+        
+
+          {/* carousel dots */}
+          <div className="topcv-dots">
+            <span className="topcv-dot" />
+            <span className="topcv-dot active" />
+            <span className="topcv-dot" />
+          </div>
+        </div>
+      </div>
+
+      <div className="container" style={{ paddingTop: 18 }}>
+       
+
+        {/* Filter bar */}
+        <div className="topcv-filter-bar">
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span className="topcv-filter-label">Lọc theo:</span>
+            <div className="topcv-filter-select">
+              <span>Địa điểm</span>
+              <span>▾</span>
+            </div>
+            <button className="topcv-circle-btn topcv-circle-btn--light">‹</button>
+            <div className="topcv-pills">
+              {LOC_PILLS.map((lp) => {
+                const isActive = (lp === "Tất cả" && !location) || location === lp;
+                const nextLoc = lp === "Tất cả" ? "" : lp;
+                return (
+                  <button
+                    key={lp}
+                    className={`topcv-pill ${isActive ? "active" : ""}`}
+                    onClick={() => update({ location: nextLoc, page: "0" })}
+                  >
+                    {lp}
+                  </button>
+                );
+              })}
+            </div>
+            <button className="topcv-circle-btn topcv-circle-btn--light">›</button>
+          </div>
+        </div>
+
+        {/* Hidden original cats for API fallback debug (keep functionality) */}
+        {catsErr && <div className="hint" style={{ margin: "8px 0", color: "#dc2626" }}>Lỗi danh mục <button className="chip" onClick={retryCats}>Thử lại</button></div>}
+        {catsLoading && <div className="hint" style={{ margin: "8px 0" }}>Đang tải danh mục…</div>}
+
+        {/* Hint bar */}
+        <div className="topcv-hint">
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span style={{ background: "#00b14f", color: "white", fontSize: 10, fontWeight: 700, padding: "2px 5px", borderRadius: 4 }}>Gợi ý:</span>
+            Di chuột vào tiêu đề việc làm để xem thêm thông tin chi tiết
+          </span>
+          <button className="topcv-hint-close" onClick={(e) => ((e.target as HTMLElement).parentElement!.style.display = "none")}>×</button>
         </div>
 
         {loading && <div className="skeleton-grid">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton-card" />)}</div>}
@@ -111,11 +168,19 @@ export default function JobListPage() {
         )}
         {data && !loading && data.items.length > 0 && (
           <>
-            <div className="job-grid">
-              {data.items.map((j) => <JobCard key={j.id} job={j} />)}
+            <div className="topcv-grid">
+              {data.items.map((j, idx) => <JobCard key={j.id} job={j} index={idx} />)}
             </div>
-            <Pagination page={data.page} totalPages={data.totalPages} onPage={(p) => update({ page: String(p) })} />
-            <div className="hint" style={{ textAlign: "center", marginTop: 12 }}>Trang {data.page + 1}/{data.totalPages} — Tổng {data.total} việc</div>
+            {/* TopCV pagination like image: circles + 12 / 111 trang */}
+            <div className="topcv-pagination">
+              <button className="topcv-circle-btn" onClick={() => update({ page: String(Math.max(0, page - 1)) })}>‹</button>
+              <span className="topcv-page-info">{page + 1} / {data.totalPages} trang</span>
+              <button className="topcv-circle-btn topcv-circle-btn--green" onClick={() => update({ page: String(Math.min(data.totalPages - 1, page + 1)) })}>›</button>
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <Pagination page={data.page} totalPages={data.totalPages} onPage={(p) => update({ page: String(p) })} />
+              <div className="hint" style={{ textAlign: "center", marginTop: 6 }}>{cats.slice(1, 6).join(" • ")} • Trang {data.page + 1}/{data.totalPages} — Tổng {data.total} việc</div>
+            </div>
           </>
         )}
       </div>
