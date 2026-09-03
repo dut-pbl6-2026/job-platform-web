@@ -20,7 +20,6 @@ export function SearchBar({ initialQ, initialLoc, onSearch }: { initialQ?: strin
       </div>
       <div className="topcv-search-divider" />
       <div className="topcv-search-field topcv-search-field--loc">
-        <span className="topcv-search-icon">📍</span>
         <input aria-label="Địa điểm" className="topcv-search-input" placeholder="Địa điểm" value={loc} onChange={(e) => setLoc(e.target.value)} />
         <span className="topcv-search-arrow">▾</span>
       </div>

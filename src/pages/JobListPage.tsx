@@ -172,14 +172,10 @@ export default function JobListPage() {
               {data.items.map((j, idx) => <JobCard key={j.id} job={j} index={idx} />)}
             </div>
             {/* TopCV pagination like image: circles + 12 / 111 trang */}
-            <div className="topcv-pagination">
-              <button className="topcv-circle-btn" onClick={() => update({ page: String(Math.max(0, page - 1)) })}>‹</button>
-              <span className="topcv-page-info">{page + 1} / {data.totalPages} trang</span>
-              <button className="topcv-circle-btn topcv-circle-btn--green" onClick={() => update({ page: String(Math.min(data.totalPages - 1, page + 1)) })}>›</button>
-            </div>
+  
             <div style={{ marginTop: 10 }}>
               <Pagination page={data.page} totalPages={data.totalPages} onPage={(p) => update({ page: String(p) })} />
-              <div className="hint" style={{ textAlign: "center", marginTop: 6 }}>{cats.slice(1, 6).join(" • ")} • Trang {data.page + 1}/{data.totalPages} — Tổng {data.total} việc</div>
+              <div className="hint" style={{ textAlign: "center", marginTop: 6 }}> Trang {data.page + 1}/{data.totalPages} — Tổng {data.total} việc</div>
             </div>
           </>
         )}

@@ -132,14 +132,14 @@ export default function RegisterPage() {
                 className={`role-btn ${role === "User" ? "active" : ""}`}
                 onClick={() => setRole("User")}
               >
-                {role === "User" ? "✓ " : ""}Ứng viên
+                Ứng viên
               </button>
               <button
                 type="button"
                 className={`role-btn ${role === "Recruiter" ? "active" : ""}`}
                 onClick={() => setRole("Recruiter")}
               >
-                <span style={{ display: "inline-flex" }}><IconBuilding /></span> Nhà tuyển dụng
+                <span style={{ display: "inline-flex" }}></span> Nhà tuyển dụng
               </button>
             </div>
           </div>
