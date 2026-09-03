@@ -6,7 +6,7 @@ export function Pagination({ page, totalPages, onPage }: { page: number; totalPa
   const showHead = windowPages[0] > 0;
   return (
     <div className="pagination">
-      <button className="btn btn-ghost" disabled={page === 0} onClick={() => onPage(page - 1)}>‹ Trước</button>
+      <button className="btn btn-ghost btn-text" disabled={page === 0} onClick={() => onPage(page - 1)}>‹ Trước</button>
       {showHead && (
         <>
           <button className="btn btn-ghost" onClick={() => onPage(0)}>1</button>
@@ -22,7 +22,7 @@ export function Pagination({ page, totalPages, onPage }: { page: number; totalPa
           <button className={`btn ${page === totalPages - 1 ? "btn-primary" : "btn-ghost"}`} onClick={() => onPage(totalPages - 1)}>{totalPages}</button>
         </>
       )}
-      <button className="btn btn-ghost" disabled={page >= totalPages - 1} onClick={() => onPage(page + 1)}>Sau ›</button>
+      <button className="btn btn-ghost btn-text" disabled={page >= totalPages - 1} onClick={() => onPage(page + 1)}>Sau ›</button>
     </div>
   );
 }

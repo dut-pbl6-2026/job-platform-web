@@ -8,21 +8,26 @@ export function SearchBar({ initialQ, initialLoc, onSearch }: { initialQ?: strin
   useEffect(() => setLoc(initialLoc || ""), [initialLoc]);
   return (
     <form
-      className="search-bar"
+      className="topcv-search"
       onSubmit={(e) => {
         e.preventDefault();
         onSearch(q.trim(), loc.trim());
       }}
     >
-      <div className="search-field">
-        <span className="search-icon">🔍</span>
-        <input aria-label="Từ khóa" className="input search-input" placeholder="Từ khóa: React, .NET, Marketing..." value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="topcv-search-field">
+        <span className="topcv-search-icon">⌕</span>
+        <input aria-label="Từ khóa" className="topcv-search-input" placeholder="Vị trí tuyển dụng, tên công ty" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-      <div className="search-field">
-        <span className="search-icon">📍</span>
-        <input aria-label="Địa điểm" className="input search-input" placeholder="Địa điểm: Hà Nội, HCM..." value={loc} onChange={(e) => setLoc(e.target.value)} />
+      <div className="topcv-search-divider" />
+      <div className="topcv-search-field topcv-search-field--loc">
+        <input aria-label="Địa điểm" className="topcv-search-input" placeholder="Địa điểm" value={loc} onChange={(e) => setLoc(e.target.value)} />
+        <span className="topcv-search-arrow">▾</span>
       </div>
-      <button className="btn btn-primary search-btn" type="submit">Tìm kiếm</button>
+      <button className="topcv-search-btn" type="submit">
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+        </span>
+      </button>
     </form>
   );
 }
