@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { fetchMe, getAccessToken, login as apiLogin, logoutApi, register as apiRegister, setTokens } from "../lib/api";
+import { fetchMe, forgotPassword as apiForgot, getAccessToken, login as apiLogin, logoutApi, register as apiRegister, resetPassword as apiReset, setTokens } from "../lib/api";
 
 type User = { id: string; email: string; fullName: string; role: string; isActive: boolean };
 
@@ -7,10 +7,12 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (p: { email: string; password: string; fullName: string; role?: string }) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  register: (p: { email: string; password: string; fullName: string; role?: string; companyId?: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<string>;
+  resetPassword: (token: string, newPassword: string) => Promise<string>;
 };
 
 const Ctx = createContext<AuthState | null>(null);
@@ -33,15 +35,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { refreshUser(); }, [refreshUser]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await apiLogin({ email, password });
+  const login = useCallback(async (email: string, password: string, rememberMe = false) => {
+    const res = await apiLogin({ email, password, rememberMe });
     setTokens(res.accessToken, res.refreshToken);
     const me = await fetchMe();
     setUser(me);
   }, []);
 
   // Best practice 2026: register 201 userId then explicit login (avoids contract drift)
-  const register = useCallback(async (p: { email: string; password: string; fullName: string; role?: string }) => {
+  const register = useCallback(async (p: { email: string; password: string; fullName: string; role?: string; companyId?: string }) => {
     await apiRegister(p);
     const res = await apiLogin({ email: p.email, password: p.password });
     setTokens(res.accessToken, res.refreshToken);
@@ -55,9 +57,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const forgotPassword = useCallback(async (email: string) => {
+    const res = await apiForgot(email);
+    return res.message;
+  }, []);
+
+  const resetPassword = useCallback(async (token: string, newPassword: string) => {
+    const res = await apiReset({ token, newPassword });
+    return res.message;
+  }, []);
+
   const value = useMemo<AuthState>(() => ({
-    user, loading, isAuthenticated: !!user, login, register, logout, refreshUser
-  }), [user, loading, login, register, logout, refreshUser]);
+    user, loading, isAuthenticated: !!user, login, register, logout, refreshUser, forgotPassword, resetPassword
+  }), [user, loading, login, register, logout, refreshUser, forgotPassword, resetPassword]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

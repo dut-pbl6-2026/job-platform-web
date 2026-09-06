@@ -85,8 +85,7 @@ function mockSearch(params: JobSearchParams): PaginatedJobs {
   return { items, total, page, size, totalPages };
 }
 
-export async function fetchJobs(params: JobSearchParams): Promise<PaginatedJobs> {
-  try {
+export async function fetchJobs(params: JobSearchParams): Promise<PaginatedJobs> {  try {
     // Primary: Search Service via Gateway
     const { data } = await api.get("/search/jobs", { params });
     const normalized = normalizePaginated(data, params);
@@ -103,6 +102,18 @@ export async function fetchJobs(params: JobSearchParams): Promise<PaginatedJobs>
     // Fallback to mock (when job-svc/search-svc not yet deployed)
     await new Promise((r) => setTimeout(r, 280));
     return mockSearch(params);
+  }
+}
+
+export async function fetchSuggestions(q: string, limit = 8): Promise<string[]> {
+  const keyword = q.trim();
+  if (!keyword) return [];
+  try {
+    const { data } = await api.get("/search/suggest", { params: { q: keyword, limit } });
+    const items = (data as any)?.items;
+    return Array.isArray(items) ? (items as string[]) : [];
+  } catch {
+    return [];
   }
 }
 

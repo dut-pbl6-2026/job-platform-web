@@ -78,7 +78,7 @@ api.interceptors.response.use(
 );
 
 // Typed helpers — 2026 best practice: register returns 201 RegisterResponse(userId), not tokens
-export async function register(payload: { email: string; password: string; fullName: string; role?: string }) {
+export async function register(payload: { email: string; password: string; fullName: string; role?: string; companyId?: string }) {
   const { data } = await api.post("/auth/register", payload);
   return data as { userId: string; message: string };
 }
@@ -94,4 +94,12 @@ export async function logoutApi() {
   const rt = getRefreshToken();
   if (!rt) return;
   await api.post("/auth/logout", { refreshToken: rt });
+}
+export async function forgotPassword(email: string) {
+  const { data } = await api.post("/auth/forgot-password", { email });
+  return data as { message: string };
+}
+export async function resetPassword(payload: { token: string; newPassword: string }) {
+  const { data } = await api.post("/auth/reset-password", payload);
+  return data as { message: string };
 }

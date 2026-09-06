@@ -38,6 +38,7 @@ export default function LoginPage() {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [show, setShow] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [fieldErr, setFieldErr] = useState<{ email?: string; pwd?: string }>({});
@@ -55,7 +56,7 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      await login(email.trim(), pwd);
+      await login(email.trim(), pwd, rememberMe);
       nav("/dashboard");
     } catch (ex: any) {
       const msg = ex?.response?.data?.message || ex?.response?.data?.title || "";
@@ -91,6 +92,14 @@ export default function LoginPage() {
               </button>
             </div>
             <div className="help">{fieldErr.pwd ?? ""}</div>
+          </div>
+
+          <div className="row" style={{ justifyContent: "space-between", fontSize: 13 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+              <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
+              <span className="hint">Ghi nhớ tôi (30 ngày)</span>
+            </label>
+            <Link to="/forgot-password">Quên mật khẩu?</Link>
           </div>
 
           <button className="btn btn-primary btn-block btn-lg" disabled={loading} style={{ marginTop: 4 }}>

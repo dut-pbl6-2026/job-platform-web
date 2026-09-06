@@ -92,4 +92,8 @@ export interface JobSearchParams {
   page?: number; // 0-based
   size?: number;
   employmentType?: string;
+  experienceLevel?: string;
+  minSalary?: number;
+  maxSalary?: number;
+  sortBy?: string; // newest | oldest | salary_desc | salary_asc
 }
