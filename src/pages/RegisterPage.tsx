@@ -82,6 +82,7 @@ export default function RegisterPage() {
   const [pwd, setPwd] = useState("");
   const [confirm, setConfirm] = useState("");
   const [role, setRole] = useState("User");
+  const [companyId, setCompanyId] = useState("");
   const [show, setShow] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -98,11 +99,19 @@ export default function RegisterPage() {
     const v2 = validateEmail(email); if (v2) fe.email = v2;
     const v3 = validatePassword(pwd); if (v3) fe.pwd = v3;
     if (pwd !== confirm) fe.confirm = "Xác nhận mật khẩu không khớp";
+    const apiRole = toApiRole(role);
+    if (apiRole === "Recruiter" && !companyId.trim()) fe.companyId = "Nhà tuyển dụng cần nhập CompanyId";
     if (Object.keys(fe).length) { setFieldErr(fe); return; }
     setFieldErr({});
     setLoading(true);
     try {
-      await register({ email: email.trim(), password: pwd, fullName: fullName.trim(), role: toApiRole(role) });
+      await register({
+        email: email.trim(),
+        password: pwd,
+        fullName: fullName.trim(),
+        role: apiRole,
+        ...(apiRole === "Recruiter" && companyId.trim() ? { companyId: companyId.trim() } : {}),
+      });
       nav("/dashboard");
     } catch (ex: any) {
       const data = ex?.response?.data;
@@ -143,6 +152,16 @@ export default function RegisterPage() {
               </button>
             </div>
           </div>
+
+          {toApiRole(role) === "Recruiter" && (
+            <div className="field">
+              <div className={`input-wrap ${fieldErr.companyId ? "error" : ""}`}>
+                <span className="input-icon"><IconBuilding /></span>
+                <input className="input-field" placeholder="CompanyId (UUID công ty)" value={companyId} onChange={e => setCompanyId(e.target.value)} autoComplete="off" />
+              </div>
+              <div className="help">{fieldErr.companyId ?? ""}</div>
+            </div>
+          )}
 
           <div className="field">
             <div className={`input-wrap ${fieldErr.fullName ? "error" : ""}`}>
