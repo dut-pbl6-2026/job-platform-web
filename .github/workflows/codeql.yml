@@ -2,11 +2,13 @@ name: codeql
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: '0 6 * * 1'
 
 permissions:
   contents: read
@@ -15,15 +17,21 @@ permissions:
 
 jobs:
   analyze:
+    name: Analyze
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # web repo is React/TS only (no C#)
-        language: [javascript]
+        language:
+          - javascript
     steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-      - uses: github/codeql-action/analyze@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
