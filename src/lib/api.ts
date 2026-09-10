@@ -29,6 +29,10 @@ export const api = axios.create({
 
 api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+  // Let the browser set multipart boundary (APP-01-01 FormData cv_file)
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
+  }
   return config;
 });
 

@@ -6,8 +6,10 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // Auth direct :5001 until job-platform-gateway has a real YARP + Dockerfile.
+      // When gateway is up: change target to http://localhost:5000
       "/api": {
-        target: "http://localhost:5000",
+        target: "http://localhost:5001",
         changeOrigin: true,
       },
     },
