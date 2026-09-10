@@ -12,7 +12,7 @@ export default function DashboardPage() {
       <div className="dashboard">
         <div className="card">
           <h2 style={{ margin: "0 0 6px" }}>Xin chào, {user?.fullName} 👋</h2>
-          <p style={{ color: "#64748b", margin: "0 0 16px" }}>Bạn đã đăng nhập thành công qua <code>job-platform-auth-svc</code> (Port 5001).</p>
+          <p style={{ color: "#64748b", margin: "0 0 16px" }}>Bạn đã đăng nhập thành công qua <code>job-platform-gateway</code> (Port 5000) → auth-svc.</p>
           <div style={{ display: "grid", gap: 10, fontSize: 14 }}>
             <div><strong>Email:</strong> {user?.email}</div>
             <div><strong>Role:</strong> {user?.role}</div>
