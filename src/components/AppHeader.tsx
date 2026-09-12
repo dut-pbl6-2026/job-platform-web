@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { isUser } from "../lib/roles";
 
 export function AppHeader() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -13,6 +14,8 @@ export function AppHeader() {
         </Link>
         <nav className="nav-links">
           <Link to="/jobs">Việc làm</Link>
+          {isAuthenticated && <Link to="/profile">Hồ sơ</Link>}
+          {isAuthenticated && isUser(user?.role) && <Link to="/applications">Đơn của tôi</Link>}
           {isAuthenticated && <Link to="/dashboard">Dashboard</Link>}
         </nav>
       </div>

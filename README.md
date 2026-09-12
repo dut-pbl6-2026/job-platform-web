@@ -3,15 +3,16 @@
 React + Vite — part of **Vietnam Job Platform** (`pbl6`) under [`dut-pbl6-2026`](https://github.com/dut-pbl6-2026).
 
 - Tech: React 18 + Vite 5 + TypeScript + React Router + Axios
-- Auth: Login / Register via **YARP gateway** `:5000` → `auth-svc` `:5001`
-- Jobs: List + Detail pages (mock fallback, ready for `job-svc` 5002 / `search-svc` 5003 via gateway)
-- API base: `VITE_API_BASE_URL` (+ Vite proxy `VITE_GATEWAY_URL`, default `http://localhost:5000`)
+- Auth: Login / Register UI consuming `job-platform-auth-svc` (Port 5001, `net10.0`, `YARP gateway`)
+- Jobs: List + Detail pages (mock fallback, ready for `job-svc` 5002 / `search-svc` 5003)
+- Apply / Profile / History: WEB-01-04/05/06 → `app-svc` 5004 + `profile-svc` 5005 (mock fallback)
 - Branch flow: `feature/* → main` (see job-platform-docs/.github/git-strategy.md)
 
 ## Features — AUTH-01 + JOB-01 / SEARCH-01 / WEB-01 (PBL6-12/13)
 
 - **Auth**: `POST /api/auth/register` — pwd `8+1upper+1num` (SRS), role `User/Recruiter/Admin` (`Employer` alias → `Recruiter`), fullName 2..128; `POST /api/auth/login` — JWT `access 60m` + `refresh 30d` (SHA256 rotation, `Http: Bearer`); `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/auth/me` (protected); client axios interceptor + `ProtectedRoute`/`GuestOnly`
 - **Jobs (WEB-01-02/03, JOB-01, SEARCH-01)**: `GET /api/search/jobs?q=&location=&page=&size=` (SEARCH-01-04: `page` 0-based, `size` 1..100 default 20 server — client dùng `JOB_PAGE_SIZE=9` cho grid 3×3, vẫn trong spec, đổi lên 20 chỉ cần sửa hằng), `GET /api/jobs/{id}` (JOB-01-05), `GET /api/categories` (JOB-01-06); UI `JobListPage` (`JobListPage.tsx:12` `JOB_PAGE_SIZE=9`) + `JobDetailPage` (Apply nếu `isUser`, Edit nếu `isRecruiter` + owner); roles canonical `User/Recruiter/Admin` (`lib/roles.ts:1`, `Employer` alias deprecated)
+- **Apply + Profile + History (WEB-01-04/05/06, APP-01, PROFILE-01)**: form `POST /api/applications` FormData `job_id` + `cover_letter` + `cv_file` (PDF/DOC/DOCX ≤5MB, 409 duplicate); `GET /api/applications/me` + `GET /api/applications/{id}`; hồ sơ `GET/PUT /api/profile/me|/profile`, skills/experience/education CRUD. UI `/jobs/:id/apply`, `/profile`, `/applications`, `/applications/:id`. Fallback `localStorage` khi app-svc/profile-svc chưa chạy.
 
 ## Setup
 
@@ -40,10 +41,13 @@ src/
   lib/validation.ts   -> SRS password regex + email/fullName validators
   contexts/AuthContext.tsx -> login/register/logout/refreshUser, isAuthenticated
   components/AppHeader.tsx, ProtectedRoute.tsx, JobCard.tsx, SearchBar.tsx, Pagination.tsx
+  lib/applicationsApi.ts -> APP-01 apply/history + mock
+  lib/profileApi.ts      -> PROFILE-01 me/skills/experience/education + mock
   pages/LoginPage.tsx, RegisterPage.tsx, DashboardPage.tsx, JobListPage.tsx (WEB-01-02), JobDetailPage.tsx (WEB-01-03)
+  pages/ApplyPage.tsx (WEB-01-04), ProfilePage.tsx (WEB-01-05), ApplicationHistoryPage.tsx + ApplicationDetailPage.tsx (WEB-01-06)
   styles/auth.css + jobs.css
-  App.tsx (routes /,/login,/register,/dashboard,/jobs,/jobs/:id) + main.tsx
-vite.config.ts        -> proxy /api -> VITE_GATEWAY_URL (default http://localhost:5000)
+  App.tsx (routes /jobs/:id/apply,/profile,/applications/:id) + main.tsx
+vite.config.ts        -> proxy /api -> http://localhost:5001 (auth; switch to :5000 when gateway ready)
 ```
 
 ## Backend deps
