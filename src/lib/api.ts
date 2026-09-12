@@ -1,6 +1,7 @@
 import axios from "axios";
+import { API_BASE_URL } from "./config";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
+const API_BASE = API_BASE_URL;
 
 // Fetch-like wrapper with auto JWT attach + refresh retry
 let accessToken: string | null = localStorage.getItem("accessToken");
