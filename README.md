@@ -18,14 +18,14 @@ React + Vite — part of **Vietnam Job Platform** (`pbl6`) under [`dut-pbl6-2026
 
 ```bash
 npm install          # or pnpm install
-cp .env.example .env # VITE_API_BASE_URL=/api  (vite proxy -> http://localhost:5001)
-npm run dev          # http://localhost:5173  (proxy /api -> 5001)
+cp .env.example .env # VITE_API_BASE_URL=/api + VITE_GATEWAY_URL=http://localhost:5000
+npm run dev          # http://localhost:5173  (proxy /api -> gateway :5000)
 ```
 
 Prod:
 
 ```bash
-VITE_API_BASE_URL=https://gateway.example.com/api npm run build
+VITE_API_BASE_URL=https://jp-gateway.onrender.com/api npm run build
 npm run preview
 ```
 
@@ -35,6 +35,7 @@ npm run preview
 src/
   types/job.ts        -> Job/Company/Category/PaginatedJobs (JOB-01/SRC 3.3.4)
   mocks/jobsMock.ts   -> 16 seed jobs fallback when job-svc not running
+  lib/config.ts       -> resolveApiBaseUrl (gateway-first VITE_API_BASE_URL)
   lib/api.ts          -> axios instance + auth helpers (register/login/me/logout + refresh)
   lib/jobsApi.ts      -> fetchJobs/fetchJobById/fetchCategories (SEARCH-01) + mock fallback + formatSalary/timeAgo
   lib/validation.ts   -> SRS password regex + email/fullName validators
@@ -51,12 +52,13 @@ vite.config.ts        -> proxy /api -> http://localhost:5001 (auth; switch to :5
 
 ## Backend deps
 
-- `job-platform-auth-svc` must expose:
+- **Gateway** `job-platform-gateway` `:5000` — single entry; routes `/api/auth|jobs|search|...`
+- `job-platform-auth-svc` `:5001` (upstream of gateway):
   `src/Auth.Api/Endpoints/AuthEndpoints.cs` + `Dtos/AuthDtos.cs` (register/login/refresh/logout/me/forgot/reset)
   `Program.cs` CORS `http://localhost:5173,3000` + `MapAuthEndpoints()`
 - DB `job_platform_auth` via `DATABASE_URL_AUTH`, JWT via `Jwt` (`Secret≥32`, `Issuer=Audience=job-platform`)
-- Verify: `curl http://localhost:5001/health` -> `{"status":"ok"}`
-  `curl -X POST http://localhost:5001/api/auth/register -H "Content-Type: application/json" -d '{"email":"a@b.com","password":"Abc12345","fullName":"Test"}'`
+- Verify: `curl http://localhost:5000/health` -> gateway ok
+  `curl -X POST http://localhost:5000/api/auth/register -H "Content-Type: application/json" -d '{"email":"a@b.com","password":"Abc12345","fullName":"Test"}'`
 
 ## Validation (SRS AUTH-01)
 
@@ -66,7 +68,6 @@ vite.config.ts        -> proxy /api -> http://localhost:5001 (auth; switch to :5
 ## Next
 
 - Add `ForgotPasswordPage` + `ResetPasswordPage` (15min TTL)
-- Add `YARP gateway` route `/api/auth/*` -> `auth-svc:5001`, forward `X-User-Id/Role`
 
 ## Deploy (Vercel jp-web — TM3 Bao)
 - Service: `jp-web` `https://jp-web.vercel.app` `Vercel` `VITE_API_BASE_URL=https://jp-gateway.onrender.com/api`
