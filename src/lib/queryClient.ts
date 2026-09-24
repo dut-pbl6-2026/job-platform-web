@@ -17,6 +17,7 @@ export function createQueryClient() {
 }
 
 export const queryKeys = {
+  allJobs: ["jobs"] as const,
   jobs: (params: unknown) => ["jobs", params] as const,
   job: (id: string) => ["job", id] as const,
   categories: ["categories"] as const,

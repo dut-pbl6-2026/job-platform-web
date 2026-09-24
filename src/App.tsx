@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
+import { ToastViewport } from "./components/ToastViewport";
 import { GuestOnly, ProtectedRoute } from "./components/ProtectedRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AppFooter } from "./components/AppFooter";
@@ -25,6 +27,8 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter>
+            <ToastProvider>
+            <ToastViewport />
             <Routes>
             <Route path="/" element={<Navigate to="/jobs" replace />} />
             <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
@@ -41,6 +45,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/jobs" replace />} />
             </Routes>
             <AppFooter />
+            </ToastProvider>
           </BrowserRouter>
         </AuthProvider>
       </QueryClientProvider>
