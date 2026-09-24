@@ -39,7 +39,27 @@ export const SALARY_BANDS_USD = [
   { label: "Trên $2.000", min: 2_000, max: undefined },
 ] as const;
 
-export const LOCATION_PILLS = ["Tất cả", "Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Remote"];
+export const LOCATION_PILLS = [
+  { label: "Ngẫu nhiên", value: "" },
+  { label: "Hà Nội", value: "Hà Nội" },
+  { label: "Thành phố Hồ Chí Minh (cũ)", value: "Hồ Chí Minh" },
+  { label: "Miền Bắc", value: "Miền Bắc" },
+  { label: "Miền Nam", value: "Miền Nam" },
+] as const;
+
+const NORTH = ["hà nội", "hải phòng", "bắc ninh", "quảng ninh", "hải dương", "nam định", "thanh hóa", "nghệ an", "ha noi"];
+const SOUTH = ["hồ chí minh", "bình dương", "đồng nai", "long an", "cần thơ", "ho chi minh"];
+
+export function locationMatches(jobLocation: string, filter: string) {
+  const loc = jobLocation.toLowerCase();
+  const want = filter.toLowerCase();
+  if (!want) return true;
+  if (want === "remote") return loc === "remote";
+  if (want === "miền bắc") return NORTH.some((p) => loc.includes(p));
+  if (want === "miền nam") return SOUTH.some((p) => loc.includes(p));
+  if (want.includes("hồ chí minh") || want.includes("ho chi minh")) return loc.includes("hồ chí minh") || loc.includes("ho chi minh");
+  return loc.includes(want) || want.includes(loc);
+}
 
 function csv(raw: string | null): string {
   return (raw || "")
