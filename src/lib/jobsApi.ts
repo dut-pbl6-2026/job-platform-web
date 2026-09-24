@@ -210,6 +210,7 @@ function advancedParams(params: JobSearchParams) {
   if (params.minSalary != null) next.salary_min = params.minSalary;
   if (params.maxSalary != null) next.salary_max = params.maxSalary;
   if (params.skills) next.skills = params.skills;
+  if (params.skillOp && params.skillOp !== "and") next.skill_op = params.skillOp;
   if (params.employmentType) next.employment_type = params.employmentType;
   if (params.experienceLevel) next.experience_level = params.experienceLevel;
   if (params.sortBy && params.sortBy !== "relevance") next.sort = params.sortBy;
@@ -244,8 +245,9 @@ export async function fetchJobs(params: JobSearchParams): Promise<PaginatedJobs>
       advancedAvailable = true;
       const page = unwrapSearch(advanced.data, params);
       if (page) return page;
-    } catch {
-      advancedAvailable = false;
+    } catch (e) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status === 404 || status === 501) advancedAvailable = false;
     }
   }
   try {

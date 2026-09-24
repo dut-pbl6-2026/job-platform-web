@@ -74,9 +74,9 @@ export function parseSearchParams(sp: URLSearchParams): JobSearchParams {
   };
 }
 
+/** `q` belongs to the search bar and survives "Xóa bộ lọc", so it is not a filter here. */
 export function hasActiveFilters(params: JobSearchParams) {
   return Boolean(
-    params.q ||
     params.location ||
     params.category ||
     params.employmentType ||

@@ -26,6 +26,8 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter>
+            <ToastProvider>
+            <ToastViewport />
             <Routes>
             <Route path="/" element={<Navigate to="/jobs" replace />} />
             <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
@@ -41,6 +43,7 @@ export default function App() {
             <Route path="/applications/:id" element={<ProtectedRoute><ApplicationDetailPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/jobs" replace />} />
             </Routes>
+            </ToastProvider>
           </BrowserRouter>
         </AuthProvider>
       </QueryClientProvider>

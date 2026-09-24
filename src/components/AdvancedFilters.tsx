@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { JobSearchParams, SearchFacets } from "../types/job";
 import { fetchSkills } from "../lib/jobsApi";
 import { queryKeys } from "../lib/queryClient";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import {
   EMPLOYMENT_OPTIONS,
   EXPERIENCE_OPTIONS,
@@ -28,9 +29,49 @@ function facetCount(facets: SearchFacets | undefined, key: keyof SearchFacets, v
   return hit?.count;
 }
 
+function SalaryInput({ label, value, onCommit }: { label: string; value?: number; onCommit: (raw: string) => void }) {
+  const current = value != null ? String(value) : "";
+  const [draft, setDraft] = useState(current);
+  useEffect(() => setDraft(current), [current]);
+  const commit = () => {
+    if (draft.trim() !== current) onCommit(draft.trim());
+  };
+  return (
+    <label>
+      {label}
+      <input
+        type="number"
+        min={0}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
+      />
+    </label>
+  );
+}
+
 export function AdvancedFilters({ params, facets, categories, onChange, onClear }: Props) {
   const [open, setOpen] = useState<string | null>(null);
   const [skillQ, setSkillQ] = useState("");
+  const debouncedSkillQ = useDebouncedValue(skillQ.trim(), 250);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: PointerEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(null);
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
   const selectedTypes = splitCsv(params.employmentType);
   const selectedLevels = splitCsv(params.experienceLevel);
   const selectedSkills = splitCsv(params.skills);
@@ -38,8 +79,8 @@ export function AdvancedFilters({ params, facets, categories, onChange, onClear 
   const bands = currency === "USD" ? SALARY_BANDS_USD : SALARY_BANDS_VND;
 
   const skillsQuery = useQuery({
-    queryKey: queryKeys.skills(skillQ),
-    queryFn: () => fetchSkills(skillQ),
+    queryKey: queryKeys.skills(debouncedSkillQ),
+    queryFn: () => fetchSkills(debouncedSkillQ),
     enabled: open === "skills",
   });
 
@@ -71,7 +112,7 @@ export function AdvancedFilters({ params, facets, categories, onChange, onClear 
   }, [params, selectedTypes, selectedLevels, selectedSkills, currency]);
 
   return (
-    <div className="adv-wrap">
+    <div className="adv-wrap" ref={wrapRef}>
       <div className="topcv-filter-bar">
         <span className="topcv-filter-label">Lọc theo:</span>
         <div className="topcv-pills">
@@ -142,14 +183,8 @@ export function AdvancedFilters({ params, facets, categories, onChange, onClear 
             })}
           </div>
           <div className="adv-salary-inputs">
-            <label>
-              Tối thiểu
-              <input type="number" min={0} value={params.minSalary ?? ""} onChange={(e) => onChange({ minSalary: e.target.value, currency })} />
-            </label>
-            <label>
-              Tối đa
-              <input type="number" min={0} value={params.maxSalary ?? ""} onChange={(e) => onChange({ maxSalary: e.target.value, currency })} />
-            </label>
+            <SalaryInput label="Tối thiểu" value={params.minSalary} onCommit={(raw) => onChange({ minSalary: raw, currency })} />
+            <SalaryInput label="Tối đa" value={params.maxSalary} onCommit={(raw) => onChange({ maxSalary: raw, currency })} />
           </div>
         </div>
       )}
