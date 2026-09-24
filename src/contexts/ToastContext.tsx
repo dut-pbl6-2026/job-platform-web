@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { jobToastPollMs, TOAST_DISMISS_MS, TOAST_STACK_LIMIT } from "../lib/config";
 import { fetchJobs } from "../lib/jobsApi";
+import { queryKeys } from "../lib/queryClient";
 import { toastFromJob, toastFromSocketMessage } from "../lib/notificationMessages";
 import { connectNotificationSocket } from "../lib/notificationSocket";
 import { getAccessToken } from "../lib/api";
@@ -20,6 +22,7 @@ const Ctx = createContext<ToastState | null>(null);
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuth();
   const userId = user?.id;
+  const queryClient = useQueryClient();
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const seenRef = useRef(new Set<string>());
   const orderRef = useRef<string[]>([]);
@@ -88,9 +91,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     let primed = false;
     const knownJobs = new Set<string>();
 
+    const refreshJobList = () => void queryClient.invalidateQueries({ queryKey: queryKeys.allJobs });
+
     const stopSocket = connectNotificationSocket(getAccessToken, (raw) => {
       const toast = toastFromSocketMessage(raw);
-      if (toast) showToast(toast);
+      if (!toast) return;
+      if (toast.kind === "job") refreshJobList();
+      showToast(toast);
     });
 
     const poll = async () => {
@@ -108,7 +115,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         const fresh = items.filter((job) => job?.id && !knownJobs.has(job.id));
+        if (!fresh.length) return;
         for (const job of fresh) knownJobs.add(job.id);
+        refreshJobList();
         for (const job of fresh.slice(0, 3)) showToast(toastFromJob(job));
         if (fresh.length > 3) {
           showToast({
@@ -136,7 +145,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", onVisible);
       stopSocket();
     };
-  }, [isAuthenticated, remember, userId]);
+  }, [isAuthenticated, queryClient, remember, userId]);
 
   useEffect(() => {
     if (isAuthenticated) return;

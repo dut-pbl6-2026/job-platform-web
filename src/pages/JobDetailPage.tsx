@@ -1,31 +1,28 @@
-import { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { fetchJobById, formatSalary, timeAgo } from "../lib/jobsApi";
-import type { Job } from "../types/job";
+import { useQuery } from "@tanstack/react-query";
+import { companyInitials, fetchJobById, formatSalary, timeAgo } from "../lib/jobsApi";
 import { AppHeader } from "../components/AppHeader";
 import { useAuth } from "../contexts/AuthContext";
 import { isRecruiter, isUser } from "../lib/roles";
+import { queryKeys } from "../lib/queryClient";
 
 export default function JobDetailPage() {
   const { id } = useParams();
   const nav = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const jobQuery = useQuery({
+    queryKey: queryKeys.job(id || ""),
+    queryFn: async () => {
+      const found = await fetchJobById(id!);
+      if (!found) throw new Error("Việc làm không tồn tại");
+      return found;
+    },
+    enabled: !!id,
+  });
 
-  useEffect(() => {
-    if (!id) return;
-    let alive = true;
-    setLoading(true);
-    setErr(null);
-    setJob(null);
-    fetchJobById(id)
-      .then((j) => { if (alive) { if (!j) setErr("Việc làm không tồn tại"); else setJob(j); } })
-      .catch((e) => { if (alive) setErr(e?.message || "Load failed"); })
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
-  }, [id]);
+  const job = jobQuery.data;
+  const loading = jobQuery.isPending;
+  const err = jobQuery.error instanceof Error ? jobQuery.error.message : jobQuery.isError ? "Load failed" : null;
 
   if (loading) return (<><AppHeader /><div className="container"><div className="skeleton-detail" /></div></>);
   if (err) return (<><AppHeader /><div className="container"><div className="alert alert-error">{err}</div><Link to="/jobs" className="btn btn-ghost">← Quay lại danh sách</Link></div></>);
@@ -38,12 +35,13 @@ export default function JobDetailPage() {
   return (
     <>
       <AppHeader />
-      <div className="container detail-layout">
+      <div className="container">
+        <Link to="/jobs" className="hint detail-back">← Quay lại</Link>
+        <div className="detail-layout">
         <div className="detail-main">
-          <Link to="/jobs" className="hint detail-back">← Quay lại</Link>
           <div className="card">
             <div className="job-detail-head">
-              <div className="job-logo lg">{job.company.name.slice(0, 2).toUpperCase()}</div>
+              <div className="job-logo lg">{companyInitials(job.company.name)}</div>
               <div>
                 <h1 className="detail-title">{job.title}</h1>
                 <div className="hint">{job.company.name} • {job.location} • {timeAgo(job.createdAt)}</div>
@@ -95,6 +93,7 @@ export default function JobDetailPage() {
             <div className="kv"><span>Trạng thái</span><strong>{job.status}</strong></div>
           </div>
         </aside>
+        </div>
       </div>
     </>
   );
