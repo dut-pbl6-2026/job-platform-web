@@ -1,6 +1,6 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchJobById, formatSalary, timeAgo } from "../lib/jobsApi";
+import { companyInitials, fetchJobById, formatSalary, timeAgo } from "../lib/jobsApi";
 import { AppHeader } from "../components/AppHeader";
 import { useAuth } from "../contexts/AuthContext";
 import { isRecruiter, isUser } from "../lib/roles";
@@ -35,12 +35,13 @@ export default function JobDetailPage() {
   return (
     <>
       <AppHeader />
-      <div className="container detail-layout">
+      <div className="container">
+        <Link to="/jobs" className="hint detail-back">← Quay lại</Link>
+        <div className="detail-layout">
         <div className="detail-main">
-          <Link to="/jobs" className="hint detail-back">← Quay lại</Link>
           <div className="card">
             <div className="job-detail-head">
-              <div className="job-logo lg">{job.company.name.slice(0, 2).toUpperCase()}</div>
+              <div className="job-logo lg">{companyInitials(job.company.name)}</div>
               <div>
                 <h1 className="detail-title">{job.title}</h1>
                 <div className="hint">{job.company.name} • {job.location} • {timeAgo(job.createdAt)}</div>
@@ -92,6 +93,7 @@ export default function JobDetailPage() {
             <div className="kv"><span>Trạng thái</span><strong>{job.status}</strong></div>
           </div>
         </aside>
+        </div>
       </div>
     </>
   );

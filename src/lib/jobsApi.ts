@@ -2,7 +2,7 @@ import { api } from "./api";
 import type { FacetBucket, Job, JobSearchParams, PaginatedJobs, SearchFacets } from "../types/job";
 import { MOCK_JOBS, MOCK_CATEGORIES } from "../mocks/jobsMock";
 import { normalizeEmploymentType, normalizeExperienceLevel } from "../types/job";
-import { splitCsv } from "./searchFilters";
+import { splitCsv, locationMatches } from "./searchFilters";
 
 function normalizeJob(raw: any): Job {
   if (!raw) return raw as Job;
@@ -150,7 +150,7 @@ function mockSearch(params: JobSearchParams): PaginatedJobs {
   const skills = splitCsv(params.skills).map((item) => item.toLowerCase());
   let filtered = MOCK_JOBS.filter((j) => {
     const hitQ = !q || j.title.toLowerCase().includes(q) || j.description.toLowerCase().includes(q) || j.company.name.toLowerCase().includes(q);
-    const hitLoc = !loc || (loc === "remote" ? j.location.toLowerCase() === "remote" : j.location.toLowerCase().includes(loc) || loc.includes(j.location.toLowerCase()));
+    const hitLoc = locationMatches(j.location, loc);
     const normalizedCat = normalizeJob(j).category.name.toLowerCase();
     const hitCat = !cat || normalizedCat === cat || j.categoryId.toLowerCase() === cat || j.category.name.toLowerCase() === cat;
     const hitType = matchesEmployment(String(j.employmentType || ""), types);
@@ -351,6 +351,33 @@ export async function fetchLocations(q = ""): Promise<NamedCount[]> {
   return MOCK_LOCATIONS
     .filter((name) => !keyword || name.toLowerCase().includes(keyword))
     .map((name) => ({ id: name, name, count: counts.get(name) ?? 0 }));
+}
+
+const COMPANY_PREFIX = /^(c[oô]ng ty|t[aậ]p [dđ]o[aà]n|doanh nghi[eệ]p|tnhh|cp|cổ phần|co\.?|ltd\.?|jsc)$/i;
+
+export function companyInitials(name: string) {
+  const words = name.split(/\s+/).filter(Boolean);
+  let rest = words;
+  while (rest.length > 1) {
+    const two = `${rest[0]} ${rest[1] ?? ""}`;
+    if (COMPANY_PREFIX.test(two)) rest = rest.slice(2);
+    else if (COMPANY_PREFIX.test(rest[0])) rest = rest.slice(1);
+    else break;
+  }
+  const picked = rest.length ? rest : words;
+  const letters = picked.length > 1 ? picked.slice(0, 2).map((w) => w[0]).join("") : picked[0].slice(0, 2);
+  return letters.toUpperCase();
+}
+
+export function formatSalaryShort(min: number, max: number, currency = "VND") {
+  if (!min && !max) return "Thỏa thuận";
+  if (currency === "VND") {
+    const a = min ? Math.round(min / 1_000_000) : null;
+    const b = max ? Math.round(max / 1_000_000) : null;
+    if (a && b) return `${a} - ${b} triệu`;
+    return `${a || b} triệu`;
+  }
+  return formatSalary(min, max, currency);
 }
 
 export function formatSalary(min: number, max: number, currency = "VND") {

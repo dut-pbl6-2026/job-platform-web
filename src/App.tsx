@@ -6,6 +6,7 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { ToastViewport } from "./components/ToastViewport";
 import { GuestOnly, ProtectedRoute } from "./components/ProtectedRoute";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { AppFooter } from "./components/AppFooter";
 import { createQueryClient } from "./lib/queryClient";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/applications/:id" element={<ProtectedRoute><ApplicationDetailPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/jobs" replace />} />
             </Routes>
+            <AppFooter />
             </ToastProvider>
           </BrowserRouter>
         </AuthProvider>

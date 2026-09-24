@@ -115,22 +115,24 @@ export function AdvancedFilters({ params, facets, categories, onChange, onClear 
     <div className="adv-wrap" ref={wrapRef}>
       <div className="topcv-filter-bar">
         <span className="topcv-filter-label">Lọc theo:</span>
+        <span className="topcv-filter-select">Địa điểm <span>▾</span></span>
+        <button type="button" className="topcv-circle-btn" aria-label="Cuộn trái">‹</button>
         <div className="topcv-pills">
           {LOCATION_PILLS.map((lp) => {
-            const isActive = (lp === "Tất cả" && !params.location) || params.location === lp;
+            const isActive = (!params.location && !lp.value) || params.location === lp.value;
             return (
               <button
-                key={lp}
+                key={lp.label}
                 type="button"
                 className={`topcv-pill ${isActive ? "active" : ""}`}
-                onClick={() => onChange({ location: lp === "Tất cả" ? undefined : lp })}
+                onClick={() => onChange({ location: lp.value || undefined })}
               >
-                {lp}
-                {lp !== "Tất cả" && facetCount(facets, "location", lp) != null ? ` (${facetCount(facets, "location", lp)})` : ""}
+                {lp.label}
               </button>
             );
           })}
         </div>
+        <button type="button" className="topcv-circle-btn" aria-label="Cuộn phải">›</button>
       </div>
 
       <div className="adv-toolbar">
