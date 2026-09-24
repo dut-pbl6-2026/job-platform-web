@@ -94,13 +94,16 @@ export function toToastInput(notification: IncomingNotification): ToastInput | n
   }
 
   if (!notification.title && !notification.body) return null;
+  const applicationId = pickString(data, ["applicationId", "application_id", "ApplicationId"]);
+  const applicationHref = applicationId ? `/applications/${encodeURIComponent(applicationId)}` : undefined;
+  const jobHref = jobId ? `/jobs/${encodeURIComponent(jobId)}` : undefined;
   return {
     id: notification.id,
     dedupeKey: notification.id,
     kind: event === "error" ? "error" : "info",
     title: notification.title ?? "Thông báo",
     body: notification.body,
-    href: jobId ? `/jobs/${encodeURIComponent(jobId)}` : undefined,
+    href: event.startsWith("application") ? applicationHref ?? jobHref : jobHref ?? applicationHref,
   };
 }
 

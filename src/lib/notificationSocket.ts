@@ -12,12 +12,23 @@ export function resolveNotificationsWsUrl(token: string): string {
   return `${protocol}//${window.location.host}${NOTIFICATION_WS_PATH}?${query}`;
 }
 
+function isServerPing(data: string) {
+  if (!data.includes("ping")) return false;
+  try {
+    const msg = JSON.parse(data) as { type?: unknown; messageType?: unknown };
+    return msg?.type === "ping" || msg?.messageType === "ping";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * WS-01-01 / WS-01-06: authenticated socket with ping and exponential reconnect.
  * Returns a stop function. Connection failures stay silent so a missing gateway
  * does not cover the page in error toasts.
+ * `getToken` is read on every attempt: access tokens expire after 60m and are rotated by the refresh interceptor.
  */
-export function connectNotificationSocket(token: string, onMessage: (data: string) => void): () => void {
+export function connectNotificationSocket(getToken: () => string | null, onMessage: (data: string) => void): () => void {
   let socket: WebSocket | null = null;
   let stopped = false;
   let attempt = 0;
@@ -40,6 +51,11 @@ export function connectNotificationSocket(token: string, onMessage: (data: strin
   const connect = () => {
     if (stopped) return;
     settled = false;
+    const token = getToken();
+    if (!token) {
+      schedule();
+      return;
+    }
     let next: WebSocket;
     try {
       next = new WebSocket(resolveNotificationsWsUrl(token));
@@ -58,7 +74,12 @@ export function connectNotificationSocket(token: string, onMessage: (data: strin
     };
 
     next.onmessage = (event) => {
-      if (typeof event.data === "string") onMessage(event.data);
+      if (typeof event.data !== "string") return;
+      if (isServerPing(event.data)) {
+        if (next.readyState === WebSocket.OPEN) next.send(JSON.stringify({ type: "pong" }));
+        return;
+      }
+      onMessage(event.data);
     };
 
     const fail = () => {

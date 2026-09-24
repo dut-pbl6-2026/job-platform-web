@@ -39,10 +39,9 @@
   color:#fff;
   background:linear-gradient(180deg,#0b6b3a 0%,#00b14f 100%);
 }
-.toast-info .toast-mark,
-.toast-warning .toast-mark,
-.toast-error .toast-mark,
-.toast-success .toast-mark{background:var(--primary)}
+.toast-info .toast-mark{background:var(--primary)}
+.toast-success .toast-mark{background:var(--success)}
+.toast-warning .toast-mark{background:#d97706}
 .toast-error .toast-mark{background:var(--danger)}
 .toast-title{margin:0;font-size:13px;font-weight:800;color:#0f172a;line-height:1.35}
 .toast-body{margin:4px 0 0;font-size:12px;color:var(--muted);line-height:1.45}

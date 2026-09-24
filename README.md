@@ -51,7 +51,7 @@ src/
   pages/ApplyPage.tsx (WEB-01-04), ProfilePage.tsx (WEB-01-05), ApplicationHistoryPage.tsx + ApplicationDetailPage.tsx (WEB-01-06)
   styles/auth.css + jobs.css + toast.css
   App.tsx (routes /jobs/:id/apply,/profile,/applications/:id) + main.tsx
-vite.config.ts        -> proxy /api -> http://localhost:5001, /ws -> http://localhost:5000
+vite.config.ts        -> proxy /api -> http://localhost:5001, /ws -> VITE_GATEWAY_URL (default http://localhost:5000)
 ```
 
 ## Backend deps

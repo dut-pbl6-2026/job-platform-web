@@ -19,6 +19,7 @@ const Ctx = createContext<ToastState | null>(null);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuth();
+  const userId = user?.id;
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const seenRef = useRef(new Set<string>());
   const orderRef = useRef<string[]>([]);
@@ -80,15 +81,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, [push]);
 
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
-    const token = getAccessToken();
-    if (!token) return;
+    if (!isAuthenticated || !userId) return;
+    if (!getAccessToken()) return;
 
     let stopped = false;
     let primed = false;
     const knownJobs = new Set<string>();
 
-    const stopSocket = connectNotificationSocket(token, (raw) => {
+    const stopSocket = connectNotificationSocket(getAccessToken, (raw) => {
       const toast = toastFromSocketMessage(raw);
       if (toast) showToast(toast);
     });
@@ -136,7 +136,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", onVisible);
       stopSocket();
     };
-  }, [isAuthenticated, remember, user]);
+  }, [isAuthenticated, remember, userId]);
 
   useEffect(() => {
     if (isAuthenticated) return;
