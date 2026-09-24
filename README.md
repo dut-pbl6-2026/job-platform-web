@@ -14,13 +14,14 @@ React + Vite — part of **Vietnam Job Platform** (`pbl6`) under [`dut-pbl6-2026
 - **Jobs (WEB-01-02/03, JOB-01, SEARCH-01)**: `GET /api/search/jobs?q=&location=&page=&size=` (SEARCH-01-04: `page` 0-based, `size` 1..100 default 20 server — client dùng `JOB_PAGE_SIZE=9` cho grid 3×3, vẫn trong spec, đổi lên 20 chỉ cần sửa hằng), `GET /api/jobs/{id}` (JOB-01-05), `GET /api/categories` (JOB-01-06); UI `JobListPage` + `JobDetailPage` (Apply nếu `isUser`, Edit nếu `isRecruiter` + owner); roles canonical `User/Recruiter/Admin` (`lib/roles.ts:1`, `Employer` alias deprecated)
 - **Advanced search (ADV-01, Week 6)**: filter bar for salary (VND/USD), skills (AND/OR + autocomplete `GET /api/search/skills`), location including Remote, employment type, experience, category, sort (`relevance` / `created_at_desc` / `salary_desc` / `salary_asc`). Query string is the source of truth. Tries `GET /api/search/advanced` then `GET /api/search/jobs`; mock fallback with facets. **TanStack Query** caches search/categories/job detail for 5 minutes (`lib/queryClient.ts`).
 - **Apply + Profile + History (WEB-01-04/05/06, APP-01, PROFILE-01)**: form `POST /api/applications` FormData `job_id` + `cover_letter` + `cv_file` (PDF/DOC/DOCX ≤5MB, 409 duplicate); `GET /api/applications/me` + `GET /api/applications/{id}`; hồ sơ `GET/PUT /api/profile/me|/profile`, skills/experience/education CRUD. UI `/jobs/:id/apply`, `/profile`, `/applications`, `/applications/:id`. Fallback `localStorage` khi app-svc/profile-svc chưa chạy.
+- **In-app toast (WS-01, Week 5)**: authenticated users connect to `ws /ws/notifications?token=` (Vite proxies `/ws`). Message `notification` with `job.created` renders `Việc làm mới: [title] tại [company]` and links to `/jobs/{id}`. Reconnect + ping follow WS-01-06. A 30s poll of `GET /api/search/jobs` (override `VITE_JOB_TOAST_POLL_MS`) toasts jobs that appear after the first snapshot, deduped against the socket. Programmatic: `showToast()` / `window` event `jp:toast`.
 
 ## Setup
 
 ```bash
 npm install          # or pnpm install
-cp .env.example .env # VITE_API_BASE_URL=/api + VITE_GATEWAY_URL=http://localhost:5000
-npm run dev          # http://localhost:5173  (proxy /api -> gateway :5000)
+cp .env.example .env # VITE_API_BASE_URL=/api
+npm run dev          # http://localhost:5173  (proxy /api -> :5001, /ws -> :5000)
 ```
 
 Prod:
@@ -44,14 +45,17 @@ src/
   components/AdvancedFilters.tsx, AppHeader.tsx, ProtectedRoute.tsx, JobCard.tsx, SearchBar.tsx, Pagination.tsx
   lib/validation.ts   -> SRS password regex + email/fullName validators
   contexts/AuthContext.tsx -> login/register/logout/refreshUser, isAuthenticated
-  components/AppHeader.tsx, ProtectedRoute.tsx, JobCard.tsx, SearchBar.tsx, Pagination.tsx
+  contexts/ToastContext.tsx -> in-app toast stack (WS-01 + new-job poll)
+  lib/notificationSocket.ts -> /ws/notifications JWT + reconnect
+  lib/notificationMessages.ts -> job.created copy "Việc làm mới: … tại …"
+  components/ToastViewport.tsx, AppHeader.tsx, ProtectedRoute.tsx, JobCard.tsx, SearchBar.tsx, Pagination.tsx
   lib/applicationsApi.ts -> APP-01 apply/history + mock
   lib/profileApi.ts      -> PROFILE-01 me/skills/experience/education + mock
   pages/LoginPage.tsx, RegisterPage.tsx, DashboardPage.tsx, JobListPage.tsx (WEB-01-02), JobDetailPage.tsx (WEB-01-03)
   pages/ApplyPage.tsx (WEB-01-04), ProfilePage.tsx (WEB-01-05), ApplicationHistoryPage.tsx + ApplicationDetailPage.tsx (WEB-01-06)
-  styles/auth.css + jobs.css
+  styles/auth.css + jobs.css + toast.css
   App.tsx (routes /jobs/:id/apply,/profile,/applications/:id) + main.tsx
-vite.config.ts        -> proxy /api -> http://localhost:5001 (auth; switch to :5000 when gateway ready)
+vite.config.ts        -> proxy /api -> http://localhost:5001, /ws -> VITE_GATEWAY_URL (default http://localhost:5000)
 ```
 
 ## Backend deps
