@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
@@ -12,6 +12,12 @@ export default defineConfig({
         target: "http://localhost:5001",
         changeOrigin: true,
       },
+      // SRS WS-01. Gateway serves /ws/notifications; point this at :5000 when YARP is up.
+      "/ws": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+        ws: true,
+      },
     },
-  };
+  },
 });
