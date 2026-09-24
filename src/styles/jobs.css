@@ -189,3 +189,23 @@
 .stack-item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f1f5f9}
 .mini-form{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0}
 .dash-actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* ADV-01 advanced search */
+.adv-wrap{margin-bottom:12px}
+.adv-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 10px}
+.adv-toggle{height:32px;padding:0 12px;border-radius:999px;border:1px solid #e2e8f0;background:white;font-size:12px;font-weight:700;color:#334155;cursor:pointer}
+.adv-toggle.active,.adv-toggle:hover{border-color:#00b14f;color:#00b14f;background:#e6f7ed}
+.adv-clear{height:32px;padding:0 12px;border:none;background:transparent;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer}
+.adv-panel{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 6px 16px rgba(15,23,42,.04)}
+.adv-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.adv-currency{display:inline-flex;background:#f1f5f9;border-radius:999px;padding:3px;gap:2px}
+.adv-currency button{height:26px;padding:0 12px;border:none;border-radius:999px;background:transparent;font-size:11px;font-weight:700;cursor:pointer;color:#475569}
+.adv-currency button.active{background:#00b14f;color:white}
+.adv-salary-inputs{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.adv-salary-inputs label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;color:#64748b}
+.adv-salary-inputs input{height:36px;width:160px;border:1px solid #e2e8f0;border-radius:10px;padding:0 10px}
+.adv-skill-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.adv-skill-row .input{flex:1;min-width:180px}
+.adv-op{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#475569}
+.adv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.adv-chip{height:28px;padding:0 10px;border-radius:999px;border:1px solid #bbf7d0;background:#e6f7ed;color:#166534;font-size:11px;font-weight:700;cursor:pointer}

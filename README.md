@@ -2,7 +2,7 @@
 
 React + Vite — part of **Vietnam Job Platform** (`pbl6`) under [`dut-pbl6-2026`](https://github.com/dut-pbl6-2026).
 
-- Tech: React 18 + Vite 5 + TypeScript + React Router + Axios
+- Tech: React 18 + Vite 5 + TypeScript + React Router + Axios + TanStack Query
 - Auth: Login / Register UI consuming `job-platform-auth-svc` (Port 5001, `net10.0`, `YARP gateway`)
 - Jobs: List + Detail pages (mock fallback, ready for `job-svc` 5002 / `search-svc` 5003)
 - Apply / Profile / History: WEB-01-04/05/06 → `app-svc` 5004 + `profile-svc` 5005 (mock fallback)
@@ -11,7 +11,8 @@ React + Vite — part of **Vietnam Job Platform** (`pbl6`) under [`dut-pbl6-2026
 ## Features — AUTH-01 + JOB-01 / SEARCH-01 / WEB-01 (PBL6-12/13)
 
 - **Auth**: `POST /api/auth/register` — pwd `8+1upper+1num` (SRS), role `User/Recruiter/Admin` (`Employer` alias → `Recruiter`), fullName 2..128; `POST /api/auth/login` — JWT `access 60m` + `refresh 30d` (SHA256 rotation, `Http: Bearer`); `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/auth/me` (protected); client axios interceptor + `ProtectedRoute`/`GuestOnly`
-- **Jobs (WEB-01-02/03, JOB-01, SEARCH-01)**: `GET /api/search/jobs?q=&location=&page=&size=` (SEARCH-01-04: `page` 0-based, `size` 1..100 default 20 server — client dùng `JOB_PAGE_SIZE=9` cho grid 3×3, vẫn trong spec, đổi lên 20 chỉ cần sửa hằng), `GET /api/jobs/{id}` (JOB-01-05), `GET /api/categories` (JOB-01-06); UI `JobListPage` (`JobListPage.tsx:12` `JOB_PAGE_SIZE=9`) + `JobDetailPage` (Apply nếu `isUser`, Edit nếu `isRecruiter` + owner); roles canonical `User/Recruiter/Admin` (`lib/roles.ts:1`, `Employer` alias deprecated)
+- **Jobs (WEB-01-02/03, JOB-01, SEARCH-01)**: `GET /api/search/jobs?q=&location=&page=&size=` (SEARCH-01-04: `page` 0-based, `size` 1..100 default 20 server — client dùng `JOB_PAGE_SIZE=9` cho grid 3×3, vẫn trong spec, đổi lên 20 chỉ cần sửa hằng), `GET /api/jobs/{id}` (JOB-01-05), `GET /api/categories` (JOB-01-06); UI `JobListPage` + `JobDetailPage` (Apply nếu `isUser`, Edit nếu `isRecruiter` + owner); roles canonical `User/Recruiter/Admin` (`lib/roles.ts:1`, `Employer` alias deprecated)
+- **Advanced search (ADV-01, Week 6)**: filter bar for salary (VND/USD), skills (AND/OR + autocomplete `GET /api/search/skills`), location including Remote, employment type, experience, category, sort (`relevance` / `created_at_desc` / `salary_desc` / `salary_asc`). Query string is the source of truth. Tries `GET /api/search/advanced` then `GET /api/search/jobs`; mock fallback with facets. **TanStack Query** caches search/categories/job detail for 5 minutes (`lib/queryClient.ts`).
 - **Apply + Profile + History (WEB-01-04/05/06, APP-01, PROFILE-01)**: form `POST /api/applications` FormData `job_id` + `cover_letter` + `cv_file` (PDF/DOC/DOCX ≤5MB, 409 duplicate); `GET /api/applications/me` + `GET /api/applications/{id}`; hồ sơ `GET/PUT /api/profile/me|/profile`, skills/experience/education CRUD. UI `/jobs/:id/apply`, `/profile`, `/applications`, `/applications/:id`. Fallback `localStorage` khi app-svc/profile-svc chưa chạy.
 
 ## Setup
@@ -37,7 +38,10 @@ src/
   mocks/jobsMock.ts   -> 16 seed jobs fallback when job-svc not running
   lib/config.ts       -> resolveApiBaseUrl (gateway-first VITE_API_BASE_URL)
   lib/api.ts          -> axios instance + auth helpers (register/login/me/logout + refresh)
-  lib/jobsApi.ts      -> fetchJobs/fetchJobById/fetchCategories (SEARCH-01) + mock fallback + formatSalary/timeAgo
+  lib/jobsApi.ts      -> fetchJobs (ADV-01 + SEARCH-01) + skills/locations + mock facets
+  lib/queryClient.ts  -> TanStack Query staleTime 5m
+  lib/searchFilters.ts -> URL <-> ADV-01 filters
+  components/AdvancedFilters.tsx, AppHeader.tsx, ProtectedRoute.tsx, JobCard.tsx, SearchBar.tsx, Pagination.tsx
   lib/validation.ts   -> SRS password regex + email/fullName validators
   contexts/AuthContext.tsx -> login/register/logout/refreshUser, isAuthenticated
   components/AppHeader.tsx, ProtectedRoute.tsx, JobCard.tsx, SearchBar.tsx, Pagination.tsx

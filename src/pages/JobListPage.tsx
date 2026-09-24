@@ -1,111 +1,60 @@
-import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { fetchCategories, fetchJobs } from "../lib/jobsApi";
-import type { PaginatedJobs } from "../types/job";
 import { JobCard } from "../components/JobCard";
 import { SearchBar } from "../components/SearchBar";
 import { Pagination } from "../components/Pagination";
 import { AppHeader } from "../components/AppHeader";
+import { AdvancedFilters } from "../components/AdvancedFilters";
+import { parseSearchParams, hasActiveFilters } from "../lib/searchFilters";
+import { queryKeys } from "../lib/queryClient";
 
-// SRS SEARCH-01-04: page 0-based, size 1..100, default 20 (server)
-const JOB_PAGE_SIZE = 9;
-
-// Fallback chips if API not yet available — must include all 9 backend seeded categories
 const FALLBACK_CATS = ["", "IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering", "Sales", "Hospitality", "Others"];
-
-// Hero categories like TopCV left panel (display label -> backend category value)
-const HERO_CATS: { label: string; value: string }[] = [
-  { label: "Kinh doanh/Bán hàng", value: "Sales" },
-  { label: "Marketing/PR/Quảng cáo", value: "Marketing" },
-  { label: "Chăm sóc khách hàng (Custome...", value: "Others" },
-  { label: "Nhân sự/Hành chính/Pháp chế", value: "Healthcare" },
-  { label: "Công nghệ Thông tin", value: "IT" },
-  { label: "Lao động phổ thông", value: "Engineering" },
-];
-
-const LOC_PILLS = ["Tất cả", "Hà Nội", "Thành phố Hồ Chí Minh (cũ)", "Miền Bắc", "Miền Nam"];
 
 export default function JobListPage() {
   const [sp, setSp] = useSearchParams();
-  const q = sp.get("q") || "";
-  const location = sp.get("location") || "";
-  const category = sp.get("category") || "";
-  const pageParam = Number(sp.get("page"));
-  const page = Number.isFinite(pageParam) && pageParam >= 0 ? pageParam : 0;
-  const [data, setData] = useState<PaginatedJobs | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
-  const [cats, setCats] = useState<string[]>(FALLBACK_CATS);
-  const [catsLoading, setCatsLoading] = useState(true);
-  const [catsErr, setCatsErr] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"vanphong" | "phothong">("vanphong");
-  const [heroPage, setHeroPage] = useState(1);
+  const params = parseSearchParams(sp);
 
-  useEffect(() => {
-    let alive = true;
-    setCatsLoading(true); setCatsErr(null);
-    fetchCategories()
-      .then((list) => {
-        if (!alive) return;
-        if (Array.isArray(list) && list.length > 0) {
-          const names = [...new Set(list.map((c) => c.name).filter(Boolean))];
-          const merged = ["", ...names];
-          for (const f of FALLBACK_CATS) if (f && !merged.includes(f)) merged.push(f);
-          setCats(merged);
-        }
-      })
-      .catch((e) => { if (alive) setCatsErr(e?.message || "Load categories failed"); })
-      .finally(() => { if (alive) setCatsLoading(false); });
-    return () => { alive = false; };
-  }, []);
+  const jobsQuery = useQuery({
+    queryKey: queryKeys.jobs(params),
+    queryFn: () => fetchJobs(params),
+  });
 
-  function retryCats() {
-    setCatsLoading(true); setCatsErr(null);
-    fetchCategories()
-      .then((list) => {
-        if (Array.isArray(list) && list.length > 0) {
-          const names = [...new Set(list.map((c) => c.name).filter(Boolean))];
-          const merged = ["", ...names];
-          for (const f of FALLBACK_CATS) if (f && !merged.includes(f)) merged.push(f);
-          setCats(merged);
-        }
-      })
-      .catch((e) => setCatsErr(e?.message || "Load categories failed"))
-      .finally(() => setCatsLoading(false));
-  }
+  const catsQuery = useQuery({
+    queryKey: queryKeys.categories,
+    queryFn: fetchCategories,
+  });
 
-  useEffect(() => {
-    let alive = true;
-    setLoading(true); setErr(null);
-    fetchJobs({ q, location, category: category || undefined, page, size: JOB_PAGE_SIZE })
-      .then((d) => { if (alive) setData(d); })
-      .catch((e) => { if (alive) setErr(e.message || "Load failed"); })
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
-  }, [q, location, category, page]);
+  const data = jobsQuery.data;
+  const loading = jobsQuery.isPending;
+  const err = jobsQuery.error instanceof Error ? jobsQuery.error.message : jobsQuery.isError ? "Load failed" : null;
+  const names = (catsQuery.data ?? []).map((c) => c.name).filter(Boolean);
+  const mergedCats = [...new Set([...names, ...FALLBACK_CATS.filter(Boolean)])];
 
-  function update(next: Record<string, string>) {
+  function update(next: Record<string, string | undefined>) {
     const n = new URLSearchParams(sp);
     Object.entries(next).forEach(([k, v]) => {
-      if (!v) n.delete(k); else n.set(k, v);
+      if (v == null || v === "") n.delete(k);
+      else n.set(k, v);
     });
+    if (!("page" in next)) n.set("page", "0");
+    if (n.get("page") === "0") n.delete("page");
     setSp(n, { replace: false });
+  }
+
+  function clearFilters() {
+    setSp(params.q ? { q: params.q } : {}, { replace: false });
   }
 
   return (
     <>
       <AppHeader />
-      {/* TopCV Hero */}
       <div className="topcv-hero">
         <div className="container" style={{ position: "relative", paddingTop: 18, paddingBottom: 28 }}>
           <h1 className="topcv-hero-title">TopCV - Tạo CV, Tìm việc làm, Tuyển dụng hiệu quả</h1>
           <div className="topcv-search-wrap">
-            <SearchBar initialQ={q} initialLoc={location} onSearch={(nq, nloc) => update({ q: nq, location: nloc, page: "0" })} />
+            <SearchBar initialQ={params.q || ""} initialLoc={params.location || ""} onSearch={(nq, nloc) => update({ q: nq || undefined, location: nloc || undefined })} />
           </div>
-
-        
-
-          {/* carousel dots */}
           <div className="topcv-dots">
             <span className="topcv-dot" />
             <span className="topcv-dot active" />
@@ -115,45 +64,25 @@ export default function JobListPage() {
       </div>
 
       <div className="container" style={{ paddingTop: 18 }}>
-       
+        <AdvancedFilters
+          params={params}
+          facets={data?.facets}
+          categories={mergedCats}
+          onChange={update}
+          onClear={clearFilters}
+        />
 
-        {/* Filter bar */}
-        <div className="topcv-filter-bar">
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span className="topcv-filter-label">Lọc theo:</span>
-            <div className="topcv-filter-select">
-              <span>Địa điểm</span>
-              <span>▾</span>
-            </div>
-            <button className="topcv-circle-btn topcv-circle-btn--light">‹</button>
-            <div className="topcv-pills">
-              {LOC_PILLS.map((lp) => {
-                const isActive = (lp === "Tất cả" && !location) || location === lp;
-                const nextLoc = lp === "Tất cả" ? "" : lp;
-                return (
-                  <button
-                    key={lp}
-                    className={`topcv-pill ${isActive ? "active" : ""}`}
-                    onClick={() => update({ location: nextLoc, page: "0" })}
-                  >
-                    {lp}
-                  </button>
-                );
-              })}
-            </div>
-            <button className="topcv-circle-btn topcv-circle-btn--light">›</button>
+        {catsQuery.isError && (
+          <div className="hint" style={{ margin: "8px 0", color: "#dc2626" }}>
+            Lỗi danh mục <button className="chip" onClick={() => void catsQuery.refetch()}>Thử lại</button>
           </div>
-        </div>
+        )}
+        {catsQuery.isPending && <div className="hint" style={{ margin: "8px 0" }}>Đang tải danh mục…</div>}
 
-        {/* Hidden original cats for API fallback debug (keep functionality) */}
-        {catsErr && <div className="hint" style={{ margin: "8px 0", color: "#dc2626" }}>Lỗi danh mục <button className="chip" onClick={retryCats}>Thử lại</button></div>}
-        {catsLoading && <div className="hint" style={{ margin: "8px 0" }}>Đang tải danh mục…</div>}
-
-        {/* Hint bar */}
         <div className="topcv-hint">
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <span style={{ background: "#00b14f", color: "white", fontSize: 10, fontWeight: 700, padding: "2px 5px", borderRadius: 4 }}>Gợi ý:</span>
-            Di chuột vào tiêu đề việc làm để xem thêm thông tin chi tiết
+            Lọc theo lương, kỹ năng, loại hình, kinh nghiệm — kết quả được cache 5 phút (React Query)
           </span>
           <button className="topcv-hint-close" onClick={(e) => ((e.target as HTMLElement).parentElement!.style.display = "none")}>×</button>
         </div>
@@ -164,6 +93,7 @@ export default function JobListPage() {
           <div className="empty">
             <h3>Không tìm thấy việc phù hợp</h3>
             <p className="hint">Thử bỏ bộ lọc hoặc tìm từ khóa khác.</p>
+            {hasActiveFilters(params) && <button className="btn btn-ghost" onClick={clearFilters}>Xóa bộ lọc</button>}
           </div>
         )}
         {data && !loading && data.items.length > 0 && (
@@ -171,8 +101,6 @@ export default function JobListPage() {
             <div className="topcv-grid">
               {data.items.map((j, idx) => <JobCard key={j.id} job={j} index={idx} />)}
             </div>
-            {/* TopCV pagination like image: circles + 12 / 111 trang */}
-  
             <div style={{ marginTop: 10 }}>
               <Pagination page={data.page} totalPages={data.totalPages} onPage={(p) => update({ page: String(p) })} />
               <div className="hint" style={{ textAlign: "center", marginTop: 6 }}> Trang {data.page + 1}/{data.totalPages} — Tổng {data.total} việc</div>
