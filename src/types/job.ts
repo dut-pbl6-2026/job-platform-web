@@ -75,7 +75,18 @@ export interface Job {
   createdAt: string;
   updatedAt: string;
   recruiterId?: string;
+  skills?: string[];
 }
+
+export type FacetBucket = { value: string; count: number };
+
+export type SearchFacets = {
+  location?: FacetBucket[];
+  employmentType?: FacetBucket[];
+  experienceLevel?: FacetBucket[];
+  category?: FacetBucket[];
+  skills?: FacetBucket[];
+};
 
 export interface PaginatedJobs {
   items: Job[];
@@ -83,6 +94,7 @@ export interface PaginatedJobs {
   page: number;
   size: number;
   totalPages: number;
+  facets?: SearchFacets;
 }
 
 export interface JobSearchParams {
@@ -95,5 +107,8 @@ export interface JobSearchParams {
   experienceLevel?: string;
   minSalary?: number;
   maxSalary?: number;
-  sortBy?: string; // newest | oldest | salary_desc | salary_asc
+  sortBy?: string; // relevance | created_at_desc | salary_desc | salary_asc
+  skills?: string;
+  skillOp?: "and" | "or";
+  salaryCurrency?: string;
 }
