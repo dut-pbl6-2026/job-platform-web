@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AdminShell } from "../components/AdminShell";
+import { ActivityLineChart, CategoryBarChart, StatusDoughnutChart } from "../components/StatsCharts";
 import { fetchAdminHealth, fetchAdminStatistics } from "../lib/adminApi";
 import type { AdminHealth, AdminPeriod, AdminStatistics } from "../types/admin";
 
@@ -28,8 +29,6 @@ export default function AdminDashboardPage() {
     return () => { alive = false; };
   }, [period]);
 
-  const maxBar = Math.max(1, ...(stats?.series.map((p) => Math.max(p.users, p.jobs, p.applications)) ?? [1]));
-
   return (
     <AdminShell title="Bảng quản trị" lead="Thống kê nền tảng và hàng chờ duyệt tin.">
       <div className="status-pills" role="tablist">
@@ -51,34 +50,17 @@ export default function AdminDashboardPage() {
           </div>
           <div className="admin-grid">
             <div className="card">
-              <h2 className="section-h">Hoạt động</h2>
-              <ul className="admin-bars">
-                {stats.series.map((point) => (
-                  <li key={point.label}>
-                    <span>{point.label}</span>
-                    <div className="admin-bar-track" title={`${point.users} user · ${point.jobs} tin · ${point.applications} đơn`}>
-                      <i style={{ width: `${(point.applications / maxBar) * 100}%` }} />
-                    </div>
-                    <strong>{point.applications}</strong>
-                  </li>
-                ))}
-              </ul>
-              <p className="hint">Cột là số đơn ứng tuyển trong kỳ.</p>
+              <h2 className="section-h">Xu hướng hoạt động</h2>
+              <ActivityLineChart stats={stats} />
             </div>
-            <div className="card">
-              <h2 className="section-h">Tin theo danh mục (chờ duyệt)</h2>
-              {stats.categories.length === 0 && <p className="hint">Không có tin chờ duyệt.</p>}
-              <ul className="stack-list">
-                {stats.categories.map((c) => (
-                  <li key={c.name} className="stack-item"><span>{c.name}</span><strong>{c.count}</strong></li>
-                ))}
-              </ul>
-              <h2 className="section-h" style={{ marginTop: 16 }}>Trạng thái đơn</h2>
-              <div className="kv-grid">
-                <div><span className="hint">Chờ</span><strong>{stats.applicationStatus.pending}</strong></div>
-                <div><span className="hint">Đã xem</span><strong>{stats.applicationStatus.reviewed}</strong></div>
-                <div><span className="hint">Nhận</span><strong>{stats.applicationStatus.accepted}</strong></div>
-                <div><span className="hint">Từ chối</span><strong>{stats.applicationStatus.rejected}</strong></div>
+            <div className="admin-side-charts">
+              <div className="card">
+                <h2 className="section-h">Tin theo danh mục</h2>
+                <CategoryBarChart stats={stats} />
+              </div>
+              <div className="card">
+                <h2 className="section-h">Trạng thái đơn</h2>
+                <StatusDoughnutChart stats={stats} />
               </div>
             </div>
           </div>
