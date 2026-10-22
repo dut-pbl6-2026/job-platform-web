@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { isAdmin } from "../lib/roles";
 import { AppHeader } from "../components/AppHeader";
 
 export default function DashboardPage() {
@@ -24,6 +25,7 @@ export default function DashboardPage() {
             <Link className="btn btn-primary" to="/jobs">Tìm việc</Link>
             <Link className="btn btn-ghost" to="/profile">Hồ sơ</Link>
             <Link className="btn btn-ghost" to="/applications">Đơn của tôi</Link>
+            {isAdmin(user?.role) && <Link className="btn btn-primary" to="/admin">Bảng quản trị</Link>}
           </div>
         </div>
       </div>
