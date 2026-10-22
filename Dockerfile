@@ -13,4 +13,7 @@ FROM nginx:alpine AS runtime
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-HEALTHCHECK --interval=10s --timeout=3s --retries=5 CMD wget -qO- http://localhost/ || exit 1
+# 127.0.0.1, not localhost: alpine resolves localhost to ::1 first, but nginx
+# listens on IPv4 only (listen 80;) -> the probe would fail and mark the
+# container unhealthy even though the site is served correctly.
+HEALTHCHECK --interval=10s --timeout=3s --retries=5 CMD wget -qO- http://127.0.0.1/ || exit 1
