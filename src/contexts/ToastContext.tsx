@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { jobToastPollMs, TOAST_DISMISS_MS, TOAST_STACK_LIMIT } from "../lib/config";
-import { fetchJobs } from "../lib/jobsApi";
 import { queryKeys } from "../lib/queryClient";
 import { toastFromJob, toastFromSocketMessage } from "../lib/notificationMessages";
 import { connectNotificationSocket } from "../lib/notificationSocket";
@@ -103,6 +102,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const poll = async () => {
       if (stopped || document.hidden) return;
       try {
+        const { fetchJobs } = await import("../lib/jobsApi");
         const page = await fetchJobs({ page: 0, size: 20 });
         const items = page.items ?? [];
         if (!primed) {

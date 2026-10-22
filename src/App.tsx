@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ToastViewport } from "./components/ToastViewport";
@@ -9,20 +9,25 @@ import { AdminRoute } from "./components/AdminShell";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AppFooter } from "./components/AppFooter";
 import { createQueryClient } from "./lib/queryClient";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import DashboardPage from "./pages/DashboardPage";
-import JobListPage from "./pages/JobListPage";
-import JobDetailPage from "./pages/JobDetailPage";
-import ApplyPage from "./pages/ApplyPage";
-import ProfilePage from "./pages/ProfilePage";
-import ApplicationHistoryPage from "./pages/ApplicationHistoryPage";
-import ApplicationDetailPage from "./pages/ApplicationDetailPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import AdminJobsPage from "./pages/AdminJobsPage";
-import AdminUsersPage from "./pages/AdminUsersPage";
+
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const JobListPage = lazy(() => import("./pages/JobListPage"));
+const JobDetailPage = lazy(() => import("./pages/JobDetailPage"));
+const ApplyPage = lazy(() => import("./pages/ApplyPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const ApplicationHistoryPage = lazy(() => import("./pages/ApplicationHistoryPage"));
+const ApplicationDetailPage = lazy(() => import("./pages/ApplicationDetailPage"));
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage"));
+const AdminJobsPage = lazy(() => import("./pages/AdminJobsPage"));
+const AdminUsersPage = lazy(() => import("./pages/AdminUsersPage"));
+
+function PageFallback() {
+  return <div style={{ display: "grid", placeItems: "center", minHeight: "40vh" }}><div className="spinner" /></div>;
+}
 
 export default function App() {
   const [queryClient] = useState(() => createQueryClient());
@@ -33,6 +38,7 @@ export default function App() {
           <BrowserRouter>
             <ToastProvider>
             <ToastViewport />
+            <Suspense fallback={<PageFallback />}>
             <Routes>
             <Route path="/" element={<Navigate to="/jobs" replace />} />
             <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
@@ -51,6 +57,7 @@ export default function App() {
             <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
             <Route path="*" element={<Navigate to="/jobs" replace />} />
             </Routes>
+            </Suspense>
             <AppFooter />
             </ToastProvider>
           </BrowserRouter>

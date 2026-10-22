@@ -5,6 +5,27 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "VITE_");
   return {
     plugins: [react()],
+    build: {
+      target: "es2020",
+      cssCodeSplit: true,
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            const path = id.replace(/\\/g, "/");
+            if (!path.includes("node_modules")) return;
+            if (path.includes("chart.js") || path.includes("react-chartjs-2")) return "charts";
+            if (path.includes("@tanstack")) return "query";
+            if (path.includes("react-router")) return "router";
+            if (path.includes("axios")) return "axios";
+            if (path.includes("/react-dom/") || path.includes("/react/")) return "react";
+          },
+        },
+      },
+    },
+    esbuild: {
+      drop: mode === "production" ? ["console", "debugger"] : [],
+    },
     server: {
       port: 5173,
       proxy: {
