@@ -2,7 +2,7 @@
  * API base URL — always go through the YARP gateway.
  *
  * Dev:  VITE_API_BASE_URL=/api  (Vite proxies /api; /ws/notifications is proxied separately)
- * Prod: VITE_API_BASE_URL=https://jp-gateway.onrender.com/api
+ * Prod: VITE_API_BASE_URL=https://<gateway-host>/api
  */
 export function resolveApiBaseUrl(): string {
   const raw = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();

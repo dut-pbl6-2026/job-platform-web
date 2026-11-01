@@ -36,5 +36,4 @@ jobs:
           path: dist
 
 # Deploy handled by Vercel Git integration (auto on push main)
-# Vercel env: VITE_API_URL=https://job-platform-gateway-prod.onrender.com
 # No GHCR for web per hybrid plan
