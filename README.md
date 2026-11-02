@@ -28,7 +28,7 @@ npm run dev          # http://localhost:5173  (proxy /api -> :5001, /ws -> :5000
 Prod:
 
 ```bash
-VITE_API_BASE_URL=https://jp-gateway.onrender.com/api npm run build
+VITE_API_BASE_URL=https://<gateway-host>/api npm run build
 npm run preview
 ```
 
@@ -81,5 +81,5 @@ vite.config.ts        -> proxy /api -> http://localhost:5001, /ws -> VITE_GATEWA
 - Add `ForgotPasswordPage` + `ResetPasswordPage` (15min TTL)
 
 ## Deploy (Vercel jp-web — TM3 Bao)
-- Service: `jp-web` `https://jp-web.vercel.app` `Vercel` `VITE_API_BASE_URL=https://jp-gateway.onrender.com/api`
+- Service: `jp-web` `https://jp-web.vercel.app` `Vercel` `VITE_API_BASE_URL=https://<gateway-host>/api`
 - Hook: Vercel Git auto `push main`
