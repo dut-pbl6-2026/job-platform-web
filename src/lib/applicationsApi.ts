@@ -111,15 +111,11 @@ export async function submitApplication(payload: {
   cvFile: File;
   applicantId: string;
 }): Promise<{ id: string; message: string }> {
+  // app-svc reads multipart fields job_id, cover_letter, cv_file (api-conventions §8). Send each once.
   const form = new FormData();
   form.append("job_id", payload.jobId);
-  form.append("jobId", payload.jobId);
-  if (payload.coverLetter) {
-    form.append("cover_letter", payload.coverLetter);
-    form.append("coverLetter", payload.coverLetter);
-  }
+  if (payload.coverLetter) form.append("cover_letter", payload.coverLetter);
   form.append("cv_file", payload.cvFile);
-  form.append("cvFile", payload.cvFile);
   try {
     const { data } = await api.post("/applications", form);
     const body = unwrap<Record<string, unknown>>(data);

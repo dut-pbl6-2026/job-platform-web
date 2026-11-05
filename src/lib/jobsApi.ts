@@ -236,24 +236,6 @@ function compactParams(params: JobSearchParams) {
   return next;
 }
 
-function advancedParams(params: JobSearchParams) {
-  const next: Record<string, string | number> = {
-    page: params.page ?? 0,
-    size: params.size ?? 20,
-  };
-  if (params.q) next.q = params.q;
-  if (params.location) next.location = params.location;
-  if (params.category) next.category = params.category;
-  if (params.minSalary != null) next.salary_min = params.minSalary;
-  if (params.maxSalary != null) next.salary_max = params.maxSalary;
-  if (params.skills) next.skills = params.skills;
-  if (params.skillOp && params.skillOp !== "and") next.skill_op = params.skillOp;
-  if (params.employmentType) next.employment_type = params.employmentType;
-  if (params.experienceLevel) next.experience_level = params.experienceLevel;
-  if (params.sortBy && params.sortBy !== "relevance") next.sort = params.sortBy;
-  return next;
-}
-
 function unwrapSearch(data: unknown, params: JobSearchParams): PaginatedJobs | null {
   const normalized = normalizePaginated(data, params);
   if (normalized) return withFacets(normalized, data);
@@ -273,20 +255,8 @@ function unwrapSearch(data: unknown, params: JobSearchParams): PaginatedJobs | n
   return null;
 }
 
-let advancedAvailable: boolean | null = null;
-
+/** search-svc GET /api/search/jobs: the only search endpoint (no /search/advanced). */
 export async function fetchJobs(params: JobSearchParams): Promise<PaginatedJobs> {
-  if (advancedAvailable !== false) {
-    try {
-      const advanced = await api.get("/search/advanced", { params: advancedParams(params) });
-      advancedAvailable = true;
-      const page = unwrapSearch(advanced.data, params);
-      if (page) return page;
-    } catch (e) {
-      const status = (e as { response?: { status?: number } })?.response?.status;
-      if (status === 404 || status === 501) advancedAvailable = false;
-    }
-  }
   try {
     const { data } = await api.get("/search/jobs", { params: compactParams(params) });
     const page = unwrapSearch(data, params);
@@ -341,51 +311,17 @@ export async function fetchCategories(): Promise<{ id: string; name: string }[]>
 
 export type NamedCount = { id: string; name: string; count: number };
 
-function unwrapNamed(data: unknown): NamedCount[] {
-  const rows = Array.isArray(data)
-    ? data
-    : Array.isArray((data as any)?.items)
-      ? (data as any).items
-      : Array.isArray((data as any)?.data)
-        ? (data as any).data
-        : [];
-  return rows
-    .map((row: any, index: number) => {
-      if (typeof row === "string") return { id: row, name: row, count: 0 };
-      const name = String(row?.name ?? row?.value ?? row?.key ?? "");
-      if (!name) return null;
-      return { id: String(row?.id ?? name), name, count: Number(row?.count ?? 0) };
-    })
-    .filter(Boolean) as NamedCount[];
-}
-
 const MOCK_SKILLS = [...new Set(MOCK_JOBS.flatMap((job) => job.skills ?? []))];
-const MOCK_LOCATIONS = [...new Set([...MOCK_JOBS.map((job) => job.location), "Remote"])];
 
+/**
+ * Skill suggestions. search-svc has no /search/skills (nor facets) yet, so this only
+ * offers the mock catalogue; users can always type a skill and press Enter.
+ */
 export async function fetchSkills(q = ""): Promise<NamedCount[]> {
   const keyword = q.trim().toLowerCase();
-  try {
-    const { data } = await api.get("/search/skills", { params: keyword ? { q: keyword } : {} });
-    const rows = unwrapNamed(data);
-    if (rows.length) return rows;
-  } catch { /* mock */ }
   const counts = new Map<string, number>();
   for (const job of MOCK_JOBS) for (const skill of job.skills ?? []) counts.set(skill, (counts.get(skill) ?? 0) + 1);
   return MOCK_SKILLS
-    .filter((name) => !keyword || name.toLowerCase().includes(keyword))
-    .map((name) => ({ id: name, name, count: counts.get(name) ?? 0 }));
-}
-
-export async function fetchLocations(q = ""): Promise<NamedCount[]> {
-  const keyword = q.trim().toLowerCase();
-  try {
-    const { data } = await api.get("/search/locations", { params: keyword ? { q: keyword } : {} });
-    const rows = unwrapNamed(data);
-    if (rows.length) return rows;
-  } catch { /* mock */ }
-  const counts = new Map<string, number>();
-  for (const job of MOCK_JOBS) counts.set(job.location, (counts.get(job.location) ?? 0) + 1);
-  return MOCK_LOCATIONS
     .filter((name) => !keyword || name.toLowerCase().includes(keyword))
     .map((name) => ({ id: name, name, count: counts.get(name) ?? 0 }));
 }
