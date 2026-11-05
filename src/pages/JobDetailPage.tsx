@@ -81,7 +81,9 @@ export default function JobDetailPage() {
           <div className="card">
             <h3 className="detail-company-name">Công ty</h3>
             <div className="detail-company-head">{job.company.name} {job.company.verified && <span className="badge-verify">✓ Verified</span>}</div>
-            <div className="hint">{job.company.industry} • {job.company.address}</div>
+            {(job.company.industry || job.company.address) && (
+              <div className="hint">{[job.company.industry, job.company.address].filter(Boolean).join(" • ")}</div>
+            )}
             {job.company.website && <a href={job.company.website} target="_blank" rel="noreferrer" style={{ fontSize: 13 }}>{job.company.website}</a>}
             <div className="detail-company-meta">Mã công ty: <code>{job.companyId}</code></div>
           </div>

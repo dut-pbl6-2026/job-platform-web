@@ -10,7 +10,8 @@ export type BackendExperienceLevel = "Entry" | "Mid" | "Senior" | "Lead";
 export type DisplayExperienceLevel = "Junior" | "Middle" | "Senior" | "Lead";
 export type ExperienceLevel = BackendExperienceLevel | DisplayExperienceLevel;
 
-export type JobStatus = "active" | "pending" | "closed";
+/** job-svc JobStatus, lower-cased by normalizeJob (api-conventions §6). */
+export type JobStatus = "active" | "pending" | "closed" | "deleted" | "rejected";
 
 // Normalization maps: backend -> display (used for UI tags / filters)
 export const EMPLOYMENT_TYPE_DISPLAY: Record<string, DisplayEmploymentType> = {
