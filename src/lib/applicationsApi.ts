@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { unwrap, pickStr, pickNum } from "./http";
+import { unwrap, pickStr, pickNum, toOneBased, fromOneBased } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
 import type { Application, ApplicationStatus, PaginatedApplications, StatusHistoryEntry } from "../types/application";
 import { APPLICATION_STATUSES } from "../types/application";
@@ -163,13 +163,15 @@ export async function fetchMyApplications(params: { status?: string; page?: numb
   const page = params.page ?? 0;
   const size = params.size ?? 10;
   try {
-    const { data } = await api.get("/applications/me", { params: { status: params.status || undefined, page, size } });
-    const raw = unwrap<Record<string, unknown>>(data);
-    const itemsRaw = (Array.isArray(raw.items) ? raw.items : Array.isArray(raw.content) ? raw.content : Array.isArray(data) ? data : []) as unknown[];
+    // app-svc pages from 1 and returns { items, total, page (1-based), size } without totalPages.
+    const { data } = await api.get("/applications/me", { params: { status: params.status || undefined, page: toOneBased(page), size } });
+    const raw = (data ?? {}) as Record<string, unknown>;
+    const itemsRaw = (Array.isArray(raw.items) ? raw.items : Array.isArray(data) ? data : []) as unknown[];
     const items = itemsRaw.map(normalizeApplication).map(enrichFromJobs);
-    const total = typeof raw.total === "number" ? raw.total : typeof raw.totalElements === "number" ? raw.totalElements : items.length;
-    const totalPages = typeof raw.totalPages === "number" ? raw.totalPages : Math.ceil(total / size) || 1;
-    return { items, total, page: typeof raw.page === "number" ? raw.page : page, size: typeof raw.size === "number" ? raw.size : size, totalPages };
+    const s = pickNum(raw, "size") ?? size;
+    const total = pickNum(raw, "total") ?? items.length;
+    const totalPages = pickNum(raw, "totalPages") ?? (Math.ceil(total / s) || 1);
+    return { items, total, page: fromOneBased(raw.page, page), size: s, totalPages };
   } catch {
     await new Promise((r) => setTimeout(r, 200));
     const res = mockList(params.userId, params.status, page, size);

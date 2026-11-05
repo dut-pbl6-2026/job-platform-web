@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { unwrap, pickNum, pickStr } from "./http";
+import { unwrap, pickNum, pickStr, toOneBased, fromOneBased } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
 import { normalizeRole } from "./roles";
 import type { AdminHealth, AdminPeriod, AdminStatistics, AdminUser, Paginated, PendingJob } from "../types/admin";
@@ -21,14 +21,18 @@ function paginate<T>(items: T[], page: number, size: number): Paginated<T> {
   return { items: items.slice(p * s, p * s + s), total, page: p, size: s, totalPages };
 }
 
-function readPage(raw: unknown, page: number, size: number): { items: unknown[]; page: number; size: number; total: number; totalPages: number } {
-  const body = unwrap<Record<string, unknown>>(raw);
-  const items = (Array.isArray(body.items) ? body.items : Array.isArray(body.content) ? body.content : Array.isArray(raw) ? raw : []) as unknown[];
-  const total = pickNum(body, "total", "totalElements") ?? items.length;
-  const p = pickNum(body, "page", "number") ?? page;
-  const s = pickNum(body, "size") ?? size;
-  const totalPages = pickNum(body, "totalPages") ?? (Math.ceil(total / s) || 1);
-  return { items, page: p, size: s, total, totalPages };
+/**
+ * auth-svc and job-svc admin lists return { data: [...], pagination: { page (1-based), pageSize, totalItems, totalPages } }.
+ * Do not unwrap() first: an array `data` is an object too, and the items would be lost.
+ */
+function readPage(raw: unknown, page0: number, size: number): { items: unknown[]; page: number; size: number; total: number; totalPages: number } {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(r.items) ? r.items : Array.isArray(r.data) ? r.data : Array.isArray(raw) ? raw : []) as unknown[];
+  const meta = (r.pagination && typeof r.pagination === "object" ? r.pagination : r) as Record<string, unknown>;
+  const s = pickNum(meta, "size", "pageSize") ?? size;
+  const total = pickNum(meta, "total", "totalItems") ?? items.length;
+  const totalPages = pickNum(meta, "totalPages") ?? (Math.ceil(total / s) || 1);
+  return { items, page: fromOneBased(pickNum(meta, "page"), page0), size: s, total, totalPages };
 }
 
 function seedUsers(): AdminUser[] {
@@ -234,7 +238,7 @@ export async function fetchAdminUsers(params: { q?: string; role?: string; statu
   const page = params.page ?? 0;
   const size = params.size ?? 8;
   try {
-    const { data } = await api.get("/admin/users", { params: { q: params.q || undefined, role: params.role || undefined, status: params.status || undefined, page, size } });
+    const { data } = await api.get("/admin/users", { params: { q: params.q || undefined, role: params.role || undefined, status: params.status || undefined, page: toOneBased(page), size } });
     const parsed = readPage(data, page, size);
     return { ...parsed, items: parsed.items.map(asUser).filter((x): x is AdminUser => !!x) };
   } catch (e) {
@@ -263,7 +267,7 @@ export async function fetchPendingJobs(params: { page?: number; size?: number })
   const page = params.page ?? 0;
   const size = params.size ?? 8;
   try {
-    const { data } = await api.get("/admin/jobs/pending", { params: { page, size } });
+    const { data } = await api.get("/admin/jobs/pending", { params: { page: toOneBased(page), size } });
     const parsed = readPage(data, page, size);
     return { ...parsed, items: parsed.items.map(asJob).filter((x): x is PendingJob => !!x) };
   } catch (e) {
