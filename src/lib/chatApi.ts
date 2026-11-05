@@ -1,6 +1,6 @@
 import { api, getAccessToken } from "./api";
 import { API_BASE_URL } from "./config";
-import { unwrap, pickStr } from "./http";
+import { unwrap, pickStr, shouldUseMock } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
 import type { ChatJobHint, ChatMessage } from "../types/chat";
 import {
@@ -36,9 +36,22 @@ function statusOf(e: unknown): number | undefined {
     ?? (e as { response?: { status?: number } })?.response?.status;
 }
 
+/**
+ * ai-svc has no /api/ai/session or /api/ai/chat yet (review #22). Without VITE_ENABLE_MOCKS a
+ * missing endpoint (404/501) or unreachable service becomes this error, shown as-is in the UI.
+ */
+export class ChatUnavailableError extends Error {
+  readonly code = "feature_unavailable";
+  constructor() {
+    super("Tính năng chat AI đang phát triển.");
+  }
+}
+
 function isOffline(e: unknown): boolean {
+  if (shouldUseMock(e, "ai chat")) return true;
   const status = statusOf(e);
-  return !status || status === 404 || status >= 500;
+  if (!status || status === 404 || status === 501) throw new ChatUnavailableError();
+  return false;
 }
 
 function estimateTokens(text: string) {
@@ -329,7 +342,7 @@ export async function sendChatMessage(
   } catch (e) {
     const status = statusOf(e);
     if (status === 401 || status === 403 || status === 429) throw e;
-    if (!isOffline(e) && status && status < 500 && status !== 404) throw e;
+    if (!isOffline(e)) throw e;
   }
 
   checkRate(userId);

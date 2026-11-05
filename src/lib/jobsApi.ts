@@ -3,7 +3,8 @@ import type { FacetBucket, Job, JobSearchParams, PaginatedJobs, SearchFacets } f
 import { MOCK_JOBS, MOCK_CATEGORIES } from "../mocks/jobsMock";
 import { normalizeEmploymentType, normalizeExperienceLevel } from "../types/job";
 import { splitCsv, locationMatches } from "./searchFilters";
-import { pickNum, pickStr } from "./http";
+import { pickNum, pickStr, shouldUseMock, httpStatus } from "./http";
+import { MOCKS_ENABLED } from "./config";
 
 /**
  * Single adapter for every Job source, until the services return one shape (Phase 2):
@@ -262,7 +263,8 @@ export async function fetchJobs(params: JobSearchParams): Promise<PaginatedJobs>
     const page = unwrapSearch(data, params);
     if (page) return page;
     return data as PaginatedJobs;
-  } catch {
+  } catch (e) {
+    if (!shouldUseMock(e, "GET /search/jobs")) throw e;
     await new Promise((r) => setTimeout(r, 280));
     return mockSearch(params);
   }
@@ -288,7 +290,9 @@ export async function fetchJobById(id: string): Promise<Job | null> {
     // API may return { data: Job } envelope
     const raw = (data && typeof data === "object" && (data as any).data && !(data as any).title) ? (data as any).data : data;
     return normalizeJob(raw);
-  } catch {
+  } catch (e) {
+    if (httpStatus(e) === 404) return null;
+    if (!shouldUseMock(e, "GET /jobs/{id}")) throw e;
     await new Promise((r) => setTimeout(r, 200));
     const found = MOCK_JOBS.find((j) => j.id === id) ?? null;
     return found ? normalizeJob(found) : null;
@@ -304,7 +308,8 @@ export async function fetchCategories(): Promise<{ id: string; name: string }[]>
     if (Array.isArray((data as any)?.items)) return (data as any).items as any;
     if (Array.isArray((data as any)?.content)) return (data as any).content as any;
     return data as any;
-  } catch {
+  } catch (e) {
+    if (!shouldUseMock(e, "GET /categories")) throw e;
     return MOCK_CATEGORIES;
   }
 }
@@ -318,6 +323,7 @@ const MOCK_SKILLS = [...new Set(MOCK_JOBS.flatMap((job) => job.skills ?? []))];
  * offers the mock catalogue; users can always type a skill and press Enter.
  */
 export async function fetchSkills(q = ""): Promise<NamedCount[]> {
+  if (!MOCKS_ENABLED) return [];
   const keyword = q.trim().toLowerCase();
   const counts = new Map<string, number>();
   for (const job of MOCK_JOBS) for (const skill of job.skills ?? []) counts.set(skill, (counts.get(skill) ?? 0) + 1);

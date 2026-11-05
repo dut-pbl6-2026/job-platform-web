@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { unwrap, pickStr, pickNum } from "./http";
+import { unwrap, pickStr, pickNum, shouldUseMock } from "./http";
 import type { Education, Profile, ProfileUpdate, Skill, WorkExperience } from "../types/profile";
 
 const STORE_PREFIX = "jp.mock.profile.";
@@ -115,10 +115,8 @@ function statusOf(e: unknown): number | undefined {
   return (e as { response?: { status?: number } })?.response?.status;
 }
 
-function isOffline(e: unknown): boolean {
-  const status = (e as { response?: { status?: number } })?.response?.status;
-  return !status || status === 404 || status >= 500;
-}
+/** Mock fallback writes PII to localStorage: only in VITE_ENABLE_MOCKS demo mode. */
+const isOffline = (e: unknown) => shouldUseMock(e, "profile-svc");
 
 export async function fetchMyProfile(userId: string, fullName: string): Promise<Profile> {
   try {

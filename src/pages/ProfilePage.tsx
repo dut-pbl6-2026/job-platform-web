@@ -12,6 +12,7 @@ import {
   updateMyProfile,
 } from "../lib/profileApi";
 import type { Education, Profile, Skill, WorkExperience } from "../types/profile";
+import { apiErrorMessage } from "../lib/http";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -39,7 +40,7 @@ export default function ProfilePage() {
           dateOfBirth: (p.dateOfBirth || "").slice(0, 10),
         });
       })
-      .catch((e) => { if (alive) setErr(e?.message || "Không tải được hồ sơ"); })
+      .catch((e) => { if (alive) setErr(apiErrorMessage(e, "Không tải được hồ sơ")); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [user]);
@@ -149,7 +150,7 @@ function SkillBlock({ userId, skills, onChange }: { userId: string; skills: Skil
       await addSkill(userId, { name: name.trim(), proficiency: prof, yearsOfExperience: years });
       setName(""); setOpen(false);
       await onChange();
-    } catch { setErr("Thêm thất bại"); }
+    } catch (ex) { setErr(apiErrorMessage(ex, "Thêm thất bại")); }
     finally { setBusy(false); }
   }
 
@@ -198,7 +199,7 @@ function ExpBlock({ userId, items, onChange }: { userId: string; items: WorkExpe
       setF({ company: "", title: "", startDate: "", endDate: "", isCurrent: false, description: "" });
       setOpen(false);
       await onChange();
-    } catch { setErr("Thêm thất bại"); }
+    } catch (ex) { setErr(apiErrorMessage(ex, "Thêm thất bại")); }
     finally { setBusy(false); }
   }
 
@@ -260,7 +261,7 @@ function EduBlock({ userId, items, onChange }: { userId: string; items: Educatio
       setF({ institution: "", degree: "", field: "", startDate: "", endDate: "", grade: "" });
       setOpen(false);
       await onChange();
-    } catch { setErr("Thêm thất bại"); }
+    } catch (ex) { setErr(apiErrorMessage(ex, "Thêm thất bại")); }
     finally { setBusy(false); }
   }
 

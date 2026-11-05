@@ -1,3 +1,23 @@
+import { MOCKS_ENABLED } from "./config";
+
+export function httpStatus(e: unknown): number | undefined {
+  return (e as { status?: number; response?: { status?: number } })?.response?.status
+    ?? (e as { status?: number })?.status;
+}
+
+/**
+ * Whether a failed call may fall back to mock data: only with VITE_ENABLE_MOCKS=true, and only
+ * when the backend is unreachable (no response) or failing (5xx). Never on 4xx: a 404 means the
+ * URL or contract is wrong and must surface, not be hidden behind fake data.
+ */
+export function shouldUseMock(e: unknown, what: string): boolean {
+  if (!MOCKS_ENABLED) return false;
+  const status = httpStatus(e);
+  const use = !status || status >= 500;
+  if (use) console.warn(`[mock] ${what}: backend unavailable (${status ?? "no response"}), using mock data`);
+  return use;
+}
+
 /** Unwrap common API envelopes used across services. */
 export function unwrap<T>(raw: unknown): T {
   if (raw && typeof raw === "object" && "data" in (raw as object) && (raw as { data: unknown }).data != null) {

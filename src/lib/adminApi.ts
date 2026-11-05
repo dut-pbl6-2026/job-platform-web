@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { unwrap, pickNum, pickStr, toOneBased, fromOneBased } from "./http";
+import { unwrap, pickNum, pickStr, toOneBased, fromOneBased, shouldUseMock } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
 import { normalizeRole } from "./roles";
 import type { AdminHealth, AdminStatistics, AdminUser, Paginated, PendingJob } from "../types/admin";
@@ -8,10 +8,7 @@ import type { Job } from "../types/job";
 const USERS_KEY = "jp.mock.admin.users";
 const JOBS_KEY = "jp.mock.admin.jobs";
 
-function isOffline(e: unknown): boolean {
-  const status = (e as { response?: { status?: number } })?.response?.status;
-  return !status || status === 404 || status >= 500;
-}
+const isOffline = (e: unknown) => shouldUseMock(e, "admin API");
 
 function paginate<T>(items: T[], page: number, size: number): Paginated<T> {
   const total = items.length;

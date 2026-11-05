@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { unwrap, pickStr, pickNum, toOneBased, fromOneBased } from "./http";
+import { unwrap, pickStr, pickNum, toOneBased, fromOneBased, shouldUseMock, httpStatus } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
 import type { Application, ApplicationStatus, PaginatedApplications, StatusHistoryEntry } from "../types/application";
 import { APPLICATION_STATUSES } from "../types/application";
@@ -123,9 +123,7 @@ export async function submitApplication(payload: {
     const message = pickStr(body, "message") || "Đã gửi hồ sơ";
     return { id, message };
   } catch (e: unknown) {
-    const status = (e as { response?: { status?: number } })?.response?.status;
-    if (status === 409) throw e;
-    if (status && status !== 404 && status < 500) throw e;
+    if (!shouldUseMock(e, "POST /applications")) throw e;
     const existing = loadStore();
     if (existing.some((a) => a.applicantId === payload.applicantId && a.jobId === payload.jobId)) {
       const err = Object.assign(new Error("Đã ứng tuyển tin này"), { response: { status: 409, data: { message: "Bạn đã ứng tuyển tin này rồi" } } });
@@ -168,7 +166,8 @@ export async function fetchMyApplications(params: { status?: string; page?: numb
     const total = pickNum(raw, "total") ?? items.length;
     const totalPages = pickNum(raw, "totalPages") ?? (Math.ceil(total / s) || 1);
     return { items, total, page: fromOneBased(raw.page, page), size: s, totalPages };
-  } catch {
+  } catch (e) {
+    if (!shouldUseMock(e, "GET /applications/me")) throw e;
     await new Promise((r) => setTimeout(r, 200));
     const res = mockList(params.userId, params.status, page, size);
     return { ...res, items: res.items.map(enrichFromJobs) };
@@ -179,7 +178,9 @@ export async function fetchApplicationById(id: string, userId: string): Promise<
   try {
     const { data } = await api.get(`/applications/${id}`);
     return enrichFromJobs(normalizeApplication(unwrap(data)));
-  } catch {
+  } catch (e) {
+    if (httpStatus(e) === 404) return null;
+    if (!shouldUseMock(e, "GET /applications/{id}")) throw e;
     await new Promise((r) => setTimeout(r, 180));
     const found = loadStore().find((a) => a.id === id && a.applicantId === userId) ?? null;
     return found ? enrichFromJobs(found) : null;
