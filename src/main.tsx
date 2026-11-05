@@ -5,6 +5,7 @@ import "./styles/auth.css";
 import "./styles/jobs.css";
 import "./styles/toast.css";
 import "./styles/admin.css";
+import "./styles/chat.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

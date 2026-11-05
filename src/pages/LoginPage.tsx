@@ -57,7 +57,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email.trim(), pwd, rememberMe);
-      nav("/dashboard");
+      nav("/jobs");
     } catch (ex: any) {
       const msg = ex?.response?.data?.message || ex?.response?.data?.title || "";
       if (ex?.response?.status === 401) setErr("Email hoặc mật khẩu không đúng");

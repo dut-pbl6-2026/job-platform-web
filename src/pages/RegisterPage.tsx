@@ -112,7 +112,7 @@ export default function RegisterPage() {
         role: apiRole,
         ...(apiRole === "Recruiter" && companyId.trim() ? { companyId: companyId.trim() } : {}),
       });
-      nav("/dashboard");
+      nav("/jobs");
     } catch (ex: any) {
       const data = ex?.response?.data;
       const status = ex?.response?.status;

@@ -39,6 +39,7 @@ export function AppFooter() {
           <Link to="/jobs">Việc làm mới nhất</Link>
           <Link to={isAuthenticated ? "/profile" : "/register"}>Hồ sơ &amp; CV</Link>
           {(!isAuthenticated || isUser(user?.role)) && <Link to="/applications">Đơn ứng tuyển của tôi</Link>}
+          {isAuthenticated && <Link to="/chat">Trợ lý AI</Link>}
           {!isAuthenticated && <Link to="/login">Đăng nhập</Link>}
           {!isAuthenticated && <Link to="/register">Đăng ký tài khoản</Link>}
         </nav>
