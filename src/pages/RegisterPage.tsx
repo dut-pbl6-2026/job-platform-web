@@ -4,6 +4,7 @@ import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail, validateFullName, validatePassword } from "../lib/validation";
 import { toApiRole } from "../lib/roles";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 function strength(pwd: string): { score: number; label: string; color: string } {
   if (!pwd) return { score: 0, label: "", color: "#e2e8f0" };
@@ -76,6 +77,7 @@ function IconBuilding() {
 }
 
 export default function RegisterPage() {
+  useDocumentTitle("Đăng ký");
   const { register } = useAuth();
   const nav = useNavigate();
   const { target, query } = useAuthRedirect();

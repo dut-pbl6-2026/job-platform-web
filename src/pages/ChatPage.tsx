@@ -1,7 +1,9 @@
 import { AppHeader } from "../components/AppHeader";
 import { ChatPanel } from "../components/ChatPanel";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ChatPage() {
+  useDocumentTitle("Trợ lý AI");
   return (
     <>
       <AppHeader />

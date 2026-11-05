@@ -7,6 +7,7 @@ import { isRecruiter, isUser } from "../lib/roles";
 import { queryKeys } from "../lib/queryClient";
 import { safeHttpUrl } from "../lib/safeUrl";
 import { loginUrl } from "../lib/redirect";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function JobDetailPage() {
   const { id } = useParams();
@@ -25,6 +26,8 @@ export default function JobDetailPage() {
   const job = jobQuery.data;
   const loading = jobQuery.isPending;
   const err = jobQuery.error instanceof Error ? jobQuery.error.message : jobQuery.isError ? "Load failed" : null;
+  // Title needs the loaded job; it must stay above the early returns below (rules of hooks).
+  useDocumentTitle(job ? `${job.title} · ${job.company.name}` : "Việc làm");
 
   if (loading) return (<><AppHeader /><div className="container"><div className="skeleton-detail" /></div></>);
   if (err) return (<><AppHeader /><div className="container"><div className="alert alert-error">{err}</div><Link to="/jobs" className="btn btn-ghost">← Quay lại danh sách</Link></div></>);

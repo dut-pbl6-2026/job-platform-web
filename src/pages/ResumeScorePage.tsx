@@ -5,6 +5,7 @@ import { fetchJobById, fetchJobs, formatSalary } from "../lib/jobsApi";
 import { SCORE_CV_ACCEPT, scoreResume, toScoreError, validateScoreCv } from "../lib/aiApi";
 import type { Job } from "../types/job";
 import type { ResumeScore, ScoreBand, ScoreError } from "../types/resumeScore";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import "../styles/resumeScore.css";
 
 const BAND_TEXT: Record<ScoreBand, string> = { Strong: "Rất phù hợp", Good: "Phù hợp", Partial: "Phù hợp một phần", Weak: "Chưa phù hợp" };
@@ -108,6 +109,7 @@ function Result({ r }: { r: ResumeScore }) {
 }
 
 export default function ResumeScorePage() {
+  useDocumentTitle("Kiểm tra độ phù hợp CV");
   const [params, setParams] = useSearchParams();
   const jobId = params.get("jobId") || "";
   const fileRef = useRef<HTMLInputElement>(null);

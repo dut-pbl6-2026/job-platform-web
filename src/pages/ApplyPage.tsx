@@ -7,8 +7,10 @@ import { fetchJobById, formatSalary } from "../lib/jobsApi";
 import { CV_ACCEPT, submitApplication, validateCvFile } from "../lib/applicationsApi";
 import { loadErrorMessage } from "../lib/http";
 import type { Job } from "../types/job";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ApplyPage() {
+  useDocumentTitle("Ứng tuyển");
   const { id } = useParams();
   const { user, isAuthenticated } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);

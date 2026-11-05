@@ -11,6 +11,7 @@ import { HomeShowcase } from "../components/HomeShowcase";
 import { parseSearchParams, hasActiveFilters } from "../lib/searchFilters";
 import { queryKeys } from "../lib/queryClient";
 import { JOB_CATEGORIES } from "../lib/labels";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 // `value` is the backend category *name*; search-svc filters by category *id*, resolved via GET /api/categories.
 // Labels come from lib/labels.ts so one category never has two names.
@@ -38,6 +39,7 @@ const BANNERS = [
 ];
 
 export default function JobListPage() {
+  useDocumentTitle("Việc làm");
   const [sp, setSp] = useSearchParams();
   const params = parseSearchParams(sp);
   const [heroPage, setHeroPage] = useState(0);

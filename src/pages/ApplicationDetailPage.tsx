@@ -7,8 +7,10 @@ import { apiErrorMessage } from "../lib/http";
 import { timeAgo } from "../lib/jobsApi";
 import type { Application } from "../types/application";
 import { STATUS_LABEL } from "../types/application";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ApplicationDetailPage() {
+  useDocumentTitle("Chi tiết đơn ứng tuyển");
   const { id } = useParams();
   const { user } = useAuth();
   const [app, setApp] = useState<Application | null>(null);

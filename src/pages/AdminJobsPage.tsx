@@ -6,10 +6,12 @@ import { decideJob, fetchAdminJob, fetchPendingJobs } from "../lib/adminApi";
 import { formatSalary, timeAgo } from "../lib/jobsApi";
 import { apiErrorMessage } from "../lib/http";
 import type { Paginated, PendingJob } from "../types/admin";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const PAGE_SIZE = 6;
 
 export default function AdminJobsPage() {
+  useDocumentTitle("Quản trị: Duyệt tin");
   const [sp, setSp] = useSearchParams();
   const page = Math.max(0, Number(sp.get("page")) || 0);
   const [data, setData] = useState<Paginated<PendingJob> | null>(null);

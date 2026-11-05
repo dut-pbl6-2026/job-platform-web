@@ -2,8 +2,10 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { validatePassword } from "../lib/validation";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ResetPasswordPage() {
+  useDocumentTitle("Đặt lại mật khẩu");
   const { resetPassword } = useAuth();
   const nav = useNavigate();
   const [params] = useSearchParams();

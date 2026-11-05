@@ -13,8 +13,10 @@ import {
 } from "../lib/profileApi";
 import type { Education, Profile, Skill, WorkExperience } from "../types/profile";
 import { apiErrorMessage } from "../lib/http";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ProfilePage() {
+  useDocumentTitle("Hồ sơ của tôi");
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);

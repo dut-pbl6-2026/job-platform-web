@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail } from "../lib/validation";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ForgotPasswordPage() {
+  useDocumentTitle("Quên mật khẩu");
   const { forgotPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [msg, setMsg] = useState<string | null>(null);

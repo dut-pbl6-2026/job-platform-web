@@ -4,6 +4,7 @@ import { AdminShell } from "../components/AdminShell";
 import { fetchAdminHealth, fetchAdminStatistics } from "../lib/adminApi";
 import { apiErrorMessage } from "../lib/http";
 import type { AdminHealth, AdminStatistics } from "../types/admin";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const SECTION_LABEL: Record<AdminStatistics["unavailable"][number], string> = {
   users: "người dùng",
@@ -12,6 +13,7 @@ const SECTION_LABEL: Record<AdminStatistics["unavailable"][number], string> = {
 };
 
 export default function AdminDashboardPage() {
+  useDocumentTitle("Quản trị: Tổng quan");
   const [stats, setStats] = useState<AdminStatistics | null>(null);
   const [health, setHealth] = useState<AdminHealth | null>(null);
   const [err, setErr] = useState<string | null>(null);

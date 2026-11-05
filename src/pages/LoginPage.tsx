@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail } from "../lib/validation";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 function IconMail() {
   return (
@@ -35,6 +36,7 @@ function IconEye({ off }: { off?: boolean }) {
 }
 
 export default function LoginPage() {
+  useDocumentTitle("Đăng nhập");
   const { login } = useAuth();
   const nav = useNavigate();
   const { target, query } = useAuthRedirect();

@@ -9,10 +9,12 @@ import { loadErrorMessage } from "../lib/http";
 import { timeAgo } from "../lib/jobsApi";
 import type { Application, ApplicationStatus, PaginatedApplications } from "../types/application";
 import { APPLICATION_STATUSES, STATUS_LABEL } from "../types/application";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const PAGE_SIZE = 8;
 
 export default function ApplicationHistoryPage() {
+  useDocumentTitle("Đơn ứng tuyển của tôi");
   const { user } = useAuth();
   const [sp, setSp] = useSearchParams();
   const status = (sp.get("status") || "") as ApplicationStatus | "";

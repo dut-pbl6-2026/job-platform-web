@@ -5,10 +5,12 @@ import { Pagination } from "../components/Pagination";
 import { fetchAdminUsers, setAdminUserActive } from "../lib/adminApi";
 import { apiErrorMessage } from "../lib/http";
 import type { AdminUser, Paginated } from "../types/admin";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const PAGE_SIZE = 8;
 
 export default function AdminUsersPage() {
+  useDocumentTitle("Quản trị: Người dùng");
   const [sp, setSp] = useSearchParams();
   const q = sp.get("q") || "";
   const role = sp.get("role") || "";
