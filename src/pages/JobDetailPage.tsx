@@ -7,7 +7,14 @@ import { isRecruiter, isUser } from "../lib/roles";
 import { queryKeys } from "../lib/queryClient";
 import { safeHttpUrl } from "../lib/safeUrl";
 import { loginUrl } from "../lib/redirect";
+import { loadErrorMessage } from "../lib/http";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+
+class JobNotFoundError extends Error {
+  constructor() {
+    super("Việc làm không tồn tại hoặc đã bị gỡ.");
+  }
+}
 
 export default function JobDetailPage() {
   const { id } = useParams();
@@ -17,20 +24,38 @@ export default function JobDetailPage() {
     queryKey: queryKeys.job(id || ""),
     queryFn: async () => {
       const found = await fetchJobById(id!);
-      if (!found) throw new Error("Việc làm không tồn tại");
+      if (!found) throw new JobNotFoundError();
       return found;
     },
     enabled: !!id,
+    // A missing job will not appear on retry; real failures keep the default single retry.
+    retry: (count, e) => !(e instanceof JobNotFoundError) && count < 1,
   });
 
   const job = jobQuery.data;
   const loading = jobQuery.isPending;
-  const err = jobQuery.error instanceof Error ? jobQuery.error.message : jobQuery.isError ? "Load failed" : null;
+  const notFound = jobQuery.error instanceof JobNotFoundError;
+  const err = !jobQuery.isError ? null : notFound ? (jobQuery.error as Error).message : loadErrorMessage(jobQuery.error, "việc làm này");
   // Title needs the loaded job; it must stay above the early returns below (rules of hooks).
   useDocumentTitle(job ? `${job.title} · ${job.company.name}` : "Việc làm");
 
   if (loading) return (<><AppHeader /><div className="container"><div className="skeleton-detail" /></div></>);
-  if (err) return (<><AppHeader /><div className="container"><div className="alert alert-error">{err}</div><Link to="/jobs" className="btn btn-ghost">← Quay lại danh sách</Link></div></>);
+  if (err) return (
+    <>
+      <AppHeader />
+      <div className="container">
+        <div className="alert alert-error" role="alert">{err}</div>
+        <div className="row" style={{ marginTop: 12, gap: 8 }}>
+          {!notFound && (
+            <button type="button" className="btn btn-primary" disabled={jobQuery.isFetching} onClick={() => void jobQuery.refetch()}>
+              {jobQuery.isFetching ? "Đang thử lại…" : "Thử lại"}
+            </button>
+          )}
+          <Link to="/jobs" className="btn btn-ghost">← Quay lại danh sách</Link>
+        </div>
+      </div>
+    </>
+  );
   if (!job) return null;
 
   const website = safeHttpUrl(job.company.website);

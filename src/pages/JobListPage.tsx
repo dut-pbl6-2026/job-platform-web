@@ -11,6 +11,7 @@ import { HomeShowcase } from "../components/HomeShowcase";
 import { parseSearchParams, hasActiveFilters } from "../lib/searchFilters";
 import { queryKeys } from "../lib/queryClient";
 import { JOB_CATEGORIES } from "../lib/labels";
+import { loadErrorMessage } from "../lib/http";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 // `value` is the backend category *name*; search-svc filters by category *id*, resolved via GET /api/categories.
@@ -58,7 +59,7 @@ export default function JobListPage() {
 
   const data = jobsQuery.data;
   const loading = jobsQuery.isPending;
-  const err = jobsQuery.error instanceof Error ? jobsQuery.error.message : jobsQuery.isError ? "Load failed" : null;
+  const err = jobsQuery.isError ? loadErrorMessage(jobsQuery.error, "danh sách việc làm") : null;
   const categories = (catsQuery.data ?? []).filter((c) => c.id && c.name);
   const catIdOf = (name: string) => categories.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id;
   const catPages = Math.max(1, Math.ceil(HERO_CATS.length / 6));
@@ -182,7 +183,14 @@ export default function JobListPage() {
           )}
 
           {loading && <div className="skeleton-grid">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton-card" />)}</div>}
-          {err && <div className="alert alert-error">{err}</div>}
+          {err && (
+            <div className="alert alert-error" role="alert">
+              <span>{err}</span>{" "}
+              <button type="button" className="btn btn-ghost btn-sm" disabled={jobsQuery.isFetching} onClick={() => void jobsQuery.refetch()}>
+                {jobsQuery.isFetching ? "Đang thử lại…" : "Thử lại"}
+              </button>
+            </div>
+          )}
           {data && !loading && items.length === 0 && (
             <div className="empty">
               <h3>Không tìm thấy việc phù hợp</h3>
