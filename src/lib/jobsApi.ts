@@ -4,13 +4,62 @@ import { MOCK_JOBS, MOCK_CATEGORIES } from "../mocks/jobsMock";
 import { normalizeEmploymentType, normalizeExperienceLevel } from "../types/job";
 import { splitCsv, locationMatches } from "./searchFilters";
 
+/** First non-empty value among `keys` (lets one normalizer read camelCase and snake_case). */
+function pick(raw: Record<string, any>, ...keys: string[]): any {
+  for (const key of keys) {
+    const value = raw[key];
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+  return undefined;
+}
+
+function toNumber(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Normalize every Job shape the app receives into the UI `Job` (nested `company` / `category`):
+ * - mocks (`jobsMock.ts`): already nested `company: { name }`, `category: { name }`
+ * - job-svc `GET /api/jobs/{id}` and camelCase search-svc: flat `companyName`, `categoryName`, `salaryCurrency`
+ * - older search-svc builds: snake_case (`company_name`, `salary_min`, `currency`, ...)
+ * Components read `job.company.name` / `job.category.name`, so those objects must always exist.
+ */
 function normalizeJob(raw: any): Job {
-  if (!raw) return raw as Job;
+  if (!raw || typeof raw !== "object") return raw as Job;
+
+  const companyObj = raw.company && typeof raw.company === "object" ? raw.company : undefined;
+  const categoryObj = raw.category && typeof raw.category === "object" ? raw.category : undefined;
+  const companyId = String(pick(raw, "companyId", "company_id") ?? companyObj?.id ?? "");
+  const categoryId = String(pick(raw, "categoryId", "category_id") ?? categoryObj?.id ?? "");
+  const companyName = companyObj?.name ?? pick(raw, "companyName", "company_name") ?? (typeof raw.company === "string" ? raw.company : "");
+  const categoryName = categoryObj?.name ?? pick(raw, "categoryName", "category_name") ?? (typeof raw.category === "string" ? raw.category : "");
+  const employmentType = pick(raw, "employmentType", "employment_type");
+  const experienceLevel = pick(raw, "experienceLevel", "experience_level");
+  const skills = raw.skills;
+
   return {
     ...raw,
-    employmentType: raw.employmentType ? normalizeEmploymentType(String(raw.employmentType)) : raw.employmentType,
-    experienceLevel: raw.experienceLevel ? normalizeExperienceLevel(String(raw.experienceLevel)) : raw.experienceLevel,
-    skills: Array.isArray(raw.skills) ? raw.skills.map(String) : raw.skills,
+    id: String(raw.id ?? ""),
+    title: String(raw.title ?? ""),
+    description: String(raw.description ?? ""),
+    company: { ...companyObj, id: String(companyObj?.id ?? companyId), name: String(companyName) },
+    companyId,
+    category: { ...categoryObj, id: String(categoryObj?.id ?? categoryId), name: String(categoryName) },
+    categoryId,
+    location: String(raw.location ?? ""),
+    salaryMin: toNumber(pick(raw, "salaryMin", "salary_min")),
+    salaryMax: toNumber(pick(raw, "salaryMax", "salary_max")),
+    salaryCurrency: String(pick(raw, "salaryCurrency", "salary_currency", "currency") ?? "VND"),
+    requirements: raw.requirements ?? null,
+    benefits: raw.benefits ?? null,
+    employmentType: employmentType ? normalizeEmploymentType(String(employmentType)) : employmentType,
+    experienceLevel: experienceLevel ? normalizeExperienceLevel(String(experienceLevel)) : experienceLevel,
+    viewCount: toNumber(pick(raw, "viewCount", "view_count")),
+    createdAt: String(pick(raw, "createdAt", "created_at") ?? ""),
+    updatedAt: String(pick(raw, "updatedAt", "updated_at") ?? ""),
+    recruiterId: pick(raw, "recruiterId", "recruiter_id"),
+    skills: Array.isArray(skills) ? skills.map(String) : skills,
   } as Job;
 }
 
