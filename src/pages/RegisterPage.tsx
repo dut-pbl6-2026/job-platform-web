@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail, validateFullName, validatePassword } from "../lib/validation";
 import { toApiRole } from "../lib/roles";
@@ -77,6 +78,7 @@ function IconBuilding() {
 export default function RegisterPage() {
   const { register } = useAuth();
   const nav = useNavigate();
+  const { target, query } = useAuthRedirect();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
@@ -112,7 +114,7 @@ export default function RegisterPage() {
         role: apiRole,
         ...(apiRole === "Recruiter" && companyId.trim() ? { companyId: companyId.trim() } : {}),
       });
-      nav("/jobs");
+      nav(target, { replace: true });
     } catch (ex: any) {
       const data = ex?.response?.data;
       const status = ex?.response?.status;
@@ -212,7 +214,7 @@ export default function RegisterPage() {
           </button>
 
           <div className="auth-footer">
-            Đã có tài khoản? <Link to="/login">Đăng nhập ngay</Link>
+            Đã có tài khoản? <Link to={`/login${query}`}>Đăng nhập ngay</Link>
           </div>
         </form>
       </div>

@@ -11,8 +11,9 @@ const LINKS = [
 
 export function AdminRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading, user } = useAuth();
+  const location = useLocation();
   if (loading) return <div style={{ display: "grid", placeItems: "center", minHeight: "60vh" }}><div className="spinner" /></div>;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   if (!isAdmin(user?.role)) {
     return (
       <>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail } from "../lib/validation";
+import { useAuthRedirect } from "../hooks/useAuthRedirect";
 
 function IconMail() {
   return (
@@ -36,6 +37,7 @@ function IconEye({ off }: { off?: boolean }) {
 export default function LoginPage() {
   const { login } = useAuth();
   const nav = useNavigate();
+  const { target, query } = useAuthRedirect();
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -57,7 +59,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email.trim(), pwd, rememberMe);
-      nav("/jobs");
+      nav(target, { replace: true });
     } catch (ex: any) {
       const msg = ex?.response?.data?.message || ex?.response?.data?.title || "";
       if (ex?.response?.status === 401) setErr("Email hoặc mật khẩu không đúng");
@@ -107,7 +109,7 @@ export default function LoginPage() {
           </button>
 
           <div className="auth-footer">
-            Chưa có tài khoản? <Link to="/register">Tạo tài khoản</Link>
+            Chưa có tài khoản? <Link to={`/register${query}`}>Tạo tài khoản</Link>
           </div>
         </form>
       </div>
