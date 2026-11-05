@@ -270,20 +270,6 @@ export async function fetchJobs(params: JobSearchParams): Promise<PaginatedJobs>
   }
 }
 
-export async function fetchSuggestions(q: string, limit = 8): Promise<string[]> {
-  const keyword = q.trim();
-  if (!keyword) return [];
-  try {
-    const { data } = await api.get("/search/suggest", { params: { q: keyword, limit } });
-    // API returns a bare array; tolerate { items: [...] } envelope too.
-    if (Array.isArray(data)) return data as string[];
-    const items = (data as any)?.items;
-    return Array.isArray(items) ? (items as string[]) : [];
-  } catch {
-    return [];
-  }
-}
-
 export async function fetchJobById(id: string): Promise<Job | null> {
   try {
     const { data } = await api.get(`/jobs/${id}`);
