@@ -31,3 +31,16 @@ export function pickNum(obj: Record<string, unknown>, ...keys: string[]): number
   }
   return undefined;
 }
+
+/**
+ * Readable error text from an axios error: job-svc/app-svc send { message },
+ * auth-svc/profile-svc/search-svc send ProblemDetails { title, detail }.
+ */
+export function apiErrorMessage(e: unknown, fallback: string): string {
+  const data = (e as { response?: { data?: unknown } })?.response?.data;
+  if (data && typeof data === "object") {
+    const msg = pickStr(data as Record<string, unknown>, "message", "detail", "title");
+    if (msg) return msg;
+  }
+  return (e as { message?: string })?.message || fallback;
+}

@@ -4,6 +4,7 @@ import { AdminShell } from "../components/AdminShell";
 import { Pagination } from "../components/Pagination";
 import { decideJob, fetchPendingJobs } from "../lib/adminApi";
 import { formatSalary, timeAgo } from "../lib/jobsApi";
+import { apiErrorMessage } from "../lib/http";
 import type { Paginated, PendingJob } from "../types/admin";
 
 const PAGE_SIZE = 6;
@@ -25,10 +26,7 @@ export default function AdminJobsPage() {
     try {
       setData(await fetchPendingJobs({ page, size: PAGE_SIZE }));
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message
-        || (e as { message?: string })?.message
-        || "Không tải được tin chờ duyệt";
-      setErr(msg);
+      setErr(apiErrorMessage(e, "Không tải được tin chờ duyệt"));
     } finally {
       setLoading(false);
     }
@@ -37,6 +35,11 @@ export default function AdminJobsPage() {
   useEffect(() => { load(); }, [page]);
 
   async function decide(jobId: string, approved: boolean) {
+    // job-svc rejects without a reason (422); stop here instead of sending the request.
+    if (!approved && !reason.trim()) {
+      setErr("Hãy nhập lý do từ chối");
+      return;
+    }
     setBusyId(jobId);
     setErr(null);
     try {
@@ -46,8 +49,7 @@ export default function AdminJobsPage() {
       setReason("");
       await load();
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message || "Không cập nhật được tin";
-      setErr(msg);
+      setErr(apiErrorMessage(e, "Không cập nhật được tin"));
     } finally {
       setBusyId(null);
     }
@@ -71,12 +73,13 @@ export default function AdminJobsPage() {
               <div className="app-detail-head">
                 <div>
                   <h2 className="section-h">{job.title}</h2>
-                  <p className="hint">{job.company.name} • {job.location} • {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}</p>
-                  <p className="hint">{job.recruiterName ? `Người đăng: ${job.recruiterName} • ` : ""}{timeAgo(job.createdAt)} • {job.category.name}</p>
+                  {/* The admin list returns title/company/category/createdAt only: skip empty parts. */}
+                  <p className="hint">{[job.company.name, job.location, job.salaryMin || job.salaryMax ? formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency) : ""].filter(Boolean).join(" • ")}</p>
+                  <p className="hint">{[job.recruiterName ? `Người đăng: ${job.recruiterName}` : "", timeAgo(job.createdAt), job.category.name].filter(Boolean).join(" • ")}</p>
                 </div>
                 <span className="status-badge status-badge--pending">Chờ duyệt</span>
               </div>
-              <p className="job-desc">{job.description.slice(0, 220)}{job.description.length > 220 ? "…" : ""}</p>
+              {job.description && <p className="job-desc">{job.description.slice(0, 220)}{job.description.length > 220 ? "…" : ""}</p>}
               <div className="dash-actions">
                 <Link className="btn btn-ghost btn-sm" to={`/jobs/${job.id}`}>Xem tin</Link>
                 <button className="btn btn-primary btn-sm" type="button" disabled={busyId === job.id} onClick={() => decide(job.id, true)}>Duyệt</button>
@@ -84,10 +87,10 @@ export default function AdminJobsPage() {
               </div>
               {rejectId === job.id && (
                 <form className="mini-form" onSubmit={(e) => { e.preventDefault(); decide(job.id, false); }}>
-                  <label className="label" htmlFor={`reason-${job.id}`}>Lý do (không bắt buộc)</label>
-                  <textarea id={`reason-${job.id}`} className="textarea" rows={3} maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ví dụ: thiếu mô tả công việc" />
+                  <label className="label" htmlFor={`reason-${job.id}`}>Lý do (bắt buộc, gửi cho nhà tuyển dụng)</label>
+                  <textarea id={`reason-${job.id}`} className="textarea" rows={3} maxLength={500} required value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ví dụ: thiếu mô tả công việc" />
                   <div className="dash-actions">
-                    <button className="btn btn-primary btn-sm" disabled={busyId === job.id}>{busyId === job.id ? "Đang gửi..." : "Xác nhận từ chối"}</button>
+                    <button className="btn btn-primary btn-sm" disabled={busyId === job.id || !reason.trim()}>{busyId === job.id ? "Đang gửi..." : "Xác nhận từ chối"}</button>
                     <button className="btn btn-ghost btn-sm" type="button" onClick={() => setRejectId(null)}>Hủy</button>
                   </div>
                 </form>

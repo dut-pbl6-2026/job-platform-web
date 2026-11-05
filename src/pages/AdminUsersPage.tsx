@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminShell } from "../components/AdminShell";
 import { Pagination } from "../components/Pagination";
-import { fetchAdminUsers, updateAdminUser } from "../lib/adminApi";
+import { fetchAdminUsers, setAdminUserActive } from "../lib/adminApi";
+import { apiErrorMessage } from "../lib/http";
 import type { AdminUser, Paginated } from "../types/admin";
 
 const PAGE_SIZE = 8;
@@ -27,7 +28,7 @@ export default function AdminUsersPage() {
     setErr(null);
     fetchAdminUsers({ q, role, status, page, size: PAGE_SIZE })
       .then((d) => { if (alive) setData(d); })
-      .catch((e) => { if (alive) setErr(e?.response?.data?.message || "Không tải được người dùng"); })
+      .catch((e) => { if (alive) setErr(apiErrorMessage(e, "Không tải được người dùng")); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [q, role, status, page]);
@@ -41,25 +42,25 @@ export default function AdminUsersPage() {
     setSp(params);
   }
 
-  async function save(user: AdminUser, change: { role?: string; isActive?: boolean }) {
+  async function toggleActive(user: AdminUser) {
+    const isActive = !user.isActive;
     setBusyId(user.id);
     setErr(null);
     try {
-      await updateAdminUser(user.id, change);
+      await setAdminUserActive(user.id, isActive);
       setData((prev) => prev ? {
         ...prev,
-        items: prev.items.map((u) => u.id === user.id ? { ...u, role: (change.role as AdminUser["role"]) || u.role, isActive: change.isActive ?? u.isActive } : u),
+        items: prev.items.map((u) => u.id === user.id ? { ...u, isActive } : u),
       } : prev);
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message || "Không cập nhật được tài khoản";
-      setErr(msg);
+      setErr(apiErrorMessage(e, "Không cập nhật được tài khoản"));
     } finally {
       setBusyId(null);
     }
   }
 
   return (
-    <AdminShell title="Người dùng" lead="Tìm, lọc, khóa tài khoản hoặc đổi vai trò User / Recruiter.">
+    <AdminShell title="Người dùng" lead="Tìm, lọc, khóa hoặc mở khóa tài khoản.">
       <form className="admin-filters" onSubmit={(e) => { e.preventDefault(); patchQuery({ q: draftQ.trim() }); }}>
         <input className="input" placeholder="Tên hoặc email" value={draftQ} onChange={(e) => setDraftQ(e.target.value)} />
         <select className="input" value={role} onChange={(e) => patchQuery({ role: e.target.value })}>
@@ -91,15 +92,10 @@ export default function AdminUsersPage() {
                     <strong>{user.fullName}</strong>
                     <div className="hint">{user.email}</div>
                   </td>
+                  {/* auth-svc has no change-role endpoint yet: role is read-only here. */}
+                  <td>{user.role}</td>
                   <td>
-                    <select className="input" disabled={busyId === user.id || user.role === "Admin"} value={user.role} onChange={(e) => save(user, { role: e.target.value, isActive: user.isActive })}>
-                      <option value="User">User</option>
-                      <option value="Recruiter">Recruiter</option>
-                      {user.role === "Admin" && <option value="Admin">Admin</option>}
-                    </select>
-                  </td>
-                  <td>
-                    <button className="btn btn-ghost btn-sm" type="button" disabled={busyId === user.id || user.role === "Admin"} onClick={() => save(user, { role: user.role, isActive: !user.isActive })}>
+                    <button className="btn btn-ghost btn-sm" type="button" disabled={busyId === user.id || user.role === "Admin"} onClick={() => toggleActive(user)}>
                       {user.isActive ? "Đang hoạt động" : "Đã khóa"}
                     </button>
                   </td>
