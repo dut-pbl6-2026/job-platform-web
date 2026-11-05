@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCategories, fetchJobs } from "../lib/jobsApi";
@@ -15,9 +15,6 @@ import { JOB_CATEGORIES } from "../lib/labels";
 // `value` is the backend category *name*; search-svc filters by category *id*, resolved via GET /api/categories.
 // Labels come from lib/labels.ts so one category never has two names.
 const HERO_CATS = JOB_CATEGORIES.map((c) => ({ label: c.label, value: c.name }));
-
-const OFFICE_CATS = new Set(["IT", "Finance", "Marketing", "Education", "Sales", "Healthcare"]);
-const LABOR_CATS = new Set(["Engineering", "Hospitality", "Others"]);
 
 const BANNERS = [
   {
@@ -45,7 +42,6 @@ export default function JobListPage() {
   const params = parseSearchParams(sp);
   const [heroPage, setHeroPage] = useState(0);
   const [banner, setBanner] = useState(0);
-  const [tab, setTab] = useState<"office" | "labor">("office");
   const [hintOpen, setHintOpen] = useState(true);
 
   const jobsQuery = useQuery({
@@ -67,12 +63,7 @@ export default function JobListPage() {
   const visibleCats = HERO_CATS.slice(heroPage * 6, heroPage * 6 + 6);
   const slide = BANNERS[banner];
 
-  const items = useMemo(() => {
-    const list = data?.items ?? [];
-    const allow = tab === "office" ? OFFICE_CATS : LABOR_CATS;
-    const filtered = list.filter((job) => allow.has(job.category?.name));
-    return filtered.length ? filtered : list;
-  }, [data, tab]);
+  const items = data?.items ?? [];
 
   function update(next: Record<string, string | undefined>) {
     const n = new URLSearchParams(sp);
@@ -157,10 +148,6 @@ export default function JobListPage() {
         <div className="container">
           <div className="topcv-section-head">
             <h2 className="topcv-section-title">Việc làm nổi bật</h2>
-            <div className="topcv-tabs">
-              <button type="button" className={`topcv-tab ${tab === "office" ? "active" : ""}`} onClick={() => setTab("office")}>Việc văn phòng</button>
-              <button type="button" className={`topcv-tab ${tab === "labor" ? "active" : ""}`} onClick={() => setTab("labor")}>Việc phổ thông</button>
-            </div>
             <Link className="topcv-viewall" to="/jobs">Xem tất cả</Link>
             <span className="topcv-section-pager">
               <button type="button" className="topcv-circle-btn" disabled={!data || data.page === 0} onClick={() => update({ page: String(Math.max(0, (data?.page ?? 0) - 1)) })}>‹</button>
