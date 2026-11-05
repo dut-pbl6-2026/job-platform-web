@@ -17,6 +17,7 @@ import DashboardPage from "./pages/DashboardPage";
 import JobListPage from "./pages/JobListPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import ApplyPage from "./pages/ApplyPage";
+import ResumeScorePage from "./pages/ResumeScorePage";
 import ProfilePage from "./pages/ProfilePage";
 import ApplicationHistoryPage from "./pages/ApplicationHistoryPage";
 import ApplicationDetailPage from "./pages/ApplicationDetailPage";
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/jobs" element={<JobListPage />} />
             <Route path="/jobs/:id" element={<JobDetailPage />} />
             <Route path="/jobs/:id/apply" element={<ProtectedRoute><ApplyPage /></ProtectedRoute>} />
+            <Route path="/resume-score" element={<ProtectedRoute><ResumeScorePage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/applications" element={<ProtectedRoute><ApplicationHistoryPage /></ProtectedRoute>} />
             <Route path="/applications/:id" element={<ProtectedRoute><ApplicationDetailPage /></ProtectedRoute>} />

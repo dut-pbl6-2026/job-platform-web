@@ -56,6 +56,7 @@ export default function JobDetailPage() {
 
             <div className="detail-actions">
               {canApply && <button className="btn btn-primary" onClick={() => nav(`/jobs/${job.id}/apply`)}>Ứng tuyển ngay</button>}
+              {canApply && <Link className="btn btn-ghost" to={`/resume-score?jobId=${job.id}`}>Kiểm tra độ phù hợp CV</Link>}
               {!isAuthenticated && <Link className="btn btn-primary" to="/login">Đăng nhập để ứng tuyển</Link>}
               {isEmployer && isOwner && <Link className="btn btn-ghost" to={`/jobs/${job.id}/edit`}>Chỉnh sửa</Link>}
               {isEmployer && !isOwner && <span className="hint">Bạn không sở hữu tin này</span>}

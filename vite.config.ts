@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       proxy: {
+        // AI resume scoring is only reachable through the gateway (YARP route /api/ai/*).
+        "/api/ai": {
+          target: env.VITE_GATEWAY_URL || "http://localhost:5000",
+          changeOrigin: true,
+        },
         // Auth direct :5001 until job-platform-gateway has a real YARP + Dockerfile.
         // When gateway is up: change target to http://localhost:5000
         "/api": {
