@@ -65,7 +65,6 @@ a:hover{text-decoration:underline}
 .select{height:42px;border:1px solid var(--border);border-radius:12px;padding:0 10px;background:white}
 .topbar{height:60px;border-bottom:1px solid rgba(226,232,240,.8);background:rgba(255,255,255,.9);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:10;box-shadow:0 1px 10px rgba(15,23,42,.06)}
 .badge{font-size:11px;padding:4px 10px;border-radius:999px;background:linear-gradient(135deg,#eef2ff,#f5f3ff);color:#4f46e5;border:1px solid #c7d2fe;font-weight:700}
-.dashboard{max-width:900px;margin:32px auto;padding:0 20px}
 .card{background:white;border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(15,23,42,.04)}
 .spinner{width:18px;height:18px;border:2px solid #cbd5e1;border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}

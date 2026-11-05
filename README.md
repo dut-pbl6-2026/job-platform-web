@@ -15,6 +15,8 @@ React + Vite — part of **Vietnam Job Platform** (`pbl6`) under [`dut-pbl6-2026
 - **Advanced search (ADV-01, Week 6)**: filter bar for salary (VND/USD), skills (AND/OR + autocomplete `GET /api/search/skills`), location including Remote, employment type, experience, category, sort (`relevance` / `created_at_desc` / `salary_desc` / `salary_asc`). Query string is the source of truth. Tries `GET /api/search/advanced` then `GET /api/search/jobs`; mock fallback with facets. **TanStack Query** caches search/categories/job detail for 5 minutes (`lib/queryClient.ts`).
 - **Apply + Profile + History (WEB-01-04/05/06, APP-01, PROFILE-01)**: form `POST /api/applications` FormData `job_id` + `cover_letter` + `cv_file` (PDF/DOC/DOCX ≤5MB, 409 duplicate); `GET /api/applications/me` + `GET /api/applications/{id}`; hồ sơ `GET/PUT /api/profile/me|/profile`, skills/experience/education CRUD. UI `/jobs/:id/apply`, `/profile`, `/applications`, `/applications/:id`. Fallback `localStorage` khi app-svc/profile-svc chưa chạy.
 - **Admin dashboard + job approval (ADMIN-01)**: Admin-only `/admin` (statistics `GET /api/admin/statistics?period=`, health `GET /api/admin/health`), `/admin/jobs` pending list + `POST /api/admin/jobs/{id}/approve` `{ approved, reason? }`, `/admin/users` search/filter + `PUT /api/admin/users/{id}` `{ role, is_active }`. Mock `localStorage` when admin APIs are offline.
+- **AI chat UI (AI-01, Week 10)**: authenticated `/chat` + floating dock. `POST /api/ai/chat` SSE (`token`/`jobs`/`truncated`/`done`), session `POST/DELETE /api/ai/session`, history `GET .../history`. Context window 20 messages / 8,000 tokens; 512 output cap; 20 req/hour. Mock `localStorage` + job hints from the catalog when AI-svc is offline. Login after register/login lands on `/jobs` (no `/dashboard`).
+- **Local backend helper**: `run-backend.bat` / `run-backend.sh` from this repo (or the parent workspace) start Docker postgres + auth `:5001` and seed a demo Admin if missing (`admin@jobplatform.local` / `Admin12345`).
 - **In-app toast (WS-01, Week 5)**: authenticated users connect to `ws /ws/notifications?token=` (Vite proxies `/ws`). Message `notification` with `job.created` renders `Việc làm mới: [title] tại [company]` and links to `/jobs/{id}`. Reconnect + ping follow WS-01-06. A 30s poll of `GET /api/search/jobs` (override `VITE_JOB_TOAST_POLL_MS`) toasts jobs that appear after the first snapshot, deduped against the socket. Programmatic: `showToast()` / `window` event `jp:toast`.
 
 ## Setup
@@ -46,18 +48,21 @@ src/
   components/AdvancedFilters.tsx, AppHeader.tsx, ProtectedRoute.tsx, JobCard.tsx, SearchBar.tsx, Pagination.tsx
   lib/validation.ts   -> SRS password regex + email/fullName validators
   contexts/AuthContext.tsx -> login/register/logout/refreshUser, isAuthenticated
+  contexts/ChatContext.tsx -> AI-01 session + 20-message context window
   contexts/ToastContext.tsx -> in-app toast stack (WS-01 + new-job poll)
   lib/notificationSocket.ts -> /ws/notifications JWT + reconnect
   lib/notificationMessages.ts -> job.created copy "Việc làm mới: … tại …"
   components/ToastViewport.tsx, AppHeader.tsx, ProtectedRoute.tsx, JobCard.tsx, SearchBar.tsx, Pagination.tsx
   lib/applicationsApi.ts -> APP-01 apply/history + mock
   lib/profileApi.ts      -> PROFILE-01 me/skills/experience/education + mock
-  pages/LoginPage.tsx, RegisterPage.tsx, DashboardPage.tsx, JobListPage.tsx (WEB-01-02), JobDetailPage.tsx (WEB-01-03)
+  pages/LoginPage.tsx, RegisterPage.tsx, JobListPage.tsx (WEB-01-02), JobDetailPage.tsx (WEB-01-03)
   lib/adminApi.ts        -> ADMIN-01 stats/users/pending jobs + mock
   pages/ApplyPage.tsx (WEB-01-04), ProfilePage.tsx (WEB-01-05), ApplicationHistoryPage.tsx + ApplicationDetailPage.tsx (WEB-01-06)
-  pages/AdminDashboardPage.tsx, AdminJobsPage.tsx, AdminUsersPage.tsx
-  styles/auth.css + jobs.css + toast.css + admin.css
-  App.tsx (routes /admin,/admin/jobs,/admin/users) + main.tsx
+  pages/AdminDashboardPage.tsx, AdminJobsPage.tsx, AdminUsersPage.tsx, ChatPage.tsx
+  styles/auth.css + jobs.css + toast.css + admin.css + chat.css
+  App.tsx (routes /chat,/admin,/admin/jobs,/admin/users) + main.tsx
+scripts/seed-admin.ps1 -> register Admin if email is free (admin, admin2, …)
+run-backend.bat / run-backend.sh -> docker postgres+auth, then seed admin
 vite.config.ts        -> proxy /api -> http://localhost:5001, /ws -> VITE_GATEWAY_URL (default http://localhost:5000)
 ```
 

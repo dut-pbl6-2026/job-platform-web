@@ -15,7 +15,7 @@ export function AppHeader() {
           <Link to="/jobs">Việc làm</Link>
           <Link to={isAuthenticated ? "/profile" : "/register"}>Tạo CV</Link>
           {isAuthenticated && isUser(user?.role) && <Link to="/applications">Đơn của tôi</Link>}
-          {isAuthenticated && <Link to="/dashboard">Công cụ</Link>}
+          {isAuthenticated && <Link to="/chat">Trợ lý AI</Link>}
           {isAuthenticated && isAdmin(user?.role) && <Link to="/admin">Quản trị</Link>}
         </nav>
       </div>
