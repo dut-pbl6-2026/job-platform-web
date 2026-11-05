@@ -24,8 +24,10 @@ React + Vite — part of **Vietnam Job Platform** (`pbl6`) under [`dut-pbl6-2026
 ```bash
 npm install          # or pnpm install
 cp .env.example .env # VITE_API_BASE_URL=/api
-npm run dev          # http://localhost:5173  (proxy /api -> :5001, /ws -> :5000)
+npm run dev          # http://localhost:5173  (proxy /api and /ws -> gateway :5000)
 ```
+
+Dev needs the gateway running (`../scripts/run-gateway.ps1`, or `run-dev-services.ps1` for the whole stack): every request goes `/api/* -> gateway :5000 -> service`. Override with `VITE_GATEWAY_URL`.
 
 Prod:
 
@@ -63,7 +65,7 @@ src/
   App.tsx (routes /chat,/admin,/admin/jobs,/admin/users) + main.tsx
 scripts/seed-admin.ps1 -> register Admin if email is free (admin, admin2, …)
 run-backend.bat / run-backend.sh -> docker postgres+auth, then seed admin
-vite.config.ts        -> proxy /api -> http://localhost:5001, /ws -> VITE_GATEWAY_URL (default http://localhost:5000)
+vite.config.ts        -> proxy /api + /ws -> VITE_GATEWAY_URL (default http://localhost:5000)
 ```
 
 ## Backend deps
