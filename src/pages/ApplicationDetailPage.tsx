@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AppHeader } from "../components/AppHeader";
 import { useAuth } from "../contexts/AuthContext";
-import { fetchApplicationById } from "../lib/applicationsApi";
+import { downloadCv, fetchApplicationById } from "../lib/applicationsApi";
+import { apiErrorMessage } from "../lib/http";
 import { timeAgo } from "../lib/jobsApi";
 import type { Application } from "../types/application";
 import { STATUS_LABEL } from "../types/application";
@@ -13,6 +14,20 @@ export default function ApplicationDetailPage() {
   const [app, setApp] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [cvBusy, setCvBusy] = useState(false);
+  const [cvErr, setCvErr] = useState<string | null>(null);
+
+  async function openCv(cvUrl: string, fileName?: string | null) {
+    setCvBusy(true);
+    setCvErr(null);
+    try {
+      await downloadCv(cvUrl, fileName);
+    } catch (e) {
+      setCvErr(apiErrorMessage(e, "Không tải được CV"));
+    } finally {
+      setCvBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!id || !user) return;
@@ -46,10 +61,13 @@ export default function ApplicationDetailPage() {
             <div className="detail-section" style={{ marginTop: 16 }}>
               <h3>CV đã gửi</h3>
               {app.cvUrl ? (
-                <a href={app.cvUrl} target="_blank" rel="noreferrer">{app.cvFileName || "Tải CV"}</a>
+                <button type="button" className="btn btn-ghost btn-sm" disabled={cvBusy} onClick={() => openCv(app.cvUrl!, app.cvFileName)}>
+                  {cvBusy ? "Đang tải..." : app.cvFileName || "Tải CV"}
+                </button>
               ) : (
                 <p className="hint">{app.cvFileName || "Đã gửi file CV"}</p>
               )}
+              {cvErr && <div className="alert alert-error">{cvErr}</div>}
             </div>
             <div className="detail-section">
               <h3>Thư xin việc</h3>

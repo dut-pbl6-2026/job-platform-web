@@ -185,3 +185,26 @@ export async function fetchApplicationById(id: string, userId: string): Promise<
     return found ? enrichFromJobs(found) : null;
   }
 }
+
+/**
+ * app-svc stores cvUrl as a gateway-relative path ("/api/applications/cv/<file>") behind the
+ * Authenticated route. A plain <a href> sends no Bearer token (401) and, on Vercel, the SPA
+ * rewrite serves index.html for it. Fetch it through the API client and save the blob instead.
+ */
+export async function downloadCv(cvUrl: string, fileName?: string | null): Promise<void> {
+  if (!cvUrl.startsWith("/")) {
+    // blob: (mock mode) or an absolute storage URL: nothing to authenticate.
+    window.open(cvUrl, "_blank", "noopener");
+    return;
+  }
+  const path = cvUrl.replace(/^\/api(?=\/)/, ""); // API_BASE_URL already ends with /api
+  const { data } = await api.get<Blob>(path, { responseType: "blob" });
+  const url = URL.createObjectURL(data);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName || path.split("/").pop() || "cv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
