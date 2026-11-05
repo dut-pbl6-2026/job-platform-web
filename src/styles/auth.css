@@ -4,7 +4,7 @@
   --radius:16px; --input-bg:#f1f5f9;
 }
 *{box-sizing:border-box}
-html,body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+html,body{margin:0;background:var(--bg);color:var(--text)}
 a{color:var(--primary);text-decoration:none}
 a:hover{text-decoration:underline}
 /* === Auth shell - vivid gradient === */

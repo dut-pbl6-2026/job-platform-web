@@ -1,0 +1,114 @@
+/*
+ * Design tokens and base styles for the "Bảng giờ tàu" (railway timetable) redesign.
+ * Plan §2.2. New rules use the --c-* / --fs-* / --sp-* names; the legacy tokens in auth.css
+ * (--primary, --bg, ...) stay until slice S10 removes the old CSS.
+ *
+ * Imported last in main.tsx so the base rules below win over legacy rules of equal specificity.
+ */
+
+:root {
+  /* Color: every hue has one fixed job (plan §2.1 rule 6). */
+  --c-navy: #133a6b;          /* shell bar, column header, primary action */
+  --c-navy-strong: #0e2c52;   /* hover / pressed of navy */
+  --c-ground: #f3f5f8;        /* page background */
+  --c-surface: #ffffff;       /* board, panel, input */
+  --c-ink: #14202e;           /* primary text */
+  --c-muted: #5a6878;         /* secondary text, 5.2:1 on ground */
+  --c-rule: #dde3eb;          /* row rules, borders */
+  --c-amber: #f5b400;         /* "your selection": fill or band only, never text on white */
+  --c-amber-soft: #fff6d9;    /* selected row */
+  --c-new: #d2232a;           /* "Mới" marker, always square + word */
+  --c-danger: #b42318;        /* errors, always with icon + text */
+  --c-success: #1f7a4d;       /* approved / done, with text */
+  --c-warning: #9a6700;       /* pending, with text */
+  --c-on-navy-muted: #c9d6ea; /* secondary text on navy, 7.7:1 */
+
+  /* Type: one family, five steps. */
+  --font-sans: "Be Vietnam Pro", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fs-caption: 13px;
+  --fs-body: 15px;
+  --fs-title: 17px;
+  --fs-h2: 22px;
+  --fs-h1: 30px;
+  --lh-tight: 1.25;
+  --lh-body: 1.5;
+
+  /* Spacing: 4-base. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+
+  /* Shape and interaction. */
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --tap: 44px;                 /* minimum touch target */
+  --focus-ring: 2px solid var(--c-navy);
+  --focus-ring-on-navy: 2px solid var(--c-amber);
+  --focus-offset: 2px;
+}
+
+/* Base */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--c-ink);
+  background: var(--c-ground);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Form controls do not inherit the family by default. Family only: sizes stay with each component. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Keyboard focus: one ring everywhere. Mouse clicks do not show it. */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+/* On navy surfaces navy would vanish; amber is the fill color for "where you are". */
+.on-navy :focus-visible,
+.on-navy:focus-visible {
+  outline: var(--focus-ring-on-navy);
+}
+
+/* Browser surfaces that would otherwise ship with defaults. */
+::selection {
+  background: var(--c-amber);
+  color: var(--c-ink);
+}
+
+input,
+textarea {
+  caret-color: var(--c-navy);
+}
+
+html {
+  scrollbar-color: #9aa8b8 var(--c-ground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

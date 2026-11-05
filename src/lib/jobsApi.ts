@@ -348,22 +348,40 @@ export function companyInitials(name: string) {
   return letters.toUpperCase();
 }
 
-export function formatSalaryShort(min: number, max: number, currency = "VND") {
-  if (!min && !max) return "Thỏa thuận";
-  if (currency === "VND") {
-    const a = min ? Math.round(min / 1_000_000) : null;
-    const b = max ? Math.round(max / 1_000_000) : null;
-    if (a && b) return `${a} - ${b} triệu`;
-    return `${a || b} triệu`;
-  }
-  return formatSalary(min, max, currency);
-}
+const viNumber = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 });
+const viInteger = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
 
+/**
+ * The one salary format, shared by the board row, the detail page and the apply page so the same job
+ * never reads differently in two places. A missing bound means "open ended", and no bound at all means
+ * the employer did not publish a salary.
+ *   VND, whole millions   5 – 10 triệu · Từ 5 triệu · Tới 10 triệu · 7,5 triệu
+ *   VND, below 1 million  500.000 – 900.000 đ
+ *   other currency        1.000 – 2.000 USD
+ */
 export function formatSalary(min: number, max: number, currency = "VND") {
-  const fmt = (n: number) => new Intl.NumberFormat("vi-VN").format(n);
-  if (!min && !max) return "Thỏa thuận";
-  if (min && max) return `${fmt(min)} - ${fmt(max)} ${currency}`;
-  return `${fmt(min || max)} ${currency}`;
+  const lo = Number.isFinite(min) && min > 0 ? min : 0;
+  const hi = Number.isFinite(max) && max > 0 ? max : 0;
+  if (!lo && !hi) return "Thỏa thuận";
+
+  let fmt: (n: number) => string;
+  let unit: string;
+  if (currency === "VND") {
+    if ((!lo || lo >= 1_000_000) && (!hi || hi >= 1_000_000)) {
+      fmt = (n) => viNumber.format(n / 1_000_000);
+      unit = "triệu";
+    } else {
+      fmt = (n) => viInteger.format(n);
+      unit = "đ";
+    }
+  } else {
+    fmt = (n) => viInteger.format(n);
+    unit = currency;
+  }
+
+  if (lo && hi && lo !== hi) return `${fmt(lo)} – ${fmt(hi)} ${unit}`;
+  if (lo && hi) return `${fmt(lo)} ${unit}`;
+  return lo ? `Từ ${fmt(lo)} ${unit}` : `Tới ${fmt(hi)} ${unit}`;
 }
 
 export function timeAgo(iso: string) {

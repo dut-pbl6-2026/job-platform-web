@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import type { Job } from "../types/job";
-import { companyInitials, formatSalaryShort } from "../lib/jobsApi";
+import { companyInitials, formatSalary } from "../lib/jobsApi";
 
 export function JobCard({ job, index = 0 }: { job: Job; index?: number }) {
   const kind = index % 5;
   const badge = kind === 0 ? "GẤP" : kind === 1 ? "HOT" : kind === 2 ? "TIN MỚI" : null;
   const badgeClass = kind === 0 ? "badge-gap" : kind === 1 ? "badge-hot" : "badge-new";
-  const salaryLabel = formatSalaryShort(job.salaryMin, job.salaryMax, job.salaryCurrency);
+  const salaryLabel = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency);
   const snippet = (job.description || "").replace(/\s+/g, " ").slice(0, 160);
 
   return (

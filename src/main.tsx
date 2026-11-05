@@ -7,6 +7,7 @@ import "./styles/jobs.css";
 import "./styles/toast.css";
 import "./styles/admin.css";
 import "./styles/chat.css";
+import "./styles/tokens.css"; // last: base rules (font, :focus-visible) override legacy rules of equal specificity
 
 // Older builds fell back to localStorage mocks on every API error and kept the user's profile there in
 // plain text (phone, address, date of birth), plus applications, admin data and chat history. With mocks

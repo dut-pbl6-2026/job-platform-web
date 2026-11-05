@@ -1,21 +1,18 @@
 import type { JobSearchParams } from "../types/job";
+import { employmentTypeLabel, experienceLevelLabel } from "./labels";
 
 export const JOB_PAGE_SIZE = 9;
 
 // Only values job-svc accepts (api-conventions §6). Freelance / Junior are an open decision there.
-export const EMPLOYMENT_OPTIONS = [
-  { value: "FullTime", label: "Toàn thời gian" },
-  { value: "PartTime", label: "Bán thời gian" },
-  { value: "Contract", label: "Hợp đồng" },
-  { value: "Internship", label: "Thực tập" },
-] as const;
+export const EMPLOYMENT_OPTIONS = (["FullTime", "PartTime", "Contract", "Internship"] as const).map((value) => ({
+  value,
+  label: employmentTypeLabel(value),
+}));
 
-export const EXPERIENCE_OPTIONS = [
-  { value: "Entry", label: "Mới vào nghề" },
-  { value: "Mid", label: "Trung cấp" },
-  { value: "Senior", label: "Senior" },
-  { value: "Lead", label: "Lead" },
-] as const;
+export const EXPERIENCE_OPTIONS = (["Entry", "Mid", "Senior", "Lead"] as const).map((value) => ({
+  value,
+  label: experienceLevelLabel(value),
+}));
 
 export const SORT_OPTIONS = [
   { value: "relevance", label: "Liên quan" },
