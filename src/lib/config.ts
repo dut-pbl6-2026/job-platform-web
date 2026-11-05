@@ -21,6 +21,14 @@ export const MOCKS_ENABLED = import.meta.env.VITE_ENABLE_MOCKS === "true";
 /** SRS WS-01: realtime channel through the gateway. */
 export const NOTIFICATION_WS_PATH = "/ws/notifications";
 
+/**
+ * Neither the gateway nor notif-svc serves /ws/notifications yet. Until it exists, do not open the
+ * socket: every reconnect attempt (up to one every 30 s per tab) put the access token in the URL,
+ * where reverse proxies and CDNs log it. Turn on with VITE_ENABLE_NOTIFICATION_WS=true once the
+ * backend ships, ideally with a short-lived ticket instead of the JWT.
+ */
+export const NOTIFICATION_WS_ENABLED = import.meta.env.VITE_ENABLE_NOTIFICATION_WS === "true";
+
 /** Week 5 toast: how often to look for newly posted jobs when the socket is quiet. */
 export function jobToastPollMs(): number {
   const raw = Number(import.meta.env.VITE_JOB_TOAST_POLL_MS);
