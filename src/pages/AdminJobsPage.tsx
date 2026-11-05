@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AdminShell } from "../components/AdminShell";
 import { Pagination } from "../components/Pagination";
-import { decideJob, fetchPendingJobs } from "../lib/adminApi";
+import { decideJob, fetchAdminJob, fetchPendingJobs } from "../lib/adminApi";
 import { formatSalary, timeAgo } from "../lib/jobsApi";
 import { apiErrorMessage } from "../lib/http";
 import type { Paginated, PendingJob } from "../types/admin";
@@ -19,6 +19,27 @@ export default function AdminJobsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  // Content of the job being read: the list has no description, and /jobs/:id hides Pending jobs.
+  const [viewId, setViewId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<PendingJob | null>(null);
+  const [detailErr, setDetailErr] = useState<string | null>(null);
+  const detailReq = useRef(0);
+
+  async function toggleDetail(jobId: string) {
+    const req = ++detailReq.current;
+    if (viewId === jobId) { setViewId(null); return; }
+    setViewId(jobId);
+    setDetail(null);
+    setDetailErr(null);
+    try {
+      const job = await fetchAdminJob(jobId);
+      if (req !== detailReq.current) return;
+      if (job) setDetail(job);
+      else setDetailErr("Tin không còn tồn tại");
+    } catch (e: unknown) {
+      if (req === detailReq.current) setDetailErr(apiErrorMessage(e, "Không tải được nội dung tin"));
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -47,6 +68,7 @@ export default function AdminJobsPage() {
       setOk(message);
       setRejectId(null);
       setReason("");
+      setViewId(null);
       await load();
     } catch (e: unknown) {
       setErr(apiErrorMessage(e, "Không cập nhật được tin"));
@@ -81,10 +103,34 @@ export default function AdminJobsPage() {
               </div>
               {job.description && <p className="job-desc">{job.description.slice(0, 220)}{job.description.length > 220 ? "…" : ""}</p>}
               <div className="dash-actions">
-                <Link className="btn btn-ghost btn-sm" to={`/jobs/${job.id}`}>Xem tin</Link>
+                <button className="btn btn-ghost btn-sm" type="button" aria-expanded={viewId === job.id} onClick={() => toggleDetail(job.id)}>
+                  {viewId === job.id ? "Ẩn nội dung" : "Xem nội dung"}
+                </button>
                 <button className="btn btn-primary btn-sm" type="button" disabled={busyId === job.id} onClick={() => decide(job.id, true)}>Duyệt</button>
                 <button className="btn btn-ghost btn-sm" type="button" onClick={() => { setRejectId(job.id); setReason(""); }}>Từ chối</button>
               </div>
+              {viewId === job.id && (
+                <div className="detail-section">
+                  {!detail && !detailErr && <div className="skeleton-detail" />}
+                  {detailErr && <div className="alert alert-error">{detailErr}</div>}
+                  {detail && (
+                    <>
+                      <p className="hint">{[
+                        detail.location,
+                        detail.salaryMin || detail.salaryMax ? formatSalary(detail.salaryMin, detail.salaryMax, detail.salaryCurrency) : "Lương thỏa thuận",
+                        detail.employmentType,
+                        detail.experienceLevel,
+                      ].filter(Boolean).join(" • ")}</p>
+                      <h3>Mô tả công việc</h3>
+                      <p className="detail-prewrap">{detail.description?.trim() ? detail.description : "Chưa cập nhật"}</p>
+                      <h3>Yêu cầu</h3>
+                      <p className="detail-prewrap">{detail.requirements?.trim() ? detail.requirements : "Chưa cập nhật"}</p>
+                      <h3>Quyền lợi</h3>
+                      <p className="detail-prewrap">{detail.benefits?.trim() ? detail.benefits : "Chưa cập nhật"}</p>
+                    </>
+                  )}
+                </div>
+              )}
               {rejectId === job.id && (
                 <form className="mini-form" onSubmit={(e) => { e.preventDefault(); decide(job.id, false); }}>
                   <label className="label" htmlFor={`reason-${job.id}`}>Lý do (bắt buộc, gửi cho nhà tuyển dụng)</label>

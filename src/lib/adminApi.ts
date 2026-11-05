@@ -1,9 +1,9 @@
 import { api } from "./api";
 import { unwrap, pickNum, pickStr, toOneBased, fromOneBased, shouldUseMock } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
+import { normalizeJob } from "./jobsApi";
 import { normalizeRole } from "./roles";
 import type { AdminHealth, AdminStatistics, AdminUser, Paginated, PendingJob } from "../types/admin";
-import type { Job } from "../types/job";
 
 const USERS_KEY = "jp.mock.admin.users";
 const JOBS_KEY = "jp.mock.admin.jobs";
@@ -106,37 +106,12 @@ function asUser(raw: unknown): AdminUser | null {
   };
 }
 
+/** Same adapter as search/job pages (normalizeJob), plus the admin-only recruiterName. */
 function asJob(raw: unknown): PendingJob | null {
   if (!raw || typeof raw !== "object") return null;
-  const o = raw as Record<string, unknown>;
-  const companyRaw = (o.company && typeof o.company === "object" ? o.company : {}) as Record<string, unknown>;
-  const categoryRaw = (o.category && typeof o.category === "object" ? o.category : {}) as Record<string, unknown>;
-  const id = pickStr(o, "id") || "";
-  if (!id) return null;
-  const job = {
-    id,
-    title: pickStr(o, "title") || "Tin tuyển dụng",
-    description: pickStr(o, "description") || "",
-    requirements: pickStr(o, "requirements") ?? null,
-    benefits: pickStr(o, "benefits") ?? null,
-    company: { id: pickStr(companyRaw, "id") || pickStr(o, "companyId", "company_id") || "", name: pickStr(companyRaw, "name") || pickStr(o, "companyName", "company_name") || "—" },
-    companyId: pickStr(o, "companyId", "company_id") || pickStr(companyRaw, "id") || "",
-    location: pickStr(o, "location") || "",
-    salaryMin: pickNum(o, "salaryMin", "salary_min") ?? 0,
-    salaryMax: pickNum(o, "salaryMax", "salary_max") ?? 0,
-    salaryCurrency: pickStr(o, "salaryCurrency", "salary_currency") || "VND",
-    category: { id: pickStr(categoryRaw, "id") || "", name: pickStr(categoryRaw, "name") || pickStr(o, "categoryName", "category_name") || "—" },
-    categoryId: pickStr(o, "categoryId", "category_id") || "",
-    employmentType: (pickStr(o, "employmentType", "employment_type") || "Full-time") as Job["employmentType"],
-    experienceLevel: (pickStr(o, "experienceLevel", "experience_level") || "Junior") as Job["experienceLevel"],
-    status: "pending",
-    viewCount: pickNum(o, "viewCount", "view_count") ?? 0,
-    createdAt: pickStr(o, "createdAt", "created_at") || new Date().toISOString(),
-    updatedAt: pickStr(o, "updatedAt", "updated_at") || new Date().toISOString(),
-    recruiterId: pickStr(o, "recruiterId", "recruiter_id"),
-    recruiterName: pickStr(o, "recruiterName", "recruiter_name"),
-  } as PendingJob;
-  return job;
+  const job = normalizeJob(raw);
+  if (!job.id) return null;
+  return { ...job, recruiterName: pickStr(raw as Record<string, unknown>, "recruiterName", "recruiter_name") };
 }
 
 function mockStats(): AdminStatistics {
@@ -278,6 +253,22 @@ export async function fetchPendingJobs(params: { page?: number; size?: number })
   } catch (e) {
     if (!isOffline(e)) throw e;
     return paginate(loadJobs(), page, size);
+  }
+}
+
+/**
+ * job-svc GET /api/admin/jobs/{id}: full content of a job in any status. The list above only has
+ * title/company/category, and the public GET /api/jobs/{id} hides Pending jobs (404), so this is
+ * the only way for an admin to read a job before approving or rejecting it.
+ */
+export async function fetchAdminJob(jobId: string): Promise<PendingJob | null> {
+  try {
+    const { data } = await api.get(`/admin/jobs/${jobId}`);
+    return asJob(data);
+  } catch (e) {
+    if ((e as { response?: { status?: number } })?.response?.status === 404) return null;
+    if (!isOffline(e)) throw e;
+    return loadJobs().find((j) => j.id === jobId) ?? null;
   }
 }
 
