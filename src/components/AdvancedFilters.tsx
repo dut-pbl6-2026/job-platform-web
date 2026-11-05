@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { JobSearchParams, SearchFacets } from "../types/job";
+import type { Category, JobSearchParams, SearchFacets } from "../types/job";
 import { fetchSkills } from "../lib/jobsApi";
 import { queryKeys } from "../lib/queryClient";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
@@ -19,7 +19,8 @@ import {
 type Props = {
   params: JobSearchParams;
   facets?: SearchFacets;
-  categories: string[];
+  /** GET /api/categories: filter value is the id (search-svc matches category_id), label is the name. */
+  categories: Category[];
   onChange: (patch: Record<string, string | undefined>) => void;
   onClear: () => void;
 };
@@ -87,7 +88,10 @@ export function AdvancedFilters({ params, facets, categories, onChange, onClear 
   const chips = useMemo(() => {
     const items: { key: string; label: string; clear: Record<string, string | undefined> }[] = [];
     if (params.location) items.push({ key: "loc", label: params.location, clear: { location: undefined } });
-    if (params.category) items.push({ key: "cat", label: params.category, clear: { category: undefined } });
+    if (params.category) {
+      const label = categories.find((c) => c.id === params.category)?.name || params.category;
+      items.push({ key: "cat", label, clear: { category: undefined } });
+    }
     selectedTypes.forEach((value) => {
       const label = EMPLOYMENT_OPTIONS.find((item) => item.value === value)?.label || value;
       items.push({ key: `t-${value}`, label, clear: { employmentType: toggleCsv(params.employmentType, value) || undefined } });
@@ -109,7 +113,7 @@ export function AdvancedFilters({ params, facets, categories, onChange, onClear 
       items.push({ key: "sort", label, clear: { sort: undefined } });
     }
     return items;
-  }, [params, selectedTypes, selectedLevels, selectedSkills, currency]);
+  }, [params, categories, selectedTypes, selectedLevels, selectedSkills, currency]);
 
   return (
     <div className="adv-wrap" ref={wrapRef}>
@@ -242,10 +246,10 @@ export function AdvancedFilters({ params, facets, categories, onChange, onClear 
             <label className="adv-op">
               <input
                 type="checkbox"
-                checked={params.skillOp === "or"}
-                onChange={(e) => onChange({ skillOp: e.target.checked ? "or" : "and" })}
+                checked={params.skillOp === "and"}
+                onChange={(e) => onChange({ skillOp: e.target.checked ? "and" : undefined })}
               />
-              Khớp bất kỳ (OR)
+              Có đủ tất cả kỹ năng (AND)
             </label>
           </div>
           <div className="adv-options">
@@ -266,15 +270,15 @@ export function AdvancedFilters({ params, facets, categories, onChange, onClear 
       {open === "category" && (
         <div className="adv-panel">
           <div className="adv-options">
-            {categories.filter(Boolean).map((name) => (
+            {categories.map((cat) => (
               <button
-                key={name}
+                key={cat.id}
                 type="button"
-                className={`topcv-pill ${params.category === name ? "active" : ""}`}
-                onClick={() => onChange({ category: params.category === name ? undefined : name })}
+                className={`topcv-pill ${params.category === cat.id ? "active" : ""}`}
+                onClick={() => onChange({ category: params.category === cat.id ? undefined : cat.id })}
               >
-                {name}
-                {facetCount(facets, "category", name) != null ? ` (${facetCount(facets, "category", name)})` : ""}
+                {cat.name}
+                {facetCount(facets, "category", cat.name) != null ? ` (${facetCount(facets, "category", cat.name)})` : ""}
               </button>
             ))}
           </div>

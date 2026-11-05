@@ -2,17 +2,16 @@ import type { JobSearchParams } from "../types/job";
 
 export const JOB_PAGE_SIZE = 9;
 
+// Only values job-svc accepts (api-conventions §6). Freelance / Junior are an open decision there.
 export const EMPLOYMENT_OPTIONS = [
   { value: "FullTime", label: "Toàn thời gian" },
   { value: "PartTime", label: "Bán thời gian" },
   { value: "Contract", label: "Hợp đồng" },
   { value: "Internship", label: "Thực tập" },
-  { value: "Freelance", label: "Freelance" },
 ] as const;
 
 export const EXPERIENCE_OPTIONS = [
   { value: "Entry", label: "Mới vào nghề" },
-  { value: "Junior", label: "Junior" },
   { value: "Mid", label: "Trung cấp" },
   { value: "Senior", label: "Senior" },
   { value: "Lead", label: "Lead" },
@@ -89,7 +88,8 @@ export function parseSearchParams(sp: URLSearchParams): JobSearchParams {
     maxSalary: num(sp.get("maxSalary")),
     sortBy: sp.get("sort") || undefined,
     skills: csv(sp.get("skills")) || undefined,
-    skillOp: sp.get("skillOp") === "or" ? "or" : "and",
+    // api-conventions §4: default is "or" (any skill), "and" only when asked for.
+    skillOp: sp.get("skillOp") === "and" ? "and" : "or",
     salaryCurrency: sp.get("currency") === "USD" ? "USD" : "VND",
   };
 }

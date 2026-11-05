@@ -191,9 +191,9 @@ function mockSearch(params: JobSearchParams): PaginatedJobs {
     const hitType = matchesEmployment(String(j.employmentType || ""), types);
     const hitLevel = matchesExperience(String(j.experienceLevel || ""), levels);
     const jobSkills = (j.skills ?? []).map((item) => item.toLowerCase());
-    const hitSkills = skills.length === 0 || (params.skillOp === "or"
-      ? skills.some((skill) => jobSkills.some((item) => item.includes(skill)))
-      : skills.every((skill) => jobSkills.some((item) => item.includes(skill))));
+    const hitSkills = skills.length === 0 || (params.skillOp === "and"
+      ? skills.every((skill) => jobSkills.some((item) => item.includes(skill)))
+      : skills.some((skill) => jobSkills.some((item) => item.includes(skill))));
     const hitMin = params.minSalary == null || (j.salaryMax || j.salaryMin) >= params.minSalary;
     const hitMax = params.maxSalary == null || (j.salaryMin || j.salaryMax) <= params.maxSalary;
     const hitCurrency = !params.salaryCurrency || !j.salaryCurrency || j.salaryCurrency === params.salaryCurrency || params.salaryCurrency === "VND";
@@ -226,8 +226,10 @@ function compactParams(params: JobSearchParams) {
   if (params.experienceLevel) next.experienceLevel = params.experienceLevel;
   if (params.minSalary != null) next.minSalary = params.minSalary;
   if (params.maxSalary != null) next.maxSalary = params.maxSalary;
-  if (params.skills) next.skills = params.skills;
-  if (params.skillOp && params.skillOp !== "and") next.skillOp = params.skillOp;
+  if (params.skills) {
+    next.skills = params.skills;
+    next.skillOp = params.skillOp ?? "or"; // always explicit (api-conventions §4)
+  }
   if (params.sortBy && params.sortBy !== "relevance") next.sortBy = params.sortBy;
   next.page = params.page ?? 0;
   next.size = params.size ?? 20;
