@@ -10,20 +10,11 @@ import { AdvancedFilters } from "../components/AdvancedFilters";
 import { HomeShowcase } from "../components/HomeShowcase";
 import { parseSearchParams, hasActiveFilters } from "../lib/searchFilters";
 import { queryKeys } from "../lib/queryClient";
+import { JOB_CATEGORIES } from "../lib/labels";
 
-// `value` is the category *name*; search-svc filters by category *id*, resolved via GET /api/categories.
-// Labels must name the backend category they filter (same wording as HomeShowcase CATEGORY_META).
-const HERO_CATS: { label: string; value: string }[] = [
-  { label: "Kinh doanh/Bán hàng", value: "Sales" },
-  { label: "Marketing/PR/Quảng cáo", value: "Marketing" },
-  { label: "Ngành nghề khác", value: "Others" },
-  { label: "Y tế/Dược", value: "Healthcare" },
-  { label: "Công nghệ Thông tin", value: "IT" },
-  { label: "Kỹ thuật/Sản xuất", value: "Engineering" },
-  { label: "Tài chính/Ngân hàng", value: "Finance" },
-  { label: "Giáo dục/Đào tạo", value: "Education" },
-  { label: "Nhà hàng/Khách sạn", value: "Hospitality" },
-];
+// `value` is the backend category *name*; search-svc filters by category *id*, resolved via GET /api/categories.
+// Labels come from lib/labels.ts so one category never has two names.
+const HERO_CATS = JOB_CATEGORIES.map((c) => ({ label: c.label, value: c.name }));
 
 const OFFICE_CATS = new Set(["IT", "Finance", "Marketing", "Education", "Sales", "Healthcare"]);
 const LABOR_CATS = new Set(["Engineering", "Hospitality", "Others"]);

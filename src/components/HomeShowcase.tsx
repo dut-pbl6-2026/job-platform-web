@@ -2,17 +2,18 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { companyInitials, fetchJobs } from "../lib/jobsApi";
 import type { Job, SearchFacets } from "../types/job";
+import { categoryLabel } from "../lib/labels";
 
-const CATEGORY_META: Record<string, { label: string; icon: ReactNode }> = {
-  IT: { label: "Công nghệ Thông tin", icon: <path d="M4 5h16v10H4zM2 19h20M9 15v4M15 15v4" /> },
-  Sales: { label: "Kinh doanh/Bán hàng", icon: <path d="M3 17l6-6 4 4 8-8M15 7h6v6" /> },
-  Marketing: { label: "Marketing/PR/Quảng cáo", icon: <path d="M3 10v4h4l6 5V5L7 10zM17 9a4 4 0 0 1 0 6" /> },
-  Finance: { label: "Tài chính/Ngân hàng", icon: <path d="M3 10l9-6 9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18" /> },
-  Healthcare: { label: "Y tế/Dược", icon: <path d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z" /> },
-  Education: { label: "Giáo dục/Đào tạo", icon: <path d="M2 9l10-5 10 5-10 5zM6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5" /> },
-  Engineering: { label: "Kỹ thuật/Sản xuất", icon: <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" /> },
-  Hospitality: { label: "Nhà hàng/Khách sạn", icon: <path d="M4 18h16M6 18a6 6 0 0 1 12 0M12 8V6M10 6h4" /> },
-  Others: { label: "Ngành nghề khác", icon: <path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z" /> },
+const CATEGORY_ICONS: Record<string, ReactNode> = {
+  IT: <path d="M4 5h16v10H4zM2 19h20M9 15v4M15 15v4" />,
+  Sales: <path d="M3 17l6-6 4 4 8-8M15 7h6v6" />,
+  Marketing: <path d="M3 10v4h4l6 5V5L7 10zM17 9a4 4 0 0 1 0 6" />,
+  Finance: <path d="M3 10l9-6 9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18" />,
+  Healthcare: <path d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z" />,
+  Education: <path d="M2 9l10-5 10 5-10 5zM6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5" />,
+  Engineering: <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" />,
+  Hospitality: <path d="M4 18h16M6 18a6 6 0 0 1 12 0M12 8V6M10 6h4" />,
+  Others: <path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z" />,
 };
 
 const BRAND_COVERS = [
@@ -43,7 +44,7 @@ function summarize(jobs: Job[], facets?: SearchFacets) {
     if (cat && !facets?.category?.length) industries.set(cat, (industries.get(cat) ?? 0) + 1);
   }
   for (const bucket of facets?.category ?? []) industries.set(bucket.value, bucket.count);
-  for (const value of Object.keys(CATEGORY_META)) if (!industries.has(value)) industries.set(value, 0);
+  for (const value of Object.keys(CATEGORY_ICONS)) if (!industries.has(value)) industries.set(value, 0);
   return {
     brands: [...brands.values()].sort((a, b) => b.count - a.count),
     industries: [...industries.entries()].map(([value, count]) => ({ value, count }) as Industry).sort((a, b) => b.count - a.count),
@@ -99,7 +100,7 @@ export function HomeShowcase({ onCompany, onCategory }: { onCompany: (name: stri
                       {brand.name}
                       {brand.verified && <span className="topcv-verify" title="Công ty đã xác thực">✓</span>}
                     </div>
-                    <div className="topcv-brand-industry">{CATEGORY_META[brand.industry]?.label ?? brand.industry}</div>
+                    <div className="topcv-brand-industry">{categoryLabel(brand.industry)}</div>
                     <div className="topcv-brand-count">{brand.count} việc làm đang tuyển</div>
                   </div>
                 </button>
@@ -119,15 +120,14 @@ export function HomeShowcase({ onCompany, onCategory }: { onCompany: (name: stri
           </div>
           <div className="topcv-industry-grid">
             {visibleCats.map((cat) => {
-              const meta = CATEGORY_META[cat.value];
               return (
                 <button key={cat.value} type="button" className="topcv-industry-card" onClick={() => onCategory(cat.value)}>
                   <span className="topcv-industry-icon">
                     <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      {meta?.icon ?? CATEGORY_META.Others.icon}
+                      {CATEGORY_ICONS[cat.value] ?? CATEGORY_ICONS.Others}
                     </svg>
                   </span>
-                  <span className="topcv-industry-name">{meta?.label ?? cat.value}</span>
+                  <span className="topcv-industry-name">{categoryLabel(cat.value)}</span>
                   <span className="topcv-industry-count">{cat.count.toLocaleString("vi-VN")} việc làm</span>
                 </button>
               );
