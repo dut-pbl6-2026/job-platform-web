@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { fetchMe, forgotPassword as apiForgot, getAccessToken, login as apiLogin, logoutApi, register as apiRegister, resetPassword as apiReset, setTokens } from "../lib/api";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { fetchMe, forgotPassword as apiForgot, getAccessToken, login as apiLogin, logoutApi, register as apiRegister, resetPassword as apiReset, setTokens, subscribeTokenChanges } from "../lib/api";
 
 type User = { id: string; email: string; fullName: string; role: string; isActive: boolean };
 
@@ -27,13 +27,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const me = await fetchMe();
       setUser(me);
-    } catch {
+    } catch (e) {
       setUser(null);
-      setTokens(null, null);
+      // The interceptor already ends the session when the refresh token is rejected.
+      // A network error or 5xx (backend restarting) must not log the user out.
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      if (status === 401 || status === 403) setTokens(null, null);
     } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { refreshUser(); }, [refreshUser]);
+
+  // Keep tabs in sync: logout in one tab logs out the others, login in one tab logs in the others.
+  const userRef = useRef(user);
+  userRef.current = user;
+  useEffect(() => subscribeTokenChanges((loggedIn) => {
+    if (!loggedIn) setUser(null);
+    else if (!userRef.current) void refreshUser();
+  }), [refreshUser]);
 
   const login = useCallback(async (email: string, password: string, rememberMe = false) => {
     const res = await apiLogin({ email, password, rememberMe });

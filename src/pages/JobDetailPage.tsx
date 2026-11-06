@@ -5,6 +5,7 @@ import { AppHeader } from "../components/AppHeader";
 import { useAuth } from "../contexts/AuthContext";
 import { isRecruiter, isUser } from "../lib/roles";
 import { queryKeys } from "../lib/queryClient";
+import { safeHttpUrl } from "../lib/safeUrl";
 
 export default function JobDetailPage() {
   const { id } = useParams();
@@ -28,6 +29,7 @@ export default function JobDetailPage() {
   if (err) return (<><AppHeader /><div className="container"><div className="alert alert-error">{err}</div><Link to="/jobs" className="btn btn-ghost">← Quay lại danh sách</Link></div></>);
   if (!job) return null;
 
+  const website = safeHttpUrl(job.company.website);
   const isOwner = isAuthenticated && user && job.recruiterId && user.id === job.recruiterId;
   const canApply = isAuthenticated && isUser(user?.role);
   const isEmployer = isRecruiter(user?.role); // canonical Recruiter; Employer alias handled via normalizeRole
@@ -84,7 +86,7 @@ export default function JobDetailPage() {
             {(job.company.industry || job.company.address) && (
               <div className="hint">{[job.company.industry, job.company.address].filter(Boolean).join(" • ")}</div>
             )}
-            {job.company.website && <a href={job.company.website} target="_blank" rel="noreferrer" style={{ fontSize: 13 }}>{job.company.website}</a>}
+            {website && <a href={website} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13 }}>{job.company.website}</a>}
             <div className="detail-company-meta">Mã công ty: <code>{job.companyId}</code></div>
           </div>
           <div className="card detail-side-card">

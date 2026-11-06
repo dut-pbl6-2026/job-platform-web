@@ -1,4 +1,4 @@
-import { API_BASE_URL, NOTIFICATION_WS_PATH, WS_PING_MS } from "./config";
+import { API_BASE_URL, NOTIFICATION_WS_ENABLED, NOTIFICATION_WS_PATH, WS_PING_MS } from "./config";
 
 /** Browser WebSocket cannot set Authorization; SRS requires the JWT on the connection string. */
 export function resolveNotificationsWsUrl(token: string): string {
@@ -29,6 +29,8 @@ function isServerPing(data: string) {
  * `getToken` is read on every attempt: access tokens expire after 60m and are rotated by the refresh interceptor.
  */
 export function connectNotificationSocket(getToken: () => string | null, onMessage: (data: string) => void): () => void {
+  // No backend socket yet: the job poll in ToastContext is the only source (see NOTIFICATION_WS_ENABLED).
+  if (!NOTIFICATION_WS_ENABLED) return () => {};
   let socket: WebSocket | null = null;
   let stopped = false;
   let attempt = 0;
