@@ -32,6 +32,9 @@ export function loadErrorMessage(e: unknown, what: string): string {
   if (status === 401 || status === 403) return `Bạn không có quyền xem ${what}. Hãy đăng nhập lại.`;
   if (status === 404) return `Không tìm thấy ${what}.`;
   if (status) return `Không tải được ${what} (lỗi ${status}).`;
+  // Not an HTTP failure: most likely a bug or a contract change (e.g. normalizeJob throwing on a new
+  // shape). React Query does not log query errors, so log it for whoever opens the console.
+  console.error("[load]", what, e);
   return `Đã xảy ra lỗi khi tải ${what}.`;
 }
 
