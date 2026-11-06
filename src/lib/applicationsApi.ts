@@ -195,11 +195,27 @@ export async function fetchApplicationById(id: string, userId: string): Promise<
 export async function downloadCv(cvUrl: string, fileName?: string | null): Promise<void> {
   if (!cvUrl.startsWith("/")) {
     // blob: (mock mode) or an absolute storage URL: nothing to authenticate.
+    if (!/^(https?|blob):/i.test(cvUrl)) throw new Error("Đường dẫn CV không hợp lệ");
     window.open(cvUrl, "_blank", "noopener");
     return;
   }
   const path = cvUrl.replace(/^\/api(?=\/)/, ""); // API_BASE_URL already ends with /api
-  const { data } = await api.get<Blob>(path, { responseType: "blob" });
+  let data: Blob;
+  try {
+    ({ data } = await api.get<Blob>(path, { responseType: "blob" }));
+  } catch (e) {
+    // With responseType "blob" the error body is a Blob too; parse it so apiErrorMessage can read
+    // app-svc's { message } instead of showing "Request failed with status code 403".
+    const res = (e as { response?: { data?: unknown } })?.response;
+    if (res && res.data instanceof Blob) {
+      try {
+        res.data = JSON.parse(await res.data.text());
+      } catch {
+        res.data = undefined;
+      }
+    }
+    throw e;
+  }
   const url = URL.createObjectURL(data);
   const a = document.createElement("a");
   a.href = url;
