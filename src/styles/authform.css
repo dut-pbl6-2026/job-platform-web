@@ -1,0 +1,147 @@
+/*
+ * Sign-in screens (login, register, forgot and reset password): the shell bar, then one plain panel
+ * on the ground colour. Replaces the legacy .auth-* look (gradient, glass card, input icons), which
+ * is removed with the rest of the old CSS in S10.
+ */
+
+.jp-auth {
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-12) var(--sp-4) calc(var(--sp-12) * 2);
+}
+
+.jp-auth-panel {
+  width: 100%;
+  max-width: 480px;
+  padding: var(--sp-8);
+}
+.jp-auth-panel .jp-lead { margin-top: var(--sp-2); }
+
+.jp-auth-body {
+  display: grid;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
+}
+
+.jp-form { display: grid; gap: var(--sp-6); }
+
+.jp-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-4);
+  /* Both ends are links or checkboxes: give them a full tap row. */
+  min-height: var(--tap);
+}
+.jp-form-row .jp-link { display: inline-flex; align-items: center; min-height: var(--tap); }
+
+.jp-auth-footer {
+  margin: var(--sp-6) 0 0;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-row-rule);
+}
+.jp-auth-footer .jp-link { display: inline-flex; align-items: center; min-height: var(--tap); }
+
+/* Password rules: ticked as they are met; the shape changes, not just the colour. */
+.jp-rules-title { display: block; margin-bottom: var(--sp-1); }
+.jp-rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.jp-rule { display: flex; align-items: center; gap: var(--sp-2); }
+.jp-rule-box {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--c-control);
+  border-radius: 3px;
+  background: var(--c-surface);
+}
+.jp-rule.is-met { color: var(--c-ink); }
+.jp-rule.is-met .jp-rule-box { background: var(--c-success); border-color: var(--c-success); color: #fff; }
+
+/* Role switch: two buttons with aria-pressed. Pressed = "your selection" = amber fill + a check. */
+.jp-seg-field { margin: 0; padding: 0; border: 0; min-width: 0; }
+.jp-seg-field .jp-label { padding: 0; margin-bottom: 6px; }
+.jp-seg { display: grid; grid-template-columns: 1fr 1fr; }
+.jp-seg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--tap);
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--c-control);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.jp-seg-btn:first-child { border-radius: var(--radius-control) 0 0 var(--radius-control); }
+.jp-seg-btn:last-child { margin-left: -1px; border-radius: 0 var(--radius-control) var(--radius-control) 0; }
+.jp-seg-btn:hover:not(.is-on) { background: var(--c-hover); border-color: var(--c-ink); }
+.jp-seg-btn.is-on { position: relative; background: var(--c-amber); border-color: var(--c-ink); font-weight: 700; }
+.jp-seg-btn:focus-visible { position: relative; z-index: 1; }
+
+/* Company combobox */
+.jp-company-box { position: relative; }
+
+.jp-company-list {
+  position: absolute;
+  top: calc(100% + var(--sp-1));
+  left: 0;
+  right: 0;
+  z-index: 5;
+  list-style: none;
+  margin: 0;
+  padding: var(--sp-1) 0;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--c-surface);
+  border: 1px solid var(--c-control);
+  border-radius: var(--radius-control);
+}
+.jp-company-list[hidden] { display: none; }
+
+.jp-company-option {
+  display: grid;
+  gap: 2px;
+  min-height: var(--tap);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+}
+.jp-company-option strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jp-company-option span { font-size: var(--fs-caption); color: var(--c-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jp-company-option.is-active { background: var(--c-amber-soft); box-shadow: inset 0 0 0 1px var(--c-amber); }
+
+.jp-company-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-control);
+  background: var(--c-ground);
+  font-size: 14px;
+}
+
+.jp-company-picked {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--c-navy);
+  border-radius: var(--radius-control);
+  background: var(--c-surface);
+}
+.jp-company-picked > .jp-icon { color: var(--c-success); }
+.jp-company-picked-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.jp-company-picked-text strong { overflow-wrap: anywhere; }
+.jp-company-picked-text span { font-size: var(--fs-caption); color: var(--c-muted); overflow-wrap: anywhere; }
+
+@media (max-width: 767px) {
+  .jp-auth { padding: var(--sp-6) var(--sp-4) var(--sp-12); }
+  .jp-auth-panel { padding: var(--sp-6) var(--sp-4); }
+}

@@ -40,6 +40,7 @@ const GUEST_SCREENS: [name: string, path: string][] = [
   ["login", "/login"],
   ["register", "/register"],
   ["forgot-password", "/forgot-password"],
+  ["reset-password", "/reset-password?token=abc"],
 ];
 
 const SIGNED_IN_SCREENS: [name: string, role: Role, path: string][] = [
@@ -141,6 +142,11 @@ async function expectSoundLayout(page: Page) {
 
 const LAYOUT_ROUTES: [name: string, role: Role | null, path: string][] = [
   ["apply", "User", "/jobs/seed-1/apply"],
+  ["login", null, "/login"],
+  ["login with next", null, "/login?next=%2Fjobs%2Fseed-1%2Fapply"],
+  ["register", null, "/register"],
+  ["forgot-password", null, "/forgot-password"],
+  ["reset-password", null, "/reset-password?token=abc"],
 ];
 
 for (const [name, role, path] of LAYOUT_ROUTES) {
@@ -152,6 +158,162 @@ for (const [name, role, path] of LAYOUT_ROUTES) {
     await expectSoundLayout(page);
   });
 }
+
+test("login: empty submit names the problem next to each field", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await page.goto("/login");
+  await expect(page.getByLabel("Email")).toBeVisible(); // a real <label>, not a placeholder
+  await page.getByRole("button", { name: "Đăng nhập", exact: true }).last().click();
+  await expect(page.getByText("Email là bắt buộc")).toBeVisible();
+  await expect(page.getByText("Hãy nhập mật khẩu")).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeFocused();
+  await expect(page.getByLabel("Email")).toHaveAttribute("aria-invalid", "true");
+  await shoot(page, testInfo, "login-errors");
+});
+
+test("login: wrong password", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await page.route("**/api/auth/login", (route) => route.fulfill({ status: 401, json: { message: "Invalid credentials" } }));
+  await page.goto("/login");
+  await page.getByLabel("Email").fill("a@e2e.local");
+  await page.getByLabel(/^Mật khẩu/).fill("sai-mat-khau");
+  await page.getByRole("button", { name: "Đăng nhập", exact: true }).last().click();
+  await expect(page.getByRole("alert").filter({ hasText: "Email hoặc mật khẩu không đúng" })).toBeVisible();
+  await shoot(page, testInfo, "login-wrong-password");
+});
+
+test("login: coming from a job says where you go back to", async ({ page }) => {
+  await offlineBackend(page);
+  await page.goto("/login?next=%2Fjobs%2Fseed-1%2Fapply");
+  await expect(page.getByText("Đăng nhập xong, bạn quay lại trang đang xem.")).toBeVisible();
+});
+
+test("register: password rules are visible up front and tick as met", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await page.goto("/register");
+  const rules = page.locator(".jp-rules");
+  await expect(rules).toBeVisible();
+  await expect(rules.getByText("(chưa đạt)")).toHaveCount(3);
+  await page.getByLabel(/^Mật khẩu/).fill("Abcdefg1");
+  await expect(rules.getByText("(đã đạt)")).toHaveCount(3);
+  await page.getByLabel(/^Mật khẩu/).fill("abcdefg1");
+  await expect(rules.getByText("(đã đạt)")).toHaveCount(2); // no capital letter yet
+  await shoot(page, testInfo, "register-password-rules");
+});
+
+test("register: empty submit, role switch has aria-pressed", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await page.goto("/register");
+  await expect(page.getByRole("button", { name: "Ứng viên", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "Nhà tuyển dụng", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await page.getByRole("button", { name: "Đăng ký ứng viên" }).click();
+  await expect(page.getByText("Họ tên là bắt buộc")).toBeVisible();
+  await expect(page.getByLabel("Họ và tên")).toBeFocused();
+  await shoot(page, testInfo, "register-errors");
+});
+
+test("register as recruiter: pick a company by name, by keyboard", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await page.goto("/register");
+  await page.getByRole("button", { name: "Nhà tuyển dụng", exact: true }).click();
+
+  // Not picked yet: submitting says so, and no UUID or "CompanyId" is ever on screen.
+  await page.getByRole("button", { name: "Đăng ký nhà tuyển dụng" }).click();
+  await expect(page.getByText("Hãy chọn công ty bạn tuyển dụng cho.")).toBeVisible();
+
+  const box = page.getByRole("combobox", { name: /Công ty bạn tuyển dụng cho/ });
+  await expect(box).toBeFocused();
+  await box.fill("T");
+  await expect(page.getByRole("option")).toHaveCount(0); // under 2 characters: no search yet
+  await box.fill("Cong");
+  await expect(page.getByRole("option").first()).toBeVisible();
+  await expect(box).toHaveAttribute("aria-expanded", "true");
+  await shoot(page, testInfo, "register-company-list");
+
+  await box.press("ArrowDown");
+  await expect(box).toHaveAttribute("aria-activedescendant", /.+/);
+  await box.press("Enter");
+  await expect(page.getByRole("group", { name: /Công ty bạn tuyển dụng cho/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Đổi/ })).toBeVisible();
+  await expect(page.getByText("Hãy chọn công ty bạn tuyển dụng cho.")).toHaveCount(0);
+  await shoot(page, testInfo, "register-company-picked");
+
+  const text = await page.locator("main").innerText();
+  expect(text).not.toMatch(/companyid/i);
+  expect(text).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+
+  await page.getByRole("button", { name: /Đổi/ }).click();
+  await expect(box).toBeFocused();
+});
+
+test("register as recruiter: no company found, and a failed search can be retried", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await page.goto("/register");
+  await page.getByRole("button", { name: "Nhà tuyển dụng", exact: true }).click();
+  const box = page.getByRole("combobox", { name: /Công ty bạn tuyển dụng cho/ });
+  await box.fill("zzzzqq");
+  await expect(page.getByText("Chưa thấy công ty? Liên hệ quản trị viên.")).toBeVisible();
+  await shoot(page, testInfo, "register-company-none");
+
+  // A 4xx is never hidden behind mock data: the real error shows, with a retry.
+  await page.route("**/api/companies**", (route) => route.fulfill({ status: 400, json: { message: "Bad request" } }));
+  await box.fill("Cong ty khac");
+  await expect(page.getByRole("button", { name: "Thử lại" })).toBeVisible();
+  await shoot(page, testInfo, "register-company-error");
+});
+
+test("register as recruiter: auth-svc 422 asks to choose the company again", async ({ page }) => {
+  await offlineBackend(page);
+  await page.route("**/api/auth/register", (route) => route.fulfill({ status: 422, json: { detail: "Invalid companyId" } }));
+  await page.goto("/register");
+  await page.getByRole("button", { name: "Nhà tuyển dụng", exact: true }).click();
+  const box = page.getByRole("combobox", { name: /Công ty bạn tuyển dụng cho/ });
+  await box.fill("Cong");
+  await expect(page.getByRole("option").first()).toBeVisible(); // the list loads after a debounce
+  await box.press("ArrowDown");
+  await box.press("Enter");
+  await expect(page.getByRole("group", { name: /Công ty bạn tuyển dụng cho/ })).toBeVisible();
+  await page.getByLabel("Họ và tên").fill("Nguyễn Văn A");
+  await page.getByLabel("Email").fill("a@e2e.local");
+  await page.getByLabel(/^Mật khẩu/).fill("Abcdefg1");
+  await page.getByLabel("Nhập lại mật khẩu").fill("Abcdefg1");
+  await page.getByRole("button", { name: "Đăng ký nhà tuyển dụng" }).click();
+  await expect(page.getByText("Công ty không còn tồn tại, hãy chọn lại.")).toBeVisible();
+  await expect(page.getByRole("combobox", { name: /Công ty bạn tuyển dụng cho/ })).toBeVisible();
+});
+
+test("forgot password: success message", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await page.route("**/api/auth/forgot-password", (route) => route.fulfill({ status: 200, json: { message: "Nếu email tồn tại, liên kết đặt lại đã được gửi" } }));
+  await page.goto("/forgot-password");
+  await page.getByLabel("Email").fill("a@e2e.local");
+  await page.getByRole("button", { name: "Gửi liên kết đặt lại" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "liên kết đặt lại đã được gửi" })).toBeVisible();
+  await shoot(page, testInfo, "forgot-password-sent");
+});
+
+test("reset password: expired token offers a new link", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await page.route("**/api/auth/reset-password", (route) => route.fulfill({ status: 401, json: { message: "Invalid token" } }));
+  await page.goto("/reset-password?token=het-han");
+  await page.getByLabel(/^Mật khẩu mới/).fill("Abcdefg1");
+  await page.getByLabel("Nhập lại mật khẩu mới").fill("Abcdefg1");
+  await page.getByRole("button", { name: "Đặt lại mật khẩu" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Mã đặt lại không hợp lệ hoặc đã hết hạn." })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Nhận liên kết mới" })).toBeVisible();
+  await shoot(page, testInfo, "reset-password-expired");
+});
+
+test("reset password: mismatch is reported on the confirm field", async ({ page }) => {
+  await offlineBackend(page);
+  await page.goto("/reset-password");
+  await page.getByLabel("Mã đặt lại").fill("abc");
+  await page.getByLabel(/^Mật khẩu mới/).fill("Abcdefg1");
+  await page.getByLabel("Nhập lại mật khẩu mới").fill("Khac12345");
+  await page.getByRole("button", { name: "Đặt lại mật khẩu" }).click();
+  await expect(page.getByText("Xác nhận mật khẩu không khớp")).toBeVisible();
+  await expect(page.getByLabel("Nhập lại mật khẩu mới")).toBeFocused();
+});
 
 test("guest jobs load error", async ({ page }, testInfo) => {
   // A 4xx is never replaced by mock data, so the error state with its retry button shows.

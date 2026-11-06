@@ -99,7 +99,7 @@ export function Field({ id, label, hint, error, required, optional, className, c
         {optional && <span className="jp-optional"> (không bắt buộc)</span>}
       </label>
       {control}
-      {hint && <p id={hintId} className="jp-hint">{hint}</p>}
+      {hint && <div id={hintId} className="jp-hint">{hint}</div>}
       {error && (
         <p id={errorId} className="jp-error" role="alert">
           <Icon name="alert" size={16} />

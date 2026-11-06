@@ -5,6 +5,7 @@ import { normalizeEmploymentType, normalizeExperienceLevel } from "../types/job"
 import { splitCsv, locationMatches } from "./searchFilters";
 import { pickNum, pickStr, shouldUseMock, httpStatus } from "./http";
 import { MOCKS_ENABLED } from "./config";
+import { categoryLabel } from "./labels";
 
 /**
  * Single adapter for every Job source, until the services return one shape (Phase 2):
@@ -297,6 +298,42 @@ export async function fetchCategories(): Promise<{ id: string; name: string }[]>
   } catch (e) {
     if (!shouldUseMock(e, "GET /categories")) throw e;
     return MOCK_CATEGORIES;
+  }
+}
+
+/** What the recruiter sign-up needs from a company: an id to send, and a name plus a line to tell similar names apart. */
+export type CompanyOption = { id: string; name: string; industry?: string; address?: string };
+
+function toCompanyOption(raw: unknown): CompanyOption | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const id = pickStr(o, "id");
+  const name = pickStr(o, "name");
+  if (!id || !name) return null;
+  return { id, name, industry: pickStr(o, "industry"), address: pickStr(o, "address") };
+}
+
+const MOCK_COMPANIES: CompanyOption[] = [
+  ...new Map(MOCK_JOBS.map((job) => [job.company.id, job.company] as const)).values(),
+]
+  // The mock catalogue stores the backend category name as `industry`; show its Vietnamese label.
+  .map((c) => toCompanyOption({ id: c.id, name: c.name, industry: c.industry && categoryLabel(c.industry), address: c.address }))
+  .filter((c): c is CompanyOption => c !== null);
+
+/**
+ * Companies by name for the recruiter sign-up. job-svc `GET /api/companies` is public, pages from 1 and
+ * returns `{ items, total, page, size, totalPages }`; only the first page is read, the user narrows by typing.
+ */
+export async function fetchCompanies(q: string, size = 8): Promise<CompanyOption[]> {
+  try {
+    const { data } = await api.get("/companies", { params: { q: q.trim(), page: 1, size } });
+    const items = (data as { items?: unknown } | null)?.items;
+    return (Array.isArray(items) ? items : []).map(toCompanyOption).filter((c): c is CompanyOption => c !== null);
+  } catch (e) {
+    if (!shouldUseMock(e, "GET /companies")) throw e;
+    await new Promise((r) => setTimeout(r, 200));
+    const keyword = q.trim().toLowerCase();
+    return MOCK_COMPANIES.filter((c) => c.name.toLowerCase().includes(keyword)).slice(0, size);
   }
 }
 
