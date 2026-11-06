@@ -25,11 +25,11 @@ export const JOB_CATEGORIES = [
   { name: "IT", label: "Công nghệ Thông tin" },
   { name: "Sales", label: "Kinh doanh/Bán hàng" },
   { name: "Marketing", label: "Marketing/PR/Quảng cáo" },
-  { name: "Finance", label: "Tài chính/Ngân hàng" },
+  { name: "Finance", label: "Tài chính/Kế toán/Ngân hàng" },
   { name: "Healthcare", label: "Y tế/Dược" },
   { name: "Education", label: "Giáo dục/Đào tạo" },
   { name: "Engineering", label: "Kỹ thuật/Sản xuất" },
-  { name: "Hospitality", label: "Nhà hàng/Khách sạn" },
+  { name: "Hospitality", label: "Nhà hàng/Khách sạn/Du lịch" },
   { name: "Others", label: "Ngành nghề khác" },
 ] as const;
 

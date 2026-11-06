@@ -1,17 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { isUser } from "../lib/roles";
+import { categoryLabel } from "../lib/labels";
 
 const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
 
-const CATEGORY_LINKS = [
-  { label: "Công nghệ Thông tin", value: "IT" },
-  { label: "Kinh doanh/Bán hàng", value: "Sales" },
-  { label: "Marketing/PR/Quảng cáo", value: "Marketing" },
-  { label: "Tài chính/Ngân hàng", value: "Finance" },
-  { label: "Kỹ thuật/Sản xuất", value: "Engineering" },
-  { label: "Giáo dục/Đào tạo", value: "Education" },
-];
+// Labels come from lib/labels.ts, the single source for category names.
+const CATEGORY_LINKS = ["IT", "Sales", "Marketing", "Finance", "Engineering", "Education"].map((value) => ({
+  label: categoryLabel(value),
+  value,
+}));
 
 const LOCATION_LINKS = [
   { label: "Việc làm tại Hà Nội", value: "Hà Nội" },
