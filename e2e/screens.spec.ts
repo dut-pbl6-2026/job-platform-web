@@ -596,3 +596,213 @@ test("profile: load error is Vietnamese and retry works", async ({ page }, testI
   await page.getByRole("button", { name: "Thử lại" }).click();
   await expect(page.getByRole("heading", { level: 2, name: "Thông tin cá nhân" })).toBeVisible();
 });
+
+/* Admin (S8) ----------------------------------------------------------------------------------------- */
+
+const STATS = {
+  users: { status: "ok", total: 128, active: 120, newThisMonth: 9, byRole: { User: 100, Recruiter: 27, Admin: 1 } },
+  jobs: { status: "ok", total: 340, active: 300, pending: 3 },
+  applications: { status: "ok", total: 57, pending: 30, accepted: 12, rejected: 15 },
+};
+
+async function adminOverview(page: Page, stats: object = STATS) {
+  await page.route(/\/api\/admin\/stats$/, (route) => route.fulfill({ json: stats }));
+  await page.route(/\/api\/health$/, (route) =>
+    route.fulfill({
+      json: {
+        status: "Degraded",
+        services: [
+          { name: "auth", status: "UP", latencyMs: 12 },
+          { name: "job", status: "UP", latencyMs: 31 },
+          { name: "application", status: "DOWN" },
+        ],
+      },
+    }),
+  );
+}
+
+test("admin dashboard: number groups, pending shortcut, service down", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "Admin");
+  await adminOverview(page);
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { level: 1, name: "Bảng quản trị" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Duyệt 3 tin chờ duyệt" })).toBeVisible();
+  await expect(page.locator(".jp-stat", { hasText: "Nhà tuyển dụng" })).toContainText("27");
+  await expect(page.locator(".jp-stat", { hasText: "Nhận việc" })).toContainText("12");
+  await expect(page.getByText("Không phản hồi")).toBeVisible();
+  await expect(page.getByText("Hoạt động", { exact: true }).first()).toBeVisible();
+  // The second bar marks where you are.
+  await expect(page.getByRole("link", { name: "Tổng quan" })).toHaveAttribute("aria-current", "page");
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "admin-dashboard-data");
+});
+
+test("admin dashboard: a section that did not answer says so instead of showing zero", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "Admin");
+  await adminOverview(page, { ...STATS, applications: { status: "unavailable" } });
+  await page.goto("/admin");
+  await expect(page.getByRole("status").filter({ hasText: "Chưa lấy được số liệu đơn ứng tuyển" })).toBeVisible();
+  await expect(page.locator(".jp-stat", { hasText: "Nhận việc" })).toContainText("Chưa có số liệu");
+  await shoot(page, testInfo, "admin-dashboard-partial");
+});
+
+test("admin dashboard: load error is Vietnamese and retry works", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "Admin");
+  let fail = true;
+  await page.route(/\/api\/admin\/stats$/, (route) =>
+    fail ? route.fulfill({ status: 403, json: { message: "forbidden" } }) : route.fulfill({ json: STATS }),
+  );
+  await page.goto("/admin");
+  await expect(page.getByRole("alert").filter({ hasText: "Bạn không có quyền xem số liệu thống kê" })).toBeVisible();
+  await shoot(page, testInfo, "admin-dashboard-error");
+  fail = false;
+  await page.getByRole("button", { name: "Thử lại" }).first().click();
+  await expect(page.locator(".jp-stat", { hasText: "Nhà tuyển dụng" })).toContainText("27");
+});
+
+test("admin: a candidate is not let in", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "Chỉ quản trị viên mới vào được khu vực này." })).toBeVisible();
+});
+
+test("admin jobs: read first, reject needs a reason, approve and reject leave the queue", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "Admin");
+  await page.goto("/admin/jobs");
+  const rows = page.locator(".jp-queue-item");
+  await expect(rows.first()).toBeVisible();
+  const before = await rows.count();
+  expect(before).toBeGreaterThan(1);
+  const rejectedTitle = await rows.first().locator(".jp-row-title").innerText();
+  const approvedTitle = await rows.nth(1).locator(".jp-row-title").innerText();
+  // No raw category enum on screen.
+  await expect(page.locator(".jp-queue")).not.toContainText(/\b(IT|Sales|Finance|Healthcare)\b/);
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "admin-jobs");
+
+  // Read the content before deciding.
+  const first = rows.first();
+  await first.getByRole("button", { name: "Xem nội dung" }).click();
+  await expect(first.locator(".jp-facts")).toBeVisible();
+  await expect(first.getByRole("heading", { name: "Mô tả công việc" })).toBeVisible();
+  await expect(first).not.toContainText(/FullTime|Full-time|Mid\b|Senior\b/);
+  await shoot(page, testInfo, "admin-jobs-reading");
+  await first.getByRole("button", { name: "Ẩn nội dung" }).click();
+  await expect(first.locator(".jp-facts")).toHaveCount(0);
+
+  // Reject: an empty reason is refused next to the field; the request is not sent.
+  await first.getByRole("button", { name: /^Từ chối tin/ }).click();
+  await first.getByRole("button", { name: "Xác nhận từ chối" }).click();
+  await expect(first.getByText("Nhập lý do từ chối để gửi cho nhà tuyển dụng.")).toBeVisible();
+  await expect(first.getByLabel(/^Lý do từ chối/)).toHaveAttribute("aria-invalid", "true");
+  await shoot(page, testInfo, "admin-jobs-reject");
+  await first.getByLabel(/^Lý do từ chối/).fill("Thiếu mô tả công việc");
+  await first.getByRole("button", { name: "Xác nhận từ chối" }).click();
+  await expect(page.getByRole("status").filter({ hasText: /từ chối/i })).toBeVisible();
+  // The page refills from the next pending jobs, so check by title, not by count.
+  await expect(page.locator(".jp-queue")).not.toContainText(rejectedTitle);
+
+  // Approve the next one.
+  await rows.filter({ hasText: approvedTitle }).getByRole("button", { name: /^Duyệt tin/ }).click();
+  await expect(page.locator(".jp-queue")).not.toContainText(approvedTitle);
+});
+
+test("admin jobs: a failed list load can be retried", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "Admin");
+  let fail = true;
+  await page.route(/\/api\/admin\/jobs\?/, (route) =>
+    fail ? route.fulfill({ status: 400, json: { message: "bad" } }) : route.fulfill({ json: { data: [], pagination: { page: 1, pageSize: 6, totalItems: 0, totalPages: 1 } } }),
+  );
+  await page.goto("/admin/jobs");
+  await expect(page.getByRole("alert").filter({ hasText: "Không tải được danh sách tin chờ duyệt" })).toBeVisible();
+  await shoot(page, testInfo, "admin-jobs-error");
+  fail = false;
+  await page.getByRole("button", { name: "Thử lại" }).click();
+  await expect(page.getByRole("heading", { name: "Không còn tin chờ duyệt" })).toBeVisible();
+  await shoot(page, testInfo, "admin-jobs-empty");
+});
+
+test("admin users: Vietnamese roles, filters, confirm before deactivating, admins untouched", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "Admin");
+  await page.goto("/admin/users");
+  const rows = page.locator(".jp-table--users tbody tr");
+  await expect(rows.first()).toBeVisible();
+  await expect(page.locator(".jp-table--users")).not.toContainText(/\b(Recruiter|User|Admin)\b/);
+  await expect(rows.filter({ hasText: "bao@example.com" })).toContainText("Quản trị viên");
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "admin-users");
+
+  // The admin account has no action.
+  const adminRow = rows.filter({ hasText: "bao@example.com" });
+  await expect(adminRow.getByRole("button")).toHaveCount(0);
+  await expect(adminRow).toContainText("Không áp dụng cho quản trị viên");
+
+  // Deactivate: asks first, cancel leaves it as it was, confirm changes it.
+  const lan = rows.filter({ hasText: "lan@example.com" });
+  await expect(lan).toContainText("Đang hoạt động");
+  await lan.getByRole("button", { name: "Vô hiệu hóa lan@example.com" }).click();
+  await expect(lan.getByText("Vô hiệu hóa tài khoản này?")).toBeVisible();
+  await shoot(page, testInfo, "admin-users-confirm");
+  await lan.getByRole("button", { name: "Hủy" }).click();
+  await expect(lan).toContainText("Đang hoạt động");
+  await lan.getByRole("button", { name: "Vô hiệu hóa lan@example.com" }).click();
+  await lan.getByRole("button", { name: "Xác nhận" }).click();
+  await expect(lan).toContainText("Đã vô hiệu hóa");
+  await expect(page.getByRole("status").filter({ hasText: "Đã vô hiệu hóa tài khoản lan@example.com." })).toBeVisible();
+  await lan.getByRole("button", { name: "Kích hoạt lan@example.com" }).click();
+  await lan.getByRole("button", { name: "Xác nhận" }).click();
+  await expect(lan).toContainText("Đang hoạt động");
+
+  // Filters live in the URL.
+  await page.getByLabel("Vai trò").selectOption("Recruiter");
+  await expect(page).toHaveURL(/role=Recruiter/);
+  await expect(rows.filter({ hasText: "lan@example.com" })).toHaveCount(0);
+  await page.getByLabel("Trạng thái").selectOption("inactive");
+  await expect(page.getByRole("heading", { name: "Không có người dùng nào khớp bộ lọc" }).or(rows.first())).toBeVisible();
+  await page.getByLabel("Vai trò").selectOption("");
+  await page.getByLabel("Trạng thái").selectOption("");
+  await page.getByLabel("Tên hoặc email").fill("zzzz-khong-co");
+  await page.getByRole("button", { name: "Tìm" }).click();
+  await expect(page.getByRole("heading", { name: "Không có người dùng nào khớp bộ lọc" })).toBeVisible();
+  await shoot(page, testInfo, "admin-users-empty");
+  await page.getByRole("button", { name: "Xóa bộ lọc" }).click();
+  await expect(rows.first()).toBeVisible();
+});
+
+test("admin users: a failed change keeps the old state and says why", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "Admin");
+  await page.goto("/admin/users");
+  const lan = page.locator(".jp-table--users tbody tr").filter({ hasText: "lan@example.com" });
+  await expect(lan).toBeVisible();
+  // A 4xx is shown, never replaced by mock success.
+  await page.route(/\/api\/admin\/users\/.*\/deactivate$/, (route) => route.fulfill({ status: 409, json: { message: "Không thể vô hiệu hóa tài khoản này." } }));
+  await lan.getByRole("button", { name: "Vô hiệu hóa lan@example.com" }).click();
+  await lan.getByRole("button", { name: "Xác nhận" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "Không thể vô hiệu hóa tài khoản này." })).toBeVisible();
+  await expect(lan).toContainText("Đang hoạt động");
+  await shoot(page, testInfo, "admin-users-error");
+});
+
+test("admin users: load error is Vietnamese and retry works", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page, "Admin");
+  let fail = true;
+  await page.route(/\/api\/admin\/users\?/, (route) =>
+    fail
+      ? route.fulfill({ status: 400, json: { message: "bad" } })
+      : route.fulfill({ json: { data: [], pagination: { page: 1, pageSize: 8, totalItems: 0, totalPages: 1 } } }),
+  );
+  await page.goto("/admin/users");
+  await expect(page.getByRole("alert").filter({ hasText: "Không tải được danh sách người dùng" })).toBeVisible();
+  fail = false;
+  await page.getByRole("button", { name: "Thử lại" }).click();
+  await expect(page.getByRole("heading", { name: "Chưa có người dùng" })).toBeVisible();
+});

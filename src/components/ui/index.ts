@@ -20,6 +20,7 @@ export {
   EmptyState,
   NewMark,
   PageHead,
+  PageLoading,
   Pagination,
   Panel,
   SkeletonBlock,

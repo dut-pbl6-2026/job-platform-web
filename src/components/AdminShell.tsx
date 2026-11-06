@@ -1,50 +1,62 @@
-import { Link, Navigate, useLocation } from "react-router-dom";
-import { TopBar } from "./ui";
+import type { ReactNode } from "react";
+import { Navigate, NavLink, useLocation } from "react-router-dom";
+import { ButtonLink, EmptyState, PageHead, PageLoading, TopBar } from "./ui";
 import { useAuth } from "../contexts/AuthContext";
 import { isAdmin } from "../lib/roles";
 
 const LINKS = [
-  { to: "/admin", label: "Tổng quan" },
-  { to: "/admin/jobs", label: "Duyệt tin" },
-  { to: "/admin/users", label: "Người dùng" },
+  { to: "/admin", label: "Tổng quan", end: true },
+  { to: "/admin/jobs", label: "Duyệt tin", end: false },
+  { to: "/admin/users", label: "Người dùng", end: false },
 ];
 
-export function AdminRoute({ children }: { children: React.ReactNode }) {
+export function AdminRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
-  if (loading) return <div style={{ display: "grid", placeItems: "center", minHeight: "60vh" }}><div className="spinner" /></div>;
+  if (loading) return <PageLoading label="Đang kiểm tra quyền truy cập" />;
   if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   if (!isAdmin(user?.role)) {
     return (
       <>
         <TopBar />
-        <div className="container">
-          <div className="alert alert-error">Chỉ quản trị viên mới vào được khu vực này.</div>
-          <Link className="btn btn-ghost" to="/jobs">← Việc làm</Link>
-        </div>
+        <main className="jp-page jp-page--narrow">
+          <EmptyState
+            title="Chỉ quản trị viên mới vào được khu vực này."
+            action={<ButtonLink to="/jobs">Xem bảng việc làm</ButtonLink>}
+          />
+        </main>
       </>
     );
   }
   return <>{children}</>;
 }
 
-export function AdminShell({ title, lead, children }: { title: string; lead?: string; children: React.ReactNode }) {
-  const { pathname } = useLocation();
+/**
+ * The admin frame: the shared shell bar, then a second bar with the three admin sections (the amber
+ * underline is "where you are"), then the page. Admin is the same world as the job board, not another app.
+ */
+export function AdminShell({ title, lead, actions, children }: {
+  title: string;
+  lead?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <>
       <TopBar />
-      <div className="container admin-layout">
-        <aside className="admin-nav" aria-label="Điều hướng quản trị">
+      <nav className="jp-subnav" aria-label="Điều hướng quản trị">
+        <div className="jp-subnav-inner">
           {LINKS.map((link) => (
-            <Link key={link.to} to={link.to} className={pathname === link.to ? "active" : ""}>{link.label}</Link>
+            <NavLink key={link.to} to={link.to} end={link.end} className="jp-subnav-link">
+              {link.label}
+            </NavLink>
           ))}
-        </aside>
-        <section className="admin-main">
-          <h1 className="page-h1">{title}</h1>
-          {lead && <p className="hint page-lead">{lead}</p>}
-          {children}
-        </section>
-      </div>
+        </div>
+      </nav>
+      <main className="jp-page">
+        <PageHead title={title} lead={lead} actions={actions} />
+        {children}
+      </main>
     </>
   );
 }

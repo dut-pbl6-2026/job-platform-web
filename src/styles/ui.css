@@ -587,8 +587,8 @@
 }
 .jp-pager-num,
 .jp-pager-step {
-  min-width: 40px;
-  height: 40px;
+  min-width: var(--tap);
+  height: var(--tap);
   padding: 0 var(--sp-3);
   display: inline-flex;
   align-items: center;
@@ -612,10 +612,6 @@
 }
 .jp-pager-step:disabled { opacity: 0.45; cursor: default; }
 .jp-pager-gap { padding: 0 var(--sp-1); color: var(--c-muted); }
-@media (pointer: coarse) {
-  .jp-pager-num,
-  .jp-pager-step { min-width: var(--tap); height: var(--tap); }
-}
 @media (max-width: 767px) {
   .jp-pager-list li:not(:has([aria-current])):not(:first-child):not(:last-child) { display: none; }
 }
@@ -861,3 +857,7 @@
   .jp-fact--salary.is-negotiable dd { color: #fff; }
   .jp-fact dd { padding-top: 2px; }
 }
+
+/* Rhythm between a page's direct children: messages sit above their content, the pager below the list. */
+.jp-page > .jp-alert { margin-bottom: var(--sp-4); }
+.jp-page > .jp-pager { margin-top: var(--sp-6); }

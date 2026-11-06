@@ -1,9 +1,12 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { AdminShell } from "../components/AdminShell";
+import { Alert, Button, ButtonLink, SkeletonBlock, StatusMark } from "../components/ui";
 import { fetchAdminHealth, fetchAdminStatistics } from "../lib/adminApi";
-import { apiErrorMessage } from "../lib/http";
-import type { AdminHealth, AdminStatistics } from "../types/admin";
+import { loadErrorMessage } from "../lib/http";
+import { queryKeys } from "../lib/queryClient";
+import type { AdminStatistics } from "../types/admin";
+import { STATUS_LABEL } from "../types/application";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const SECTION_LABEL: Record<AdminStatistics["unavailable"][number], string> = {
@@ -12,100 +15,153 @@ const SECTION_LABEL: Record<AdminStatistics["unavailable"][number], string> = {
   applications: "đơn ứng tuyển",
 };
 
+type Cell = { label: string; value: number | null; to?: string };
+
 export default function AdminDashboardPage() {
   useDocumentTitle("Quản trị: Tổng quan");
-  const [stats, setStats] = useState<AdminStatistics | null>(null);
-  const [health, setHealth] = useState<AdminHealth | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    setErr(null);
-    Promise.all([fetchAdminStatistics(), fetchAdminHealth()])
-      .then(([s, h]) => { if (!alive) return; setStats(s); setHealth(h); })
-      .catch((e) => { if (alive) setErr(apiErrorMessage(e, "Không tải được thống kê")); })
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
-  }, []);
+  // Two separate requests: a slow health check must not hold back the numbers, nor the reverse.
+  const stats = useQuery({ queryKey: queryKeys.adminStats, queryFn: fetchAdminStatistics, staleTime: 0 });
+  const health = useQuery({ queryKey: queryKeys.adminHealth, queryFn: fetchAdminHealth, staleTime: 0 });
+  const s = stats.data;
+  const pending = s?.pendingJobs ?? 0;
 
   return (
-    <AdminShell title="Bảng quản trị" lead="Thống kê nền tảng và hàng chờ duyệt tin.">
-      {err && <div className="alert alert-error">{err}</div>}
-      {loading && <div className="skeleton-detail" />}
-      {stats && (
+    <AdminShell
+      title="Bảng quản trị"
+      lead="Số liệu nền tảng và tình trạng các dịch vụ."
+      actions={pending > 0 ? <ButtonLink to="/admin/jobs">Duyệt {pending.toLocaleString("vi-VN")} tin chờ duyệt</ButtonLink> : undefined}
+    >
+      {stats.isPending && <SkeletonBlock height={240} label="Đang tải số liệu" />}
+
+      {stats.isError && (
+        <Alert
+          tone="error"
+          action={
+            <Button variant="secondary" loading={stats.isFetching} onClick={() => void stats.refetch()}>
+              {stats.isFetching ? "Đang thử lại…" : "Thử lại"}
+            </Button>
+          }
+        >
+          {loadErrorMessage(stats.error, "số liệu thống kê")}
+        </Alert>
+      )}
+
+      {s && (
         <>
-          {stats.unavailable.length > 0 && (
-            <div className="alert alert-error">
-              Chưa lấy được số liệu {stats.unavailable.map((key) => SECTION_LABEL[key]).join(", ")}: dịch vụ không phản hồi.
-            </div>
+          {s.unavailable.length > 0 && (
+            <Alert tone="warning">
+              Chưa lấy được số liệu {s.unavailable.map((key) => SECTION_LABEL[key]).join(", ")}: dịch vụ không phản hồi.
+            </Alert>
           )}
-          <div className="admin-kpis">
-            <Kpi label="Người dùng" value={stats.totalUsers} />
-            <Kpi label="Nhà tuyển dụng" value={stats.totalRecruiters} />
-            <Kpi label="Người tìm việc" value={stats.totalJobSeekers} />
-            <Kpi label="Tin đăng" value={stats.totalJobs} />
-            <Kpi label="Đơn ứng tuyển" value={stats.totalApplications} />
-            <Kpi label="Chờ duyệt" value={stats.pendingJobs} href="/admin/jobs" />
-          </div>
-          <div className="admin-grid">
-            <div className="card">
-              <h2 className="section-h">Người dùng</h2>
-              <div className="kv-grid">
-                <div><span className="hint">Đang hoạt động</span><strong>{show(stats.activeUsers)}</strong></div>
-                <div><span className="hint">Mới tháng này</span><strong>{show(stats.newUsersThisMonth)}</strong></div>
-              </div>
-              <h2 className="section-h" style={{ marginTop: 16 }}>Tin đăng</h2>
-              <div className="kv-grid">
-                <div><span className="hint">Đang hiển thị</span><strong>{show(stats.activeJobs)}</strong></div>
-                <div><span className="hint">Chờ duyệt</span><strong>{show(stats.pendingJobs)}</strong></div>
-              </div>
-            </div>
-            <div className="card">
-              <h2 className="section-h">Trạng thái đơn</h2>
-              {stats.applicationStatus ? (
-                <div className="kv-grid">
-                  <div><span className="hint">Chờ</span><strong>{stats.applicationStatus.pending}</strong></div>
-                  <div><span className="hint">Nhận</span><strong>{stats.applicationStatus.accepted}</strong></div>
-                  <div><span className="hint">Từ chối</span><strong>{stats.applicationStatus.rejected}</strong></div>
-                </div>
-              ) : (
-                <p className="hint">Chưa có số liệu.</p>
-              )}
-            </div>
+          <div className="jp-stat-groups">
+            <StatGroup
+              title="Người dùng"
+              className="jp-statgroup--wide"
+              cells={[
+                { label: "Tổng số", value: s.totalUsers },
+                { label: "Người tìm việc", value: s.totalJobSeekers },
+                { label: "Nhà tuyển dụng", value: s.totalRecruiters },
+                { label: "Đang hoạt động", value: s.activeUsers },
+                { label: "Mới tháng này", value: s.newUsersThisMonth },
+              ]}
+            />
+            <StatGroup
+              title="Tin đăng"
+              cells={[
+                { label: "Tổng số", value: s.totalJobs },
+                { label: "Đang hiển thị", value: s.activeJobs },
+                { label: "Chờ duyệt", value: s.pendingJobs, to: "/admin/jobs" },
+              ]}
+            />
+            <StatGroup
+              title="Đơn ứng tuyển"
+              cells={[
+                { label: "Tổng số", value: s.totalApplications },
+                { label: STATUS_LABEL.pending, value: s.applicationStatus?.pending ?? null },
+                { label: STATUS_LABEL.accepted, value: s.applicationStatus?.accepted ?? null },
+                { label: STATUS_LABEL.rejected, value: s.applicationStatus?.rejected ?? null },
+              ]}
+            />
           </div>
         </>
       )}
-      {health && (
-        <div className="card">
-          <h2 className="section-h">Sức khỏe dịch vụ</h2>
-          <ul className="admin-health">
-            {health.services.map((s) => (
-              <li key={s.name}>
-                <span className={`status-badge status-badge--${s.status === "online" ? "accepted" : "rejected"}`}>{s.status === "online" ? "Online" : "Offline"}</span>
-                <strong>{s.name}</strong>
-                <span className="hint">{s.latencyMs == null ? "—" : `${s.latencyMs} ms`}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+
+      <section className="jp-health" aria-labelledby="health-title">
+        <h2 className="jp-h2" id="health-title">Tình trạng dịch vụ</h2>
+        {health.isPending && <SkeletonBlock height={120} label="Đang kiểm tra dịch vụ" />}
+        {health.isError && (
+          <Alert
+            tone="error"
+            action={
+              <Button variant="secondary" loading={health.isFetching} onClick={() => void health.refetch()}>
+                {health.isFetching ? "Đang thử lại…" : "Thử lại"}
+              </Button>
+            }
+          >
+            {loadErrorMessage(health.error, "tình trạng dịch vụ")}
+          </Alert>
+        )}
+        {health.data && (
+          <div className="jp-table-wrap">
+            <table className="jp-table">
+              <thead>
+                <tr>
+                  <th scope="col">Dịch vụ</th>
+                  <th scope="col">Trạng thái</th>
+                  <th scope="col" className="jp-num">Độ trễ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {health.data.services.map((svc) => (
+                  <tr key={svc.name}>
+                    <th scope="row">{svc.name}</th>
+                    <td>
+                      <StatusMark tone={svc.status === "online" ? "success" : "danger"}>
+                        {svc.status === "online" ? "Hoạt động" : "Không phản hồi"}
+                      </StatusMark>
+                    </td>
+                    <td className="jp-num">{svc.latencyMs == null ? <Dash /> : `${svc.latencyMs.toLocaleString("vi-VN")} ms`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </AdminShell>
   );
 }
 
-function show(value: number | null) {
-  return value == null ? "—" : value;
-}
-
-function Kpi({ label, value, href }: { label: string; value: number | null; href?: string }) {
-  const body = (
+function Dash() {
+  return (
     <>
-      <span className="hint">{label}</span>
-      <strong>{show(value)}</strong>
+      <span aria-hidden="true" className="jp-missing">—</span>
+      <span className="jp-sr">Chưa có số liệu</span>
     </>
   );
-  if (href) return <Link className="admin-kpi" to={href}>{body}</Link>;
-  return <div className="admin-kpi">{body}</div>;
+}
+
+/** One topic of numbers under a navy header band, like a board: label above value, one row of cells. */
+function StatGroup({ title, cells, className }: { title: string; cells: Cell[]; className?: string }) {
+  return (
+    <section className={["jp-statgroup", className].filter(Boolean).join(" ")}>
+      <h2 className="jp-statgroup-title">{title}</h2>
+      <dl className="jp-stats">
+        {cells.map((c) => (
+          <div key={c.label} className="jp-stat">
+            <dt>{c.label}</dt>
+            <dd>
+              {c.value == null ? (
+                <Dash />
+              ) : c.to ? (
+                <Link to={c.to} className="jp-link">{c.value.toLocaleString("vi-VN")}</Link>
+              ) : (
+                c.value.toLocaleString("vi-VN")
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 }

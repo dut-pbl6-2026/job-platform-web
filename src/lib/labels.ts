@@ -95,3 +95,15 @@ export function locationLabel(raw: string | null | undefined, fallback = "Chưa 
   if (!value) return fallback;
   return key(value) === "remote" ? "Làm từ xa" : value;
 }
+/* Account role ---------------------------------------------------------------------------------- */
+
+const ROLE_LABELS: Record<string, string> = {
+  user: "Người tìm việc",
+  recruiter: "Nhà tuyển dụng",
+  employer: "Nhà tuyển dụng",
+  admin: "Quản trị viên",
+};
+
+export function roleLabel(raw: string | null | undefined): string {
+  return lookup(ROLE_LABELS, raw) ?? "Chưa cập nhật";
+}

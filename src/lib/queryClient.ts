@@ -26,4 +26,7 @@ export const queryKeys = {
   applications: (params: unknown) => ["applications", params] as const,
   application: (id: string) => ["application", id] as const,
   profile: (userId: string) => ["profile", userId] as const,
+  adminStats: ["admin", "stats"] as const,
+  adminHealth: ["admin", "health"] as const,
+  adminUsers: (params: unknown) => ["admin", "users", params] as const,
 };

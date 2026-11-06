@@ -195,3 +195,12 @@ export function Panel({ title, actions, children, className, as: Tag = "section"
     </Tag>
   );
 }
+
+/** What a route guard shows while it waits to learn who is signed in. */
+export function PageLoading({ label = "Đang tải" }: { label?: string }) {
+  return (
+    <main className="jp-page">
+      <SkeletonBlock height={240} label={label} />
+    </main>
+  );
+}

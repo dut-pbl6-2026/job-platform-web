@@ -1,14 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminShell } from "../components/AdminShell";
-import { Pagination } from "../components/Pagination";
+import {
+  Alert,
+  Button,
+  EmptyState,
+  FactStrip,
+  Field,
+  Pagination,
+  SkeletonRows,
+  Textarea,
+} from "../components/ui";
 import { decideJob, fetchAdminJob, fetchPendingJobs } from "../lib/adminApi";
-import { formatSalary, timeAgo } from "../lib/jobsApi";
-import { apiErrorMessage } from "../lib/http";
+import { timeAgo } from "../lib/jobsApi";
+import { apiErrorMessage, loadErrorMessage } from "../lib/http";
+import { categoryLabel } from "../lib/labels";
 import type { Paginated, PendingJob } from "../types/admin";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const PAGE_SIZE = 6;
+const MISSING = "Chưa cập nhật";
 
 export default function AdminJobsPage() {
   useDocumentTitle("Quản trị: Duyệt tin");
@@ -16,11 +27,13 @@ export default function AdminJobsPage() {
   const page = Math.max(0, Number(sp.get("page")) || 0);
   const [data, setData] = useState<Paginated<PendingJob> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [actionErr, setActionErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [reasonErr, setReasonErr] = useState<string | null>(null);
   // Content of the job being read: the list has no description, and /jobs/:id hides Pending jobs.
   const [viewId, setViewId] = useState<string | null>(null);
   const [detail, setDetail] = useState<PendingJob | null>(null);
@@ -37,9 +50,9 @@ export default function AdminJobsPage() {
       const job = await fetchAdminJob(jobId);
       if (req !== detailReq.current) return;
       if (job) setDetail(job);
-      else setDetailErr("Tin không còn tồn tại");
+      else setDetailErr("Tin không còn tồn tại.");
     } catch (e: unknown) {
-      if (req === detailReq.current) setDetailErr(apiErrorMessage(e, "Không tải được nội dung tin"));
+      if (req === detailReq.current) setDetailErr(loadErrorMessage(e, "nội dung tin"));
     }
   }
 
@@ -51,7 +64,7 @@ export default function AdminJobsPage() {
 
   async function load() {
     setLoading(true);
-    setErr(null);
+    setLoadErr(null);
     try {
       const res = await fetchPendingJobs({ page, size: PAGE_SIZE });
       // Deciding the last job on page N > 0 empties that page; earlier pages may still have jobs.
@@ -61,22 +74,24 @@ export default function AdminJobsPage() {
       }
       setData(res);
     } catch (e: unknown) {
-      setErr(apiErrorMessage(e, "Không tải được tin chờ duyệt"));
+      setLoadErr(loadErrorMessage(e, "danh sách tin chờ duyệt"));
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { load(); }, [page]);
+  useEffect(() => { void load(); }, [page]);
 
   async function decide(jobId: string, approved: boolean) {
     // job-svc rejects without a reason (422); stop here instead of sending the request.
     if (!approved && !reason.trim()) {
-      setErr("Hãy nhập lý do từ chối");
+      setReasonErr("Nhập lý do từ chối để gửi cho nhà tuyển dụng.");
       return;
     }
     setBusyId(jobId);
-    setErr(null);
+    setActionErr(null);
+    setReasonErr(null);
+    setOk(null);
     try {
       const message = await decideJob(jobId, approved, approved ? undefined : reason.trim());
       setOk(message);
@@ -85,7 +100,7 @@ export default function AdminJobsPage() {
       setViewId(null);
       await load();
     } catch (e: unknown) {
-      setErr(apiErrorMessage(e, "Không cập nhật được tin"));
+      setActionErr(apiErrorMessage(e, "Chưa cập nhật được tin. Vui lòng thử lại."));
     } finally {
       setBusyId(null);
     }
@@ -93,73 +108,123 @@ export default function AdminJobsPage() {
 
   return (
     <AdminShell title="Duyệt tin" lead="Tin đang chờ. Duyệt để công khai, hoặc từ chối kèm lý do gửi nhà tuyển dụng.">
-      {err && <div className="alert alert-error">{err}</div>}
-      {ok && <div className="alert alert-success">{ok}</div>}
-      {loading && <div className="skeleton-detail" />}
-      {!loading && data && data.items.length === 0 && (
-        <div className="empty">
-          <h3>Không còn tin chờ duyệt</h3>
-          <p className="hint">Khi nhà tuyển dụng đăng tin mới, danh sách sẽ hiện ở đây.</p>
-        </div>
+      {actionErr && <Alert tone="error">{actionErr}</Alert>}
+      {ok && <Alert tone="success">{ok}</Alert>}
+
+      {loadErr && (
+        <Alert
+          tone="error"
+          action={<Button variant="secondary" loading={loading} onClick={() => void load()}>{loading ? "Đang thử lại…" : "Thử lại"}</Button>}
+        >
+          {loadErr}
+        </Alert>
       )}
-      {!loading && data && data.items.length > 0 && (
-        <div className="app-list">
-          {data.items.map((job) => (
-            <article key={job.id} className="card admin-job">
-              <div className="app-detail-head">
-                <div>
-                  <h2 className="section-h">{job.title}</h2>
-                  {/* The admin list returns title/company/category/createdAt only: skip empty parts. */}
-                  <p className="hint">{[job.company.name, job.location, job.salaryMin || job.salaryMax ? formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency) : ""].filter(Boolean).join(" • ")}</p>
-                  <p className="hint">{[job.recruiterName ? `Người đăng: ${job.recruiterName}` : "", timeAgo(job.createdAt), job.category.name].filter(Boolean).join(" • ")}</p>
-                </div>
-                <span className="status-badge status-badge--pending">Chờ duyệt</span>
-              </div>
-              {job.description && <p className="job-desc">{job.description.slice(0, 220)}{job.description.length > 220 ? "…" : ""}</p>}
-              <div className="dash-actions">
-                <button className="btn btn-ghost btn-sm" type="button" aria-expanded={viewId === job.id} onClick={() => toggleDetail(job.id)}>
-                  {viewId === job.id ? "Ẩn nội dung" : "Xem nội dung"}
-                </button>
-                <button className="btn btn-primary btn-sm" type="button" disabled={busyId === job.id} onClick={() => decide(job.id, true)}>Duyệt</button>
-                <button className="btn btn-ghost btn-sm" type="button" onClick={() => { setRejectId(job.id); setReason(""); }}>Từ chối</button>
-              </div>
-              {viewId === job.id && (
-                <div className="detail-section">
-                  {!detail && !detailErr && <div className="skeleton-detail" />}
-                  {detailErr && <div className="alert alert-error">{detailErr}</div>}
-                  {detail && (
-                    <>
-                      <p className="hint">{[
-                        detail.location,
-                        detail.salaryMin || detail.salaryMax ? formatSalary(detail.salaryMin, detail.salaryMax, detail.salaryCurrency) : "Lương thỏa thuận",
-                        detail.employmentType,
-                        detail.experienceLevel,
-                      ].filter(Boolean).join(" • ")}</p>
-                      <h3>Mô tả công việc</h3>
-                      <p className="detail-prewrap">{detail.description?.trim() ? detail.description : "Chưa cập nhật"}</p>
-                      <h3>Yêu cầu</h3>
-                      <p className="detail-prewrap">{detail.requirements?.trim() ? detail.requirements : "Chưa cập nhật"}</p>
-                      <h3>Quyền lợi</h3>
-                      <p className="detail-prewrap">{detail.benefits?.trim() ? detail.benefits : "Chưa cập nhật"}</p>
-                    </>
-                  )}
-                </div>
-              )}
-              {rejectId === job.id && (
-                <form className="mini-form" onSubmit={(e) => { e.preventDefault(); decide(job.id, false); }}>
-                  <label className="label" htmlFor={`reason-${job.id}`}>Lý do (bắt buộc, gửi cho nhà tuyển dụng)</label>
-                  <textarea id={`reason-${job.id}`} className="textarea" rows={3} maxLength={500} required value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ví dụ: thiếu mô tả công việc" />
-                  <div className="dash-actions">
-                    <button className="btn btn-primary btn-sm" disabled={busyId === job.id || !reason.trim()}>{busyId === job.id ? "Đang gửi..." : "Xác nhận từ chối"}</button>
-                    <button className="btn btn-ghost btn-sm" type="button" onClick={() => setRejectId(null)}>Hủy</button>
-                  </div>
-                </form>
-              )}
-            </article>
-          ))}
-          <Pagination page={data.page} totalPages={data.totalPages} onPage={goToPage} />
-        </div>
+
+      {loading && !data && !loadErr && <SkeletonRows rows={4} label="Đang tải tin chờ duyệt" />}
+
+      {data && data.items.length === 0 && (
+        <EmptyState title="Không còn tin chờ duyệt">
+          <p>Khi nhà tuyển dụng đăng tin mới, danh sách sẽ hiện ở đây.</p>
+        </EmptyState>
+      )}
+
+      {data && data.items.length > 0 && (
+        <>
+          <p className="jp-count" aria-live="polite">{data.total.toLocaleString("vi-VN")} tin chờ duyệt</p>
+          <div className="jp-queue">
+            <div className="jp-queue-head" aria-hidden="true">
+              <span>Vị trí · Công ty</span>
+              <span>Danh mục</span>
+              <span>Đăng</span>
+              <span className="jp-queue-head-actions">Thao tác</span>
+            </div>
+            <ol className="jp-queue-rows" aria-label="Tin chờ duyệt">
+              {data.items.map((job) => {
+                const reading = viewId === job.id;
+                const rejecting = rejectId === job.id;
+                const busy = busyId === job.id;
+                return (
+                  <li key={job.id} className="jp-queue-item">
+                    <div className="jp-queue-row">
+                      <div className="jp-row-main">
+                        <h3 className="jp-row-title">{job.title}</h3>
+                        <p className="jp-row-company" title={job.company.name}>{job.company.name || MISSING}</p>
+                        {job.recruiterName && <p className="jp-queue-by">Người đăng: {job.recruiterName}</p>}
+                      </div>
+                      <span className="jp-cell">
+                        <span className="jp-sr">Danh mục: </span>
+                        {categoryLabel(job.category.name)}
+                      </span>
+                      <span className="jp-cell jp-cell--date">
+                        <span className="jp-sr">Đăng: </span>
+                        {timeAgo(job.createdAt) || MISSING}
+                      </span>
+                      <div className="jp-queue-actions">
+                        <Button variant="secondary" aria-expanded={reading} onClick={() => void toggleDetail(job.id)}>
+                          {reading ? "Ẩn nội dung" : "Xem nội dung"}
+                        </Button>
+                        <Button loading={busy && !rejecting} disabled={busy} aria-label={`Duyệt tin ${job.title}`} onClick={() => void decide(job.id, true)}>
+                          Duyệt
+                        </Button>
+                        <Button
+                          variant="danger"
+                          aria-expanded={rejecting}
+                          aria-label={`Từ chối tin ${job.title}`}
+                          disabled={busy}
+                          onClick={() => { setRejectId(rejecting ? null : job.id); setReason(""); setReasonErr(null); }}
+                        >
+                          Từ chối
+                        </Button>
+                      </div>
+                    </div>
+
+                    {reading && (
+                      <div className="jp-queue-detail">
+                        {!detail && !detailErr && <p className="jp-muted" role="status">Đang tải nội dung…</p>}
+                        {detailErr && <Alert tone="error">{detailErr}</Alert>}
+                        {detail && (
+                          <>
+                            <FactStrip job={detail} />
+                            <JobText title="Mô tả công việc" text={detail.description} />
+                            <JobText title="Yêu cầu" text={detail.requirements} />
+                            <JobText title="Quyền lợi" text={detail.benefits} />
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {rejecting && (
+                      <form
+                        className="jp-queue-reject"
+                        noValidate
+                        onSubmit={(e) => { e.preventDefault(); void decide(job.id, false); }}
+                      >
+                        <Field id={`reason-${job.id}`} label="Lý do từ chối" required hint="Nhà tuyển dụng sẽ nhận được nội dung này." error={reasonErr}>
+                          <Textarea rows={3} maxLength={500} value={reason} placeholder="Ví dụ: thiếu mô tả công việc" onChange={(e) => setReason(e.target.value)} />
+                        </Field>
+                        <div className="jp-form-actions">
+                          <Button variant="secondary" onClick={() => setRejectId(null)} disabled={busy}>Hủy</Button>
+                          <Button type="submit" variant="danger" loading={busy}>{busy ? "Đang gửi…" : "Xác nhận từ chối"}</Button>
+                        </div>
+                      </form>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+          <Pagination page={page} totalPages={data.totalPages} onPage={goToPage} />
+        </>
       )}
     </AdminShell>
+  );
+}
+
+function JobText({ title, text }: { title: string; text: string | null | undefined }) {
+  return (
+    <section className="jp-detail-section">
+      <h4 className="jp-h3">{title}</h4>
+      {text?.trim() ? <p className="jp-prose">{text}</p> : <p className="jp-muted">{MISSING}</p>}
+    </section>
   );
 }
