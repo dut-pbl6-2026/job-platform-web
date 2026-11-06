@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { isUser } from "../lib/roles";
 import { fetchJobById, formatSalary } from "../lib/jobsApi";
 import { CV_ACCEPT, submitApplication, validateCvFile } from "../lib/applicationsApi";
+import { loadErrorMessage } from "../lib/http";
 import type { Job } from "../types/job";
 
 export default function ApplyPage() {
@@ -13,6 +14,8 @@ export default function ApplyPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
+  // A failed load (network, 5xx) is not "job not found": fetchJobById returns null only on 404.
+  const [loadErr, setLoadErr] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [cover, setCover] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -25,7 +28,7 @@ export default function ApplyPage() {
     let alive = true;
     fetchJobById(id)
       .then((j) => { if (alive) setJob(j); })
-      .catch(() => { if (alive) setJob(null); }) // errors now reach the UI instead of a mock job
+      .catch((e) => { if (alive) { setJob(null); setLoadErr(loadErrorMessage(e, "tin tuyển dụng")); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [id]);
@@ -44,7 +47,7 @@ export default function ApplyPage() {
   }
 
   if (loading) return (<><AppHeader /><div className="container"><div className="skeleton-detail" /></div></>);
-  if (!job) return (<><AppHeader /><div className="container"><div className="alert alert-error">Không tìm thấy việc làm</div></div></>);
+  if (!job) return (<><AppHeader /><div className="container"><div className="alert alert-error" role="alert">{loadErr ?? "Không tìm thấy việc làm"}</div></div></>);
   const currentJob = job;
 
   async function onSubmit(e: React.FormEvent) {
