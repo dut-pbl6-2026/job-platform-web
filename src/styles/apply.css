@@ -1,0 +1,126 @@
+/*
+ * /jobs/:id/apply: the job as one static board row (the same row as the list and the detail strip),
+ * then a form of three numbered steps. The step order is information here (CV, letter, send), so the
+ * numbers stay; everything else is the shared field and button set.
+ */
+
+.jp-apply-job { margin-bottom: var(--sp-6); }
+
+.jp-apply-form {
+  max-width: 720px;
+  display: grid;
+  gap: var(--sp-6);
+}
+
+.jp-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-8);
+}
+
+.jp-step {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+/* A square, not a circle: the world has no pills. */
+.jp-step-no {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-control);
+  background: var(--c-navy);
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--fs-body);
+}
+
+.jp-step-body {
+  display: grid;
+  gap: var(--sp-3);
+  justify-items: start;
+  min-width: 0;
+}
+.jp-step-body > .jp-field { width: 100%; }
+
+.jp-step-title {
+  margin: 0;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.jp-apply-submit { min-width: 200px; }
+
+/* Drop zone: one real button, so it takes focus and Enter/Space like any control. */
+.jp-drop {
+  width: 100%;
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  border: 2px dashed var(--c-control);
+  border-radius: var(--radius-panel);
+  background: var(--c-ground);
+  color: var(--c-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.jp-drop:hover,
+.jp-drop.is-dragging { border-color: var(--c-navy); background: var(--c-info-soft); }
+.jp-drop:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.jp-drop.is-error { border-color: var(--c-danger); background: var(--c-danger-soft); }
+.jp-drop.has-file { border-style: solid; border-color: var(--c-navy); background: var(--c-surface); }
+.jp-drop .jp-icon { color: var(--c-navy); }
+.jp-drop.is-error .jp-icon { color: var(--c-danger); }
+
+.jp-drop-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.jp-drop-text strong { overflow-wrap: anywhere; }
+.jp-drop-text span { font-size: 14px; color: var(--c-muted); }
+
+/* Success */
+.jp-apply-done {
+  display: grid;
+  gap: var(--sp-4);
+  justify-items: start;
+}
+.jp-apply-done-icon { color: var(--c-success); }
+.jp-apply-done .jp-h1:focus { outline: none; }
+.jp-apply-done p { margin: 0; }
+
+.jp-apply-sent {
+  margin: 0;
+  width: 100%;
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4) 0;
+  border-block: 1px solid var(--c-row-rule);
+}
+.jp-apply-sent > div { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: var(--sp-4); }
+.jp-apply-sent dt { color: var(--c-muted); font-size: 14px; }
+.jp-apply-sent dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+
+.jp-apply-done-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+
+@media (max-width: 767px) {
+  .jp-step { grid-template-columns: 28px minmax(0, 1fr); gap: var(--sp-3); }
+  .jp-step-no { width: 28px; height: 28px; }
+  .jp-step-title { min-height: 28px; }
+  .jp-apply-submit { width: 100%; }
+  .jp-apply-sent > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .jp-apply-done-actions .jp-btn { flex: 1 1 100%; }
+}
