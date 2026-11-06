@@ -43,6 +43,8 @@ const GUEST_SCREENS: [name: string, path: string][] = [
 ];
 
 const SIGNED_IN_SCREENS: [name: string, role: Role, path: string][] = [
+  ["job-detail-user", "User", "/jobs/seed-1"],
+  ["job-detail-recruiter", "Recruiter", "/jobs/seed-1"],
   ["apply", "User", "/jobs/seed-1/apply"],
   ["profile", "User", "/profile"],
   ["applications", "User", "/applications"],

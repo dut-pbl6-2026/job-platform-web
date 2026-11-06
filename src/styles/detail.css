@@ -1,0 +1,96 @@
+/*
+ * /jobs/:id: title, the board's fact strip, then the reading column (65ch) beside a sticky
+ * apply + company column (plan §3.2). Below 1100px the apply panel moves above the text so the
+ * action is never a long scroll away.
+ */
+
+.jp-detail-head { margin-bottom: var(--sp-6); }
+.jp-detail-head .jp-h1 { max-width: 32em; }
+
+.jp-detail-company {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-title);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.jp-detail-status { margin-bottom: var(--sp-4); }
+
+.jp-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--sp-6);
+  align-items: start;
+  margin-top: var(--sp-6);
+}
+
+/* Reading column */
+.jp-detail-section + .jp-detail-section {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-6);
+  border-top: 1px solid var(--c-row-rule);
+}
+.jp-detail-section .jp-h3 { margin-bottom: var(--sp-3); }
+
+.jp-prose {
+  margin: 0;
+  max-width: 65ch;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.jp-detail-empty { margin: var(--sp-6) 0 0; }
+.jp-detail-section + .jp-detail-empty { padding-top: var(--sp-6); border-top: 1px solid var(--c-row-rule); }
+.jp-detail-main > .jp-detail-empty:first-child { margin-top: 0; }
+
+.jp-detail-meta {
+  margin: var(--sp-6) 0 0;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-row-rule);
+  font-size: var(--fs-caption);
+}
+.jp-detail-main > .jp-detail-meta:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* Side column */
+.jp-detail-side {
+  position: sticky;
+  top: calc(64px + var(--sp-6));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+
+.jp-detail-actions { display: grid; gap: var(--sp-3); }
+/* Long labels (and the "đang phát triển" tag) wrap instead of widening the column. */
+.jp-detail-actions .jp-btn {
+  height: auto;
+  min-height: var(--tap);
+  padding-block: var(--sp-2);
+  flex-wrap: wrap;
+  white-space: normal;
+  text-align: center;
+}
+.jp-detail-actions .jp-devtag { margin-left: var(--sp-2); }
+
+.jp-detail-note { margin: 0; font-size: 14px; }
+.jp-detail-actions .jp-detail-note { margin-top: calc(var(--sp-1) * -1); }
+.jp-detail-note--reason { display: flex; gap: var(--sp-2); align-items: flex-start; color: var(--c-ink); }
+.jp-detail-note--reason .jp-icon { margin-top: 3px; color: var(--c-navy); }
+
+.jp-detail-kv { margin: 0; display: grid; gap: var(--sp-3); }
+.jp-detail-kv dt { font-size: var(--fs-caption); color: var(--c-muted); }
+.jp-detail-kv dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+
+@media (max-width: 1099px) {
+  .jp-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  /* The side column dissolves so its two panels can sit on either side of the text. */
+  .jp-detail-side { display: contents; }
+  .jp-detail-apply { order: -1; }
+  .jp-detail-main { order: 0; }
+  .jp-detail-company-panel { order: 1; }
+}
