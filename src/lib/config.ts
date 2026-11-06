@@ -14,7 +14,7 @@ export const API_BASE_URL = resolveApiBaseUrl();
 
 /**
  * Offline demo data (localStorage mocks). Off unless VITE_ENABLE_MOCKS=true, so on staging/prod
- * a failing or mismatched API shows a real error instead of fake data (review #7).
+ * a failing or mismatched API shows a real error instead of fake data.
  */
 export const MOCKS_ENABLED = import.meta.env.VITE_ENABLE_MOCKS === "true";
 
