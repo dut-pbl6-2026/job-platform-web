@@ -861,3 +861,8 @@
 /* Rhythm between a page's direct children: messages sit above their content, the pager below the list. */
 .jp-page > .jp-alert { margin-bottom: var(--sp-4); }
 .jp-page > .jp-pager { margin-top: var(--sp-6); }
+
+/* ErrorBoundary: the page that replaces a crashed screen. */
+.jp-fatal { display: grid; gap: var(--sp-3); }
+.jp-fatal p { margin: 0; }
+.jp-fatal-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-2); }

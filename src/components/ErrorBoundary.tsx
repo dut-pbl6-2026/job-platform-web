@@ -3,6 +3,10 @@ import React from "react";
 interface Props { children: React.ReactNode; }
 interface State { hasError: boolean; error: Error | null; }
 
+/**
+ * Last resort for a render error. It sits above the router, so it cannot use router links or the
+ * shell bar: plain markup with the shared panel and button classes.
+ */
 export class ErrorBoundary extends React.Component<Props, State> {
   state: State = { hasError: false, error: null };
 
@@ -19,16 +23,16 @@ export class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="container">
-          <div className="card" style={{ marginTop: 24 }}>
-            <h3 style={{ marginTop: 0 }}>Đã xảy ra lỗi</h3>
-            <p className="hint">{this.state.error?.message || "Ứng dụng gặp lỗi ngoài dự kiến."}</p>
-            <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-              <button className="btn btn-primary" onClick={this.handleReset}>Thử lại</button>
-              <a className="btn btn-ghost" href="/jobs">Về trang việc làm</a>
+        <main className="jp-page jp-page--narrow">
+          <div className="jp-panel jp-fatal" role="alert">
+            <h1 className="jp-h2">Đã xảy ra lỗi</h1>
+            <p className="jp-muted">{this.state.error?.message || "Ứng dụng gặp lỗi ngoài dự kiến."}</p>
+            <div className="jp-fatal-actions">
+              <button type="button" className="jp-btn jp-btn--primary" onClick={this.handleReset}>Thử lại</button>
+              <a className="jp-btn jp-btn--secondary" href="/jobs">Về bảng việc làm</a>
             </div>
           </div>
-        </div>
+        </main>
       );
     }
     return this.props.children;

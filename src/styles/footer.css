@@ -1,0 +1,65 @@
+/* Footer: the shell's navy, at the bottom of every screen except the sign-in ones. */
+
+.jp-footer {
+  margin-top: var(--sp-12);
+  background: var(--c-navy-strong);
+  color: var(--c-on-navy-muted);
+  font-size: 14px;
+}
+
+.jp-footer-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--sp-12) 40px var(--sp-8);
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: var(--sp-8);
+}
+
+.jp-footer-wordmark {
+  display: inline-block;
+  margin-bottom: var(--sp-3);
+  color: #fff;
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.jp-footer-wordmark:hover { color: #fff; text-decoration: none; }
+.jp-footer-brand p { margin: 0; max-width: 320px; line-height: 1.6; }
+
+.jp-footer-col { display: flex; flex-direction: column; gap: var(--sp-1); }
+.jp-footer-title {
+  margin: 0 0 var(--sp-2);
+  color: #fff;
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+.jp-footer-col a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--c-on-navy-muted);
+}
+.jp-footer-col a:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+
+.jp-footer-bottom {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--sp-4) 40px var(--sp-6);
+  border-top: 1px solid var(--c-navy);
+  font-size: var(--fs-caption);
+}
+
+@media (pointer: coarse) {
+  .jp-footer-col a { min-height: var(--tap); }
+}
+
+@media (max-width: 1099px) {
+  .jp-footer-inner { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 767px) {
+  .jp-footer-inner { grid-template-columns: minmax(0, 1fr); padding: var(--sp-8) var(--sp-4) var(--sp-6); }
+  .jp-footer-bottom { padding-inline: var(--sp-4); }
+}

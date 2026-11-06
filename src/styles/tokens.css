@@ -1,9 +1,6 @@
 /*
- * Design tokens and base styles for the "Bảng giờ tàu" (railway timetable) redesign.
- * Plan §2.2. New rules use the --c-* / --fs-* / --sp-* names; the legacy tokens in auth.css
- * (--primary, --bg, ...) stay until slice S10 removes the old CSS.
- *
- * Imported last in main.tsx so the base rules below win over legacy rules of equal specificity.
+ * Design tokens and base styles for the "Bảng giờ tàu" (railway timetable) design.
+ * Plan §2.2. Every rule names these tokens (--c-*, --fs-*, --sp-*); there is no other colour source.
  */
 
 :root {
@@ -61,12 +58,25 @@
 
 /* Base */
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
+a {
+  color: var(--c-navy);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
 body {
+  margin: 0;
   font-family: var(--font-sans);
   font-size: var(--fs-body);
   line-height: var(--lh-body);
