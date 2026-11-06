@@ -11,8 +11,7 @@ import { HomeShowcase } from "../components/HomeShowcase";
 import { parseSearchParams, hasActiveFilters } from "../lib/searchFilters";
 import { queryKeys } from "../lib/queryClient";
 
-const FALLBACK_CATS = ["IT", "Finance", "Marketing", "Healthcare", "Education", "Engineering", "Sales", "Hospitality", "Others"];
-
+// `value` is the category *name*; search-svc filters by category *id*, resolved via GET /api/categories.
 const HERO_CATS: { label: string; value: string }[] = [
   { label: "Kinh doanh/Bán hàng", value: "Sales" },
   { label: "Marketing/PR/Quảng cáo", value: "Marketing" },
@@ -70,8 +69,8 @@ export default function JobListPage() {
   const data = jobsQuery.data;
   const loading = jobsQuery.isPending;
   const err = jobsQuery.error instanceof Error ? jobsQuery.error.message : jobsQuery.isError ? "Load failed" : null;
-  const names = (catsQuery.data ?? []).map((c) => c.name).filter(Boolean);
-  const mergedCats = [...new Set([...names, ...FALLBACK_CATS])];
+  const categories = (catsQuery.data ?? []).filter((c) => c.id && c.name);
+  const catIdOf = (name: string) => categories.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id;
   const catPages = Math.max(1, Math.ceil(HERO_CATS.length / 6));
   const visibleCats = HERO_CATS.slice(heroPage * 6, heroPage * 6 + 6);
   const slide = BANNERS[banner];
@@ -116,17 +115,21 @@ export default function JobListPage() {
           <div className="topcv-hero-row">
             <div className="topcv-hero-cats">
               <div className="topcv-cat-list">
-                {visibleCats.map((cat) => (
+                {visibleCats.map((cat) => {
+                  const id = catIdOf(cat.value);
+                  return (
                   <button
                     key={cat.value}
                     type="button"
-                    className={`topcv-cat-item ${params.category === cat.value ? "active" : ""}`}
-                    onClick={() => update({ category: params.category === cat.value ? undefined : cat.value })}
+                    disabled={!id}
+                    className={`topcv-cat-item ${id && params.category === id ? "active" : ""}`}
+                    onClick={() => update({ category: params.category === id ? undefined : id })}
                   >
                     <span>{cat.label}</span>
                     <span className="topcv-cat-arrow">›</span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
               <div className="topcv-cat-footer">
                 <span>{heroPage + 1}/{catPages}</span>
@@ -176,7 +179,7 @@ export default function JobListPage() {
           <AdvancedFilters
             params={params}
             facets={data?.facets}
-            categories={mergedCats}
+            categories={categories}
             onChange={update}
             onClear={clearFilters}
           />
@@ -222,7 +225,7 @@ export default function JobListPage() {
 
       <HomeShowcase
         onCompany={(name) => pickAndScroll({ q: name })}
-        onCategory={(value) => pickAndScroll({ category: value })}
+        onCategory={(name) => { const id = catIdOf(name); if (id) pickAndScroll({ category: id }); }}
       />
     </div>
   );

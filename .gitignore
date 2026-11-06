@@ -12,6 +12,9 @@ mise.toml.local
 INFISICAL_TOKEN
 .vite/
 *.log
+# tsc output of vite.config.ts; Vite would load a stale .js before the .ts
+vite.config.js
+vite.config.d.ts
 coverage/
 .env.development.local
 .env.production.local

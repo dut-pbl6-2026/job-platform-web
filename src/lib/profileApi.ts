@@ -104,6 +104,17 @@ export function normalizeProfile(raw: unknown, fallbackUserId: string, fallbackN
   };
 }
 
+/** profile-svc routes (gateway: /api/profiles/{**catch-all}). */
+const P = "/profiles";
+
+/** DateOnly fields: send null, never "" (System.Text.Json cannot parse an empty date). */
+const dateOrNull = (v?: string | null) => (v ? v.slice(0, 10) : null);
+const textOrNull = (v?: string | null) => (v && v.trim() ? v.trim() : null);
+
+function statusOf(e: unknown): number | undefined {
+  return (e as { response?: { status?: number } })?.response?.status;
+}
+
 function isOffline(e: unknown): boolean {
   const status = (e as { response?: { status?: number } })?.response?.status;
   return !status || status === 404 || status >= 500;
@@ -111,9 +122,11 @@ function isOffline(e: unknown): boolean {
 
 export async function fetchMyProfile(userId: string, fullName: string): Promise<Profile> {
   try {
-    const { data } = await api.get("/profile/me");
+    const { data } = await api.get(`${P}/me`);
     return normalizeProfile(unwrap(data), userId, fullName);
   } catch (e) {
+    // 404 = the user has no profile yet; PUT /me (or adding a skill/experience) creates it.
+    if (statusOf(e) === 404) return emptyProfile(userId, fullName);
     if (!isOffline(e)) throw e;
     await new Promise((r) => setTimeout(r, 180));
     return loadMock(userId, fullName);
@@ -122,15 +135,13 @@ export async function fetchMyProfile(userId: string, fullName: string): Promise<
 
 export async function updateMyProfile(payload: ProfileUpdate, userId: string): Promise<void> {
   try {
-    await api.put("/profile", {
+    await api.put(`${P}/me`, {
       fullName: payload.fullName,
-      full_name: payload.fullName,
-      phone: payload.phone,
-      address: payload.address,
-      headline: payload.headline,
-      summary: payload.summary,
-      dateOfBirth: payload.dateOfBirth || undefined,
-      date_of_birth: payload.dateOfBirth || undefined,
+      headline: textOrNull(payload.headline),
+      summary: textOrNull(payload.summary),
+      phone: textOrNull(payload.phone),
+      address: textOrNull(payload.address),
+      dateOfBirth: dateOrNull(payload.dateOfBirth),
     });
   } catch (e) {
     if (!isOffline(e)) throw e;
@@ -143,11 +154,10 @@ export async function updateMyProfile(payload: ProfileUpdate, userId: string): P
 
 export async function addSkill(userId: string, skill: Omit<Skill, "id">): Promise<Skill> {
   try {
-    const { data } = await api.post("/profile/skills", {
+    const { data } = await api.post(`${P}/skills`, {
       name: skill.name,
       proficiency: skill.proficiency,
       yearsOfExperience: skill.yearsOfExperience,
-      years_of_experience: skill.yearsOfExperience,
     });
     const body = unwrap<Record<string, unknown>>(data);
     return asSkill({ ...skill, id: pickStr(body, "id") })!;
@@ -163,7 +173,7 @@ export async function addSkill(userId: string, skill: Omit<Skill, "id">): Promis
 
 export async function deleteSkill(userId: string, id: string): Promise<void> {
   try {
-    await api.delete(`/profile/skills/${id}`);
+    await api.delete(`${P}/skills/${id}`);
   } catch (e) {
     if (!isOffline(e)) throw e;
     const p = loadMock(userId, "");
@@ -174,16 +184,13 @@ export async function deleteSkill(userId: string, id: string): Promise<void> {
 
 export async function addExperience(userId: string, exp: Omit<WorkExperience, "id">): Promise<WorkExperience> {
   try {
-    const { data } = await api.post("/profile/experience", {
+    const { data } = await api.post(`${P}/experiences`, {
       company: exp.company,
       title: exp.title,
-      startDate: exp.startDate,
-      start_date: exp.startDate,
-      endDate: exp.isCurrent ? null : exp.endDate,
-      end_date: exp.isCurrent ? null : exp.endDate,
+      startDate: dateOrNull(exp.startDate),
+      endDate: exp.isCurrent ? null : dateOrNull(exp.endDate),
       isCurrent: exp.isCurrent,
-      is_current: exp.isCurrent,
-      description: exp.description,
+      description: textOrNull(exp.description),
     });
     const body = unwrap<Record<string, unknown>>(data);
     return asExp({ ...exp, id: pickStr(body, "id") })!;
@@ -199,7 +206,7 @@ export async function addExperience(userId: string, exp: Omit<WorkExperience, "i
 
 export async function deleteExperience(userId: string, id: string): Promise<void> {
   try {
-    await api.delete(`/profile/experience/${id}`);
+    await api.delete(`${P}/experiences/${id}`);
   } catch (e) {
     if (!isOffline(e)) throw e;
     const p = loadMock(userId, "");
@@ -210,15 +217,13 @@ export async function deleteExperience(userId: string, id: string): Promise<void
 
 export async function addEducation(userId: string, edu: Omit<Education, "id">): Promise<Education> {
   try {
-    const { data } = await api.post("/profile/education", {
+    const { data } = await api.post(`${P}/educations`, {
       institution: edu.institution,
-      degree: edu.degree,
-      field: edu.field,
-      startDate: edu.startDate,
-      start_date: edu.startDate,
-      endDate: edu.endDate,
-      end_date: edu.endDate,
-      grade: edu.grade,
+      degree: textOrNull(edu.degree),
+      field: textOrNull(edu.field),
+      startDate: dateOrNull(edu.startDate),
+      endDate: dateOrNull(edu.endDate),
+      grade: textOrNull(edu.grade),
     });
     const body = unwrap<Record<string, unknown>>(data);
     return asEdu({ ...edu, id: pickStr(body, "id") })!;
@@ -234,7 +239,7 @@ export async function addEducation(userId: string, edu: Omit<Education, "id">): 
 
 export async function deleteEducation(userId: string, id: string): Promise<void> {
   try {
-    await api.delete(`/profile/education/${id}`);
+    await api.delete(`${P}/educations/${id}`);
   } catch (e) {
     if (!isOffline(e)) throw e;
     const p = loadMock(userId, "");

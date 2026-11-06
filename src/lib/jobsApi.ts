@@ -3,14 +3,49 @@ import type { FacetBucket, Job, JobSearchParams, PaginatedJobs, SearchFacets } f
 import { MOCK_JOBS, MOCK_CATEGORIES } from "../mocks/jobsMock";
 import { normalizeEmploymentType, normalizeExperienceLevel } from "../types/job";
 import { splitCsv, locationMatches } from "./searchFilters";
+import { pickNum, pickStr } from "./http";
 
-function normalizeJob(raw: any): Job {
-  if (!raw) return raw as Job;
+/**
+ * Single adapter for every Job source, until the services return one shape (Phase 2):
+ * - search-svc returns the ES JobDocument as-is: snake_case, flat (`company_name`, `salary_min`, `created_at`).
+ * - job-svc JobDetailDto is camelCase but flat (`companyName`, `categoryName`).
+ * - mocks already nest `company` / `category`.
+ */
+export function normalizeJob(raw: any): Job {
+  if (!raw || typeof raw !== "object") return raw as Job;
+  const s = (...k: string[]) => pickStr(raw, ...k);
+  const n = (...k: string[]) => pickNum(raw, ...k);
+  const companyId = s("companyId", "company_id") ?? raw.company?.id ?? "";
+  const categoryId = s("categoryId", "category_id") ?? raw.category?.id ?? "";
+  const employment = s("employmentType", "employment_type");
+  const experience = s("experienceLevel", "experience_level");
   return {
     ...raw,
-    employmentType: raw.employmentType ? normalizeEmploymentType(String(raw.employmentType)) : raw.employmentType,
-    experienceLevel: raw.experienceLevel ? normalizeExperienceLevel(String(raw.experienceLevel)) : raw.experienceLevel,
-    skills: Array.isArray(raw.skills) ? raw.skills.map(String) : raw.skills,
+    id: String(raw.id ?? ""),
+    title: s("title") ?? "",
+    description: s("description") ?? "",
+    location: s("location") ?? "",
+    requirements: s("requirements") ?? null,
+    benefits: s("benefits") ?? null,
+    companyId,
+    company: raw.company && typeof raw.company === "object"
+      ? raw.company
+      : { id: companyId, name: s("companyName", "company_name") ?? "—" },
+    categoryId,
+    category: raw.category && typeof raw.category === "object"
+      ? raw.category
+      : { id: categoryId, name: s("categoryName", "category_name") ?? "" },
+    salaryMin: n("salaryMin", "salary_min") ?? 0,
+    salaryMax: n("salaryMax", "salary_max") ?? 0,
+    salaryCurrency: s("salaryCurrency", "salary_currency", "currency") ?? "VND",
+    employmentType: employment ? normalizeEmploymentType(employment) : undefined,
+    experienceLevel: experience ? normalizeExperienceLevel(experience) : undefined,
+    status: (s("status") ?? "active").toLowerCase(),
+    viewCount: n("viewCount", "view_count") ?? 0,
+    recruiterId: s("recruiterId", "recruiter_id"),
+    createdAt: s("createdAt", "created_at") ?? "",
+    updatedAt: s("updatedAt", "updated_at") ?? "",
+    skills: Array.isArray(raw.skills) ? raw.skills.map(String) : [],
   } as Job;
 }
 
@@ -156,9 +191,9 @@ function mockSearch(params: JobSearchParams): PaginatedJobs {
     const hitType = matchesEmployment(String(j.employmentType || ""), types);
     const hitLevel = matchesExperience(String(j.experienceLevel || ""), levels);
     const jobSkills = (j.skills ?? []).map((item) => item.toLowerCase());
-    const hitSkills = skills.length === 0 || (params.skillOp === "or"
-      ? skills.some((skill) => jobSkills.some((item) => item.includes(skill)))
-      : skills.every((skill) => jobSkills.some((item) => item.includes(skill))));
+    const hitSkills = skills.length === 0 || (params.skillOp === "and"
+      ? skills.every((skill) => jobSkills.some((item) => item.includes(skill)))
+      : skills.some((skill) => jobSkills.some((item) => item.includes(skill))));
     const hitMin = params.minSalary == null || (j.salaryMax || j.salaryMin) >= params.minSalary;
     const hitMax = params.maxSalary == null || (j.salaryMin || j.salaryMax) <= params.maxSalary;
     const hitCurrency = !params.salaryCurrency || !j.salaryCurrency || j.salaryCurrency === params.salaryCurrency || params.salaryCurrency === "VND";
@@ -191,8 +226,10 @@ function compactParams(params: JobSearchParams) {
   if (params.experienceLevel) next.experienceLevel = params.experienceLevel;
   if (params.minSalary != null) next.minSalary = params.minSalary;
   if (params.maxSalary != null) next.maxSalary = params.maxSalary;
-  if (params.skills) next.skills = params.skills;
-  if (params.skillOp && params.skillOp !== "and") next.skillOp = params.skillOp;
+  if (params.skills) {
+    next.skills = params.skills;
+    next.skillOp = params.skillOp ?? "or"; // always explicit (api-conventions §4)
+  }
   if (params.sortBy && params.sortBy !== "relevance") next.sortBy = params.sortBy;
   next.page = params.page ?? 0;
   next.size = params.size ?? 20;

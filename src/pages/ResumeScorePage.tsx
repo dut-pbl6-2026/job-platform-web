@@ -17,9 +17,9 @@ const WARNING_TEXT: [RegExp, string][] = [
   [/^not_cv_like/, "File này không giống một CV nên điểm bị giới hạn."],
 ];
 
-/** job-svc returns flat `companyName`; search-svc/mocks nest `company.name`. Accept both. */
+/** Jobs come through normalizeJob, so `company` is always nested. */
 function companyOf(j: Job): string {
-  return j.company?.name ?? (j as unknown as { companyName?: string }).companyName ?? "";
+  return j.company?.name ?? "";
 }
 
 function warningText(w: string): string {
