@@ -35,13 +35,8 @@ export const SALARY_BANDS_USD = [
   { label: "Trên $2.000", min: 2_000, max: undefined },
 ] as const;
 
-export const LOCATION_PILLS = [
-  { label: "Ngẫu nhiên", value: "" },
-  { label: "Hà Nội", value: "Hà Nội" },
-  { label: "Thành phố Hồ Chí Minh (cũ)", value: "Hồ Chí Minh" },
-  { label: "Miền Bắc", value: "Miền Bắc" },
-  { label: "Miền Nam", value: "Miền Nam" },
-] as const;
+/** Suggestions under the place field; the visitor can still type any place. */
+export const LOCATION_SUGGESTIONS = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Hải Phòng", "Cần Thơ", "Bình Dương", "Đồng Nai", "Bắc Ninh"] as const;
 
 const NORTH = ["hà nội", "hải phòng", "bắc ninh", "quảng ninh", "hải dương", "nam định", "thanh hóa", "nghệ an", "ha noi"];
 const SOUTH = ["hồ chí minh", "bình dương", "đồng nai", "long an", "cần thơ", "ho chi minh"];

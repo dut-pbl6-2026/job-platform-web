@@ -1,221 +1,272 @@
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchCategories, fetchJobs } from "../lib/jobsApi";
-import { JobCard } from "../components/JobCard";
+import { fetchCategories, fetchJobs, formatSalary } from "../lib/jobsApi";
 import { SearchBar } from "../components/SearchBar";
-import { Pagination } from "../components/Pagination";
-import { TopBar } from "../components/ui";
+import { CategoryRow } from "../components/CategoryRow";
 import { AdvancedFilters } from "../components/AdvancedFilters";
-import { HomeShowcase } from "../components/HomeShowcase";
-import { parseSearchParams, hasActiveFilters } from "../lib/searchFilters";
+import {
+  Alert,
+  Board,
+  Button,
+  EmptyState,
+  Icon,
+  JobRow,
+  Pagination,
+  RemovableChip,
+  Select,
+  SkeletonRows,
+  TopBar,
+  cx,
+} from "../components/ui";
+import { EMPLOYMENT_OPTIONS, EXPERIENCE_OPTIONS, SORT_OPTIONS, hasActiveFilters, parseSearchParams, splitCsv, toggleCsv } from "../lib/searchFilters";
 import { queryKeys } from "../lib/queryClient";
-import { JOB_CATEGORIES } from "../lib/labels";
+import { categoryLabel } from "../lib/labels";
 import { loadErrorMessage } from "../lib/http";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
-// `value` is the backend category *name*; search-svc filters by category *id*, resolved via GET /api/categories.
-// Labels come from lib/labels.ts so one category never has two names.
-const HERO_CATS = JOB_CATEGORIES.map((c) => ({ label: c.label, value: c.name }));
+// The row the visitor opened last gets the amber "your selection" band when they come back.
+const LAST_JOB_KEY = "jp.lastJob";
 
-const BANNERS = [
-  {
-    kicker: "Cơ hội việc làm mới",
-    title: "Tìm việc phù hợp, ứng tuyển trong vài phút",
-    points: ["Hồ sơ một lần", "Gợi ý theo kỹ năng", "Theo dõi trạng thái"],
-    cta: "Khám phá ngay",
-  },
-  {
-    kicker: "Nhà tuyển dụng",
-    title: "Đăng tin và tiếp cận ứng viên chất lượng",
-    points: ["Lọc hồ sơ nhanh", "Quản lý tin tuyển", "Phản hồi tức thì"],
-    cta: "Đăng tin tuyển dụng",
-  },
-  {
-    kicker: "Job Platform",
-    title: "Kết nối người tìm việc và doanh nghiệp",
-    points: ["Tìm theo lương", "Lọc kinh nghiệm", "Việc làm Remote"],
-    cta: "Bắt đầu tìm việc",
-  },
-];
+function readLastJob(): string | null {
+  try {
+    return sessionStorage.getItem(LAST_JOB_KEY);
+  } catch {
+    return null;
+  }
+}
+
+type Patch = Record<string, string | undefined>;
 
 export default function JobListPage() {
   useDocumentTitle("Việc làm");
   const [sp, setSp] = useSearchParams();
   const params = parseSearchParams(sp);
-  const [heroPage, setHeroPage] = useState(0);
-  const [banner, setBanner] = useState(0);
-  const [hintOpen, setHintOpen] = useState(true);
+  const [lastJobId, setLastJobId] = useState(readLastJob);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLDialogElement>(null);
+  const boardRef = useRef<HTMLElement>(null);
 
   const jobsQuery = useQuery({
     queryKey: queryKeys.jobs(params),
     queryFn: () => fetchJobs(params),
+    // Keep the current rows on screen while the next filter or page loads, instead of a blank board.
+    placeholderData: (previous) => previous,
   });
-
-  const catsQuery = useQuery({
-    queryKey: queryKeys.categories,
-    queryFn: fetchCategories,
-  });
+  const catsQuery = useQuery({ queryKey: queryKeys.categories, queryFn: fetchCategories });
 
   const data = jobsQuery.data;
-  const loading = jobsQuery.isPending;
+  const items = data?.items ?? [];
   const err = jobsQuery.isError ? loadErrorMessage(jobsQuery.error, "danh sách việc làm") : null;
   const categories = (catsQuery.data ?? []).filter((c) => c.id && c.name);
-  const catIdOf = (name: string) => categories.find((c) => c.name.toLowerCase() === name.toLowerCase())?.id;
-  const catPages = Math.max(1, Math.ceil(HERO_CATS.length / 6));
-  const visibleCats = HERO_CATS.slice(heroPage * 6, heroPage * 6 + 6);
-  const slide = BANNERS[banner];
 
-  const items = data?.items ?? [];
+  useEffect(() => {
+    const dialog = drawerRef.current;
+    if (!dialog) return;
+    if (drawerOpen && !dialog.open) dialog.showModal();
+    if (!drawerOpen && dialog.open) dialog.close();
+  }, [drawerOpen]);
 
-  function update(next: Record<string, string | undefined>) {
+  function update(next: Patch) {
     const n = new URLSearchParams(sp);
     Object.entries(next).forEach(([k, v]) => {
       if (v == null || v === "") n.delete(k);
       else n.set(k, v);
     });
-    if (!("page" in next)) n.set("page", "0");
+    if (!("page" in next)) n.delete("page");
     if (n.get("page") === "0") n.delete("page");
     setSp(n, { replace: false });
   }
 
-  function pickAndScroll(next: Record<string, string | undefined>) {
-    update(next);
-    document.getElementById("home-jobs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  function goToPage(page: number) {
+    update({ page: String(page) });
+    boardRef.current?.scrollIntoView({ block: "start" });
   }
 
   function clearFilters() {
     setSp(params.q ? { q: params.q } : {}, { replace: false });
   }
 
+  function remember(id: string) {
+    setLastJobId(id);
+    try {
+      sessionStorage.setItem(LAST_JOB_KEY, id);
+    } catch {
+      /* storage blocked: the band is a nicety */
+    }
+  }
+
+  // One removable chip per active filter, in the order the filters appear on screen.
+  const chips: { key: string; label: string; clear: Patch }[] = [];
+  if (params.category) {
+    const name = categories.find((c) => c.id === params.category)?.name;
+    chips.push({ key: "cat", label: name ? categoryLabel(name) : "Ngành nghề đã chọn", clear: { category: undefined } });
+  }
+  if (params.location) chips.push({ key: "loc", label: params.location, clear: { location: undefined } });
+  if (params.minSalary != null || params.maxSalary != null) {
+    chips.push({
+      key: "sal",
+      label: formatSalary(params.minSalary ?? 0, params.maxSalary ?? 0, params.salaryCurrency),
+      clear: { minSalary: undefined, maxSalary: undefined },
+    });
+  }
+  splitCsv(params.experienceLevel).forEach((v) => chips.push({
+    key: `l-${v}`,
+    label: EXPERIENCE_OPTIONS.find((o) => o.value === v)?.label ?? "Cấp bậc đã chọn",
+    clear: { experienceLevel: toggleCsv(params.experienceLevel, v) || undefined },
+  }));
+  splitCsv(params.employmentType).forEach((v) => chips.push({
+    key: `t-${v}`,
+    label: EMPLOYMENT_OPTIONS.find((o) => o.value === v)?.label ?? "Hình thức đã chọn",
+    clear: { employmentType: toggleCsv(params.employmentType, v) || undefined },
+  }));
+  splitCsv(params.skills).forEach((v) => chips.push({ key: `s-${v}`, label: v, clear: { skills: toggleCsv(params.skills, v) || undefined } }));
+  // The drawer button counts what lives in the drawer (category and place have their own rows).
+  const drawerCount = chips.filter((c) => c.key !== "cat" && c.key !== "loc").length;
+
+  const total = data?.total ?? 0;
+  const filtered = hasActiveFilters(params);
+
   return (
-    <div className="home-shell">
+    <>
       <TopBar />
-      <section className="topcv-hero">
-        <div className="container topcv-hero-inner">
-          <h1 className="topcv-hero-title">Job Platform — Tạo CV, Tìm việc làm, Tuyển dụng hiệu quả</h1>
-          <div className="topcv-search-wrap">
-            <SearchBar initialQ={params.q || ""} initialLoc={params.location || ""} onSearch={(nq, nloc) => update({ q: nq || undefined, location: nloc || undefined })} />
-          </div>
-
-          <div className="topcv-hero-row">
-            <div className="topcv-hero-cats">
-              <div className="topcv-cat-list">
-                {visibleCats.map((cat) => {
-                  const id = catIdOf(cat.value);
-                  return (
-                  <button
-                    key={cat.value}
-                    type="button"
-                    disabled={!id}
-                    className={`topcv-cat-item ${id && params.category === id ? "active" : ""}`}
-                    onClick={() => update({ category: params.category === id ? undefined : id })}
-                  >
-                    <span>{cat.label}</span>
-                    <span className="topcv-cat-arrow">›</span>
-                  </button>
-                  );
-                })}
-              </div>
-              <div className="topcv-cat-footer">
-                <span>{heroPage + 1}/{catPages}</span>
-                <span className="topcv-cat-pager">
-                  <button type="button" className="topcv-circle-btn" disabled={heroPage === 0} onClick={() => setHeroPage((p) => Math.max(0, p - 1))}>‹</button>
-                  <button type="button" className="topcv-circle-btn topcv-circle-btn--green" disabled={heroPage >= catPages - 1} onClick={() => setHeroPage((p) => Math.min(catPages - 1, p + 1))}>›</button>
-                </span>
-              </div>
-            </div>
-
-            <div className="topcv-hero-banner">
-              <button type="button" className="topcv-banner-nav left" aria-label="Banner trước" onClick={() => setBanner((i) => (i + BANNERS.length - 1) % BANNERS.length)}>‹</button>
-              <div className="topcv-banner-copy">
-                <p className="topcv-banner-kicker">{slide.kicker}</p>
-                <h2>{slide.title}</h2>
-                <ul>
-                  {slide.points.map((point) => <li key={point}>{point}</li>)}
-                </ul>
-                <Link className="topcv-banner-cta" to="/jobs">{slide.cta} →</Link>
-              </div>
-              <div className="topcv-banner-art" aria-hidden="true" />
-              <button type="button" className="topcv-banner-nav right" aria-label="Banner sau" onClick={() => setBanner((i) => (i + 1) % BANNERS.length)}>›</button>
-            </div>
-          </div>
-
-          <div className="topcv-dots">
-            {BANNERS.map((_, i) => <span key={i} className={`topcv-dot ${i === banner ? "active" : ""}`} />)}
-          </div>
-        </div>
-      </section>
-
-      <section className="home-jobs" id="home-jobs">
-        <div className="container">
-          <div className="topcv-section-head">
-            <h2 className="topcv-section-title">Việc làm nổi bật</h2>
-            <Link className="topcv-viewall" to="/jobs">Xem tất cả</Link>
-            <span className="topcv-section-pager">
-              <button type="button" className="topcv-circle-btn" disabled={!data || data.page === 0} onClick={() => update({ page: String(Math.max(0, (data?.page ?? 0) - 1)) })}>‹</button>
-              <button type="button" className="topcv-circle-btn topcv-circle-btn--green" disabled={!data || data.page >= data.totalPages - 1} onClick={() => update({ page: String((data?.page ?? 0) + 1) })}>›</button>
-            </span>
-          </div>
-
-          <AdvancedFilters
-            params={params}
-            facets={data?.facets}
-            categories={categories}
-            onChange={update}
-            onClear={clearFilters}
+      <div className="jp-searchband">
+        <div className="jp-searchband-inner">
+          <SearchBar
+            initialQ={params.q || ""}
+            initialLoc={params.location || ""}
+            onSearch={(q, loc) => update({ q: q || undefined, location: loc || undefined })}
           />
+        </div>
+      </div>
 
-          {catsQuery.isError && (
-            <div className="hint" style={{ margin: "8px 0", color: "#dc2626" }}>
-              Lỗi danh mục <button className="chip" onClick={() => void catsQuery.refetch()}>Thử lại</button>
+      <main className="jp-page jp-jobs">
+        <CategoryRow
+          categories={categories}
+          selectedId={params.category}
+          facets={data?.facets}
+          loadFailed={catsQuery.isError}
+          retrying={catsQuery.isFetching}
+          onRetry={() => void catsQuery.refetch()}
+          onSelect={(id) => update({ category: id })}
+        />
+
+        <div className="jp-jobs-grid">
+          <aside className="jp-jobs-filters" aria-label="Bộ lọc">
+            <AdvancedFilters params={params} facets={data?.facets} onChange={update} />
+          </aside>
+
+          <section className="jp-jobs-main" ref={boardRef} aria-labelledby="jp-board-title">
+            <div className="jp-boardhead">
+              <div className="jp-boardhead-title">
+                <h1 id="jp-board-title" className="jp-h1">Bảng việc làm</h1>
+                <p className="jp-boardhead-count" aria-live="polite">
+                  {data ? `${total.toLocaleString("vi-VN")} việc đang tuyển` : " "}
+                  {data && params.q && <> cho “<strong>{params.q}</strong>”</>}
+                </p>
+              </div>
+              <div className="jp-boardhead-tools">
+                <Button variant="secondary" icon="filter" className="jp-filters-open" aria-haspopup="dialog" onClick={() => setDrawerOpen(true)}>
+                  Bộ lọc{drawerCount ? ` (${drawerCount})` : ""}
+                </Button>
+                <label className="jp-sort">
+                  <span>Sắp xếp</span>
+                  <Select value={params.sortBy || "relevance"} onChange={(e) => update({ sort: e.target.value === "relevance" ? undefined : e.target.value })}>
+                    {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </Select>
+                </label>
+              </div>
             </div>
-          )}
 
-          {hintOpen && (
-            <div className="topcv-hint">
-              <span>
-                <span className="topcv-hint-tag">Gợi ý:</span>
-                Di chuột vào tiêu đề việc làm để xem thêm thông tin chi tiết
-              </span>
-              <button className="topcv-hint-close" type="button" onClick={() => setHintOpen(false)}>×</button>
-            </div>
-          )}
+            {chips.length > 0 && (
+              <div className="jp-active-filters" aria-label="Bộ lọc đang bật">
+                {chips.map((chip) => <RemovableChip key={chip.key} label={chip.label} onRemove={() => update(chip.clear)} />)}
+                <Button variant="ghost" size="sm" onClick={clearFilters}>Xóa bộ lọc</Button>
+              </div>
+            )}
 
-          {loading && <div className="skeleton-grid">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="skeleton-card" />)}</div>}
-          {err && (
-            <div className="alert alert-error" role="alert">
-              <span>{err}</span>{" "}
-              <button type="button" className="btn btn-ghost btn-sm" disabled={jobsQuery.isFetching} onClick={() => void jobsQuery.refetch()}>
-                {jobsQuery.isFetching ? "Đang thử lại…" : "Thử lại"}
+            {err && (
+              <Alert
+                action={
+                  <Button variant="secondary" size="sm" loading={jobsQuery.isFetching} onClick={() => void jobsQuery.refetch()}>
+                    {jobsQuery.isFetching ? "Đang thử lại…" : "Thử lại"}
+                  </Button>
+                }
+              >
+                {err}
+              </Alert>
+            )}
+
+            {jobsQuery.isPending && (
+              <div className="jp-board">
+                <SkeletonRows rows={8} label="Đang tải bảng việc làm" />
+              </div>
+            )}
+
+            {data && !err && items.length === 0 && (
+              <div className="jp-board">
+                {filtered ? (
+                  <EmptyState title="Không có việc khớp bộ lọc" action={<Button variant="secondary" onClick={clearFilters}>Xóa bộ lọc</Button>}>
+                    Bỏ bớt bộ lọc đang bật ở trên, hoặc xóa hết để xem cả bảng.
+                  </EmptyState>
+                ) : params.q ? (
+                  <EmptyState title={`Không có việc nào khớp “${params.q}”`} action={<Button variant="secondary" onClick={() => update({ q: undefined })}>Xóa từ khóa</Button>}>
+                    Thử từ khóa ngắn hơn, hoặc tên kỹ năng thay vì tên vị trí.
+                  </EmptyState>
+                ) : (
+                  <EmptyState title="Chưa có việc làm nào đang tuyển">Khi có tin mới được duyệt, bảng sẽ hiện ở đây.</EmptyState>
+                )}
+              </div>
+            )}
+
+            {data && !err && items.length > 0 && (
+              <div className={cx("jp-board-wrap", jobsQuery.isPlaceholderData && "is-stale")} aria-busy={jobsQuery.isPlaceholderData || undefined}>
+                <Board
+                  sort={params.sortBy}
+                  onSalarySort={(next) => update({ sort: next })}
+                  label={`Trang ${data.page + 1} của bảng việc làm`}
+                >
+                  {items.map((job) => (
+                    <JobRow key={job.id} job={job} selected={job.id === lastJobId} onOpen={(j) => remember(j.id)} />
+                  ))}
+                </Board>
+                <div className="jp-board-foot">
+                  <Pagination page={data.page} totalPages={data.totalPages} onPage={goToPage} label="Trang của bảng việc làm" />
+                  {data.totalPages > 1 && <p className="jp-board-pageinfo">Trang {data.page + 1} / {data.totalPages}</p>}
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+
+      <dialog
+        ref={drawerRef}
+        className="jp-drawer"
+        aria-labelledby="jp-drawer-title"
+        onClose={() => setDrawerOpen(false)}
+        onClick={(e) => { if (e.target === e.currentTarget) setDrawerOpen(false); }}
+      >
+        {drawerOpen && (
+          <div className="jp-drawer-inner">
+            <div className="jp-drawer-head">
+              <h2 id="jp-drawer-title" className="jp-h2">Bộ lọc</h2>
+              <button type="button" className="jp-drawer-close" aria-label="Đóng bộ lọc" onClick={() => setDrawerOpen(false)}>
+                <Icon name="x" size={22} />
               </button>
             </div>
-          )}
-          {data && !loading && items.length === 0 && (
-            <div className="empty">
-              <h3>Không tìm thấy việc phù hợp</h3>
-              <p className="hint">Thử bỏ bộ lọc hoặc tìm từ khóa khác.</p>
-              {hasActiveFilters(params) && <button className="btn btn-ghost" onClick={clearFilters}>Xóa bộ lọc</button>}
+            <div className="jp-drawer-body">
+              <AdvancedFilters params={params} facets={data?.facets} onChange={update} />
             </div>
-          )}
-          {data && !loading && items.length > 0 && (
-            <>
-              <div className="topcv-grid">
-                {items.map((j, idx) => <JobCard key={j.id} job={j} index={idx} />)}
-              </div>
-              <div className="topcv-pagination">
-                <Pagination page={data.page} totalPages={data.totalPages} onPage={(p) => update({ page: String(p) })} />
-                <div className="topcv-page-info">Trang {data.page + 1} / {data.totalPages}</div>
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
-      <HomeShowcase
-        onCompany={(name) => pickAndScroll({ q: name })}
-        onCategory={(name) => { const id = catIdOf(name); if (id) pickAndScroll({ category: id }); }}
-      />
-    </div>
+            <div className="jp-drawer-foot">
+              <Button variant="secondary" disabled={!filtered} onClick={clearFilters}>Xóa bộ lọc</Button>
+              <Button onClick={() => setDrawerOpen(false)}>
+                {data ? `Xem ${total.toLocaleString("vi-VN")} việc` : "Xem kết quả"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </dialog>
+    </>
   );
 }

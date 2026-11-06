@@ -33,7 +33,8 @@ async function shoot(page: Page, testInfo: TestInfo, name: string) {
 
 const GUEST_SCREENS: [name: string, path: string][] = [
   ["jobs", "/jobs"],
-  ["jobs-empty", "/jobs?keyword=zzzzqqq"],
+  ["jobs-empty", "/jobs?q=zzzzqqq"],
+  ["jobs-filtered", "/jobs?experienceLevel=Mid&employmentType=FullTime&minSalary=5000000&maxSalary=10000000&sort=salary_desc"],
   ["job-detail", "/jobs/seed-1"],
   ["job-not-found", "/jobs/khong-ton-tai"],
   ["login", "/login"],
@@ -73,6 +74,28 @@ test("guest jobs load error", async ({ page }, testInfo) => {
   await page.route("**/api/search/**", (route) => route.fulfill({ status: 400, json: { message: "Bad request" } }));
   await page.goto("/jobs");
   await shoot(page, testInfo, "jobs-error");
+});
+
+test("guest jobs first viewport", async ({ page }, testInfo) => {
+  // What a visitor sees before scrolling: the brief requires the first job inside this frame.
+  await offlineBackend(page);
+  await page.goto("/jobs");
+  await page.waitForLoadState("networkidle");
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page.locator('[class*="skeleton"]')).toHaveCount(0, { timeout: 10_000 });
+  await expect(page.locator(".jp-row").first()).toBeInViewport();
+  await page.screenshot({ path: `screenshots/${testInfo.project.name}/jobs-viewport.png` });
+});
+
+test("guest jobs filter drawer", async ({ page }, testInfo) => {
+  test.skip((page.viewportSize()?.width ?? 0) >= 1100, "the drawer only exists below 1100px");
+  await offlineBackend(page);
+  await page.goto("/jobs");
+  await expect(page.locator('[class*="skeleton"]')).toHaveCount(0, { timeout: 10_000 });
+  await page.getByRole("button", { name: /Bộ lọc/ }).click();
+  await expect(page.getByRole("dialog", { name: "Bộ lọc" })).toBeVisible();
+  await page.waitForTimeout(400); // let the slide-in finish
+  await page.screenshot({ path: `screenshots/${testInfo.project.name}/jobs-drawer.png` });
 });
 
 test("fonts are self-hosted", async ({ page }) => {

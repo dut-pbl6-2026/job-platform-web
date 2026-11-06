@@ -812,7 +812,8 @@
   .jp-row .jp-col--type,
   .jp-row .jp-col--posted { display: inline; }
   /* Same order as the desktop columns, salary still the bold one. */
-  .jp-row .jp-cell + .jp-cell::before { content: "·"; margin: 0 var(--sp-2); color: var(--c-muted); font-weight: 400; }
+  /* The dot hangs at the end of the fact before it, so a wrapped line never starts with "·". */
+  .jp-row .jp-cell:not(:last-child)::after { content: "·"; margin: 0 var(--sp-2); color: var(--c-muted); font-weight: 400; }
   .jp-cell.jp-col--salary { text-align: left; }
 }
 

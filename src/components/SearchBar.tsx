@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { Icon } from "./ui";
+import { LOCATION_SUGGESTIONS } from "../lib/searchFilters";
 
+/** Keyword + place + "Tìm việc". Submitting writes both to the URL; the page reads them back from there. */
 export function SearchBar({ initialQ, initialLoc, onSearch }: { initialQ?: string; initialLoc?: string; onSearch: (q: string, loc: string) => void }) {
   const [q, setQ] = useState(initialQ || "");
   const [loc, setLoc] = useState(initialLoc || "");
@@ -9,26 +12,41 @@ export function SearchBar({ initialQ, initialLoc, onSearch }: { initialQ?: strin
 
   return (
     <form
-      className="topcv-search"
+      className="jp-search"
+      role="search"
+      aria-label="Tìm việc làm"
       onSubmit={(e) => {
         e.preventDefault();
         onSearch(q.trim(), loc.trim());
       }}
     >
-      <div className="topcv-search-field">
-        <span className="topcv-search-icon">⌕</span>
-        <input aria-label="Từ khóa" className="topcv-search-input" placeholder="Vị trí tuyển dụng, tên công ty" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" />
-      </div>
-      <div className="topcv-search-divider" />
-      <div className="topcv-search-field topcv-search-field--loc">
-        <span className="topcv-search-icon" aria-hidden="true">⌖</span>
-        <input aria-label="Địa điểm" className="topcv-search-input" placeholder="Địa điểm" value={loc} onChange={(e) => setLoc(e.target.value)} />
-        <span className="topcv-search-arrow">▾</span>
-      </div>
-      <button className="topcv-search-btn" type="submit">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-        Tìm kiếm
-      </button>
+      <label className="jp-search-field">
+        <span className="jp-sr">Từ khóa</span>
+        <Icon name="search" />
+        <input
+          type="search"
+          placeholder="Vị trí, kỹ năng, công ty…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          autoComplete="off"
+          enterKeyHint="search"
+        />
+      </label>
+      <label className="jp-search-field jp-search-field--loc">
+        <span className="jp-sr">Địa điểm</span>
+        <Icon name="pin" />
+        <input
+          placeholder="Tất cả địa điểm"
+          value={loc}
+          onChange={(e) => setLoc(e.target.value)}
+          list="jp-location-suggestions"
+          autoComplete="off"
+        />
+        <datalist id="jp-location-suggestions">
+          {LOCATION_SUGGESTIONS.map((place) => <option key={place} value={place} />)}
+        </datalist>
+      </label>
+      <button className="jp-btn jp-btn--primary jp-btn--lg jp-search-go" type="submit">Tìm việc</button>
     </form>
   );
 }
