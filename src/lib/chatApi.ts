@@ -37,7 +37,7 @@ function statusOf(e: unknown): number | undefined {
 }
 
 /**
- * ai-svc has no /api/ai/session or /api/ai/chat yet (review #22). Without VITE_ENABLE_MOCKS a
+ * ai-svc has no /api/ai/session or /api/ai/chat yet. Without VITE_ENABLE_MOCKS a
  * missing endpoint (404/501) or unreachable service becomes this error, shown as-is in the UI.
  */
 export class ChatUnavailableError extends Error {

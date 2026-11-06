@@ -41,11 +41,23 @@ export default function AdminJobsPage() {
     }
   }
 
+  function goToPage(p: number) {
+    const next = new URLSearchParams(sp);
+    if (p) next.set("page", String(p)); else next.delete("page");
+    setSp(next);
+  }
+
   async function load() {
     setLoading(true);
     setErr(null);
     try {
-      setData(await fetchPendingJobs({ page, size: PAGE_SIZE }));
+      const res = await fetchPendingJobs({ page, size: PAGE_SIZE });
+      // Deciding the last job on page N > 0 empties that page; earlier pages may still have jobs.
+      if (res.items.length === 0 && page > 0) {
+        goToPage(page - 1);
+        return;
+      }
+      setData(res);
     } catch (e: unknown) {
       setErr(apiErrorMessage(e, "Không tải được tin chờ duyệt"));
     } finally {
@@ -143,11 +155,7 @@ export default function AdminJobsPage() {
               )}
             </article>
           ))}
-          <Pagination page={data.page} totalPages={data.totalPages} onPage={(p) => {
-            const next = new URLSearchParams(sp);
-            if (p) next.set("page", String(p)); else next.delete("page");
-            setSp(next);
-          }} />
+          <Pagination page={data.page} totalPages={data.totalPages} onPage={goToPage} />
         </div>
       )}
     </AdminShell>

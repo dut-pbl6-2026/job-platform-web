@@ -5,6 +5,7 @@ import { Pagination } from "../components/Pagination";
 import { useAuth } from "../contexts/AuthContext";
 import { isUser } from "../lib/roles";
 import { fetchMyApplications } from "../lib/applicationsApi";
+import { loadErrorMessage } from "../lib/http";
 import { timeAgo } from "../lib/jobsApi";
 import type { Application, ApplicationStatus, PaginatedApplications } from "../types/application";
 import { APPLICATION_STATUSES, STATUS_LABEL } from "../types/application";
@@ -27,7 +28,7 @@ export default function ApplicationHistoryPage() {
     setErr(null);
     fetchMyApplications({ status: status || undefined, page, size: PAGE_SIZE, userId: user.id })
       .then((d) => { if (alive) setData(d); })
-      .catch((e) => { if (alive) setErr(e?.message || "Không tải được danh sách"); })
+      .catch((e) => { if (alive) setErr(loadErrorMessage(e, "lịch sử ứng tuyển")); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [user, status, page]);
