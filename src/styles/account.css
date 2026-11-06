@@ -1,0 +1,226 @@
+/*
+ * Candidate account screens: /applications (a board of your applications), /applications/:id (reuses the
+ * detail page grid) and /profile (the same main + side grid, sections as panels).
+ * Rows borrow the board's title, company and cell styles; the columns are this page's own.
+ */
+
+.jp-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.jp-count {
+  margin: 0 0 var(--sp-2);
+  font-size: 14px;
+  color: var(--c-muted);
+}
+
+/* Applications board ------------------------------------------------------------------------------ */
+
+.jp-apps {
+  --apps-cols: minmax(0, 1fr) 200px 140px 160px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+}
+
+.jp-apps-head,
+.jp-app-row {
+  display: grid;
+  grid-template-columns: var(--apps-cols);
+  align-items: center;
+  column-gap: var(--sp-4);
+  padding: 0 var(--sp-6);
+}
+
+.jp-apps-head {
+  min-height: 44px;
+  background: var(--c-navy);
+  color: #fff;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.jp-apps-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jp-app-row {
+  position: relative;
+  min-height: 72px;
+  padding-top: var(--sp-3);
+  padding-bottom: var(--sp-3);
+  border-top: 1px solid var(--c-row-rule);
+  transition: background-color 0.12s ease;
+}
+.jp-apps-rows > .jp-app-row:first-child { border-top: 0; }
+.jp-app-row:hover { background: var(--c-hover); }
+.jp-app-row:has(.jp-row-link:focus-visible) {
+  background: var(--c-amber-soft);
+  box-shadow: inset 4px 0 0 var(--c-amber);
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.jp-cell--date { color: var(--c-muted); }
+.jp-cell--status { overflow: visible; }
+
+@media (max-width: 1099px) {
+  .jp-apps { --apps-cols: minmax(0, 1fr) 150px 130px 150px; }
+  .jp-apps-head,
+  .jp-app-row { padding-inline: var(--sp-4); }
+}
+
+/* Below 768px a row is two lines: title + company, then place · date · status. */
+@media (max-width: 767px) {
+  .jp-apps-head { display: none; }
+  .jp-app-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0;
+    row-gap: 2px;
+    padding: var(--sp-4);
+  }
+  .jp-app-row .jp-row-main { flex: 1 1 100%; margin-bottom: var(--sp-2); }
+  .jp-app-row .jp-cell { display: inline; flex: none; white-space: normal; }
+  .jp-app-row .jp-cell:not(:last-child)::after { content: "·"; margin: 0 var(--sp-2); color: var(--c-muted); }
+}
+
+/* Application detail ------------------------------------------------------------------------------- */
+
+.jp-app-status { margin: 0 0 var(--sp-4); font-size: var(--fs-title); }
+.jp-app-status .jp-status { font-size: var(--fs-title); }
+
+.jp-cv-button { height: auto; min-height: var(--tap); padding-block: var(--sp-2); }
+.jp-cv-name { min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.jp-cv-error { margin-top: var(--sp-3); }
+.jp-cv-plain { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Status history: a small timetable, oldest first. */
+.jp-history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+  background: var(--c-surface);
+}
+.jp-history-row {
+  display: grid;
+  grid-template-columns: 160px 170px minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--sp-2) var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--c-row-rule);
+}
+.jp-history-row:first-child { border-top: 0; }
+.jp-history-time { font-size: 14px; color: var(--c-muted); }
+.jp-history-note { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 767px) {
+  .jp-history-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .jp-history-time { order: 2; }
+}
+
+/* Profile ------------------------------------------------------------------------------------------ */
+
+.jp-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: var(--sp-6);
+  align-items: start;
+}
+.jp-profile-main,
+.jp-profile-side { display: grid; gap: var(--sp-4); min-width: 0; }
+
+@media (max-width: 1099px) {
+  .jp-profile-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.jp-panel-alert { margin-bottom: var(--sp-4); }
+
+/* View: label and value on one row, rules between rows. */
+.jp-kv { margin: 0; }
+.jp-kv > div {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--c-row-rule);
+}
+.jp-kv > div:first-child { border-top: 0; padding-top: 0; }
+.jp-kv dt { font-size: 14px; color: var(--c-muted); }
+.jp-kv dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.jp-kv dd.jp-muted { font-weight: 400; }
+
+.jp-kv-summary {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-row-rule);
+}
+.jp-kv-summary .jp-label { margin: 0 0 var(--sp-2); font-weight: 600; }
+.jp-kv-summary p { margin: 0; }
+
+@media (max-width: 767px) {
+  .jp-kv > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+
+/* Edit and add forms */
+.jp-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+.jp-form-grid > .jp-field--wide { grid-column: 1 / -1; }
+
+.jp-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+}
+
+.jp-addform {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--c-row-rule);
+  display: grid;
+  gap: var(--sp-4);
+}
+.jp-addform.jp-form-grid { display: grid; }
+
+@media (max-width: 767px) {
+  .jp-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .jp-form-actions .jp-btn { flex: 1 1 100%; }
+  .jp-addform .jp-btn[type="submit"] { width: 100%; }
+}
+
+/* Entries of skills, experience and education: one row each, rules between. */
+.jp-items { margin: 0; padding: 0; list-style: none; }
+.jp-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-top: 1px solid var(--c-row-rule);
+}
+.jp-item:first-child { border-top: 0; padding-top: 0; }
+.jp-item:last-child { padding-bottom: 0; }
+.jp-item-main { min-width: 0; display: grid; gap: 2px; }
+.jp-item-title { font-size: var(--fs-body); overflow-wrap: anywhere; }
+.jp-item-sub { overflow-wrap: anywhere; }
+.jp-item-meta { font-size: 14px; color: var(--c-muted); }
+.jp-item-text { margin: var(--sp-2) 0 0; max-width: 65ch; white-space: pre-wrap; overflow-wrap: anywhere; }
+.jp-item .jp-btn { margin-top: -4px; }
+
+.jp-filter-row .jp-chip { min-height: var(--tap); }

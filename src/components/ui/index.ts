@@ -28,5 +28,6 @@ export {
   type StatusTone,
 } from "./feedback";
 export { Board, FactStrip, JobRow, jobFacts, type JobFacts } from "./board";
+export { ApplicationStatusMark } from "./account";
 export { TopBar } from "./TopBar";
 export { AuthLayout, PasswordRules } from "./AuthLayout";

@@ -23,4 +23,7 @@ export const queryKeys = {
   categories: ["categories"] as const,
   skills: (q: string) => ["skills", q] as const,
   locations: (q: string) => ["locations", q] as const,
+  applications: (params: unknown) => ["applications", params] as const,
+  application: (id: string) => ["application", id] as const,
+  profile: (userId: string) => ["profile", userId] as const,
 };

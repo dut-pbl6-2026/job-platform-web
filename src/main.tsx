@@ -13,6 +13,7 @@ import "./styles/board.css";
 import "./styles/detail.css";
 import "./styles/apply.css";
 import "./styles/authform.css";
+import "./styles/account.css";
 import "./styles/tokens.css"; // last: base rules (font, :focus-visible) override legacy rules of equal specificity
 
 // Older builds fell back to localStorage mocks on every API error and kept the user's profile there in

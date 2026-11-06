@@ -365,3 +365,234 @@ test("fonts are self-hosted", async ({ page }) => {
   expect(local.length).toBeGreaterThan(0);
   expect(external).toEqual([]);
 });
+
+/* Candidate account (S7) --------------------------------------------------------------------------- */
+
+type Status = "pending" | "reviewed" | "shortlisted" | "accepted" | "rejected";
+
+function application(n: number, status: Status, extra: Record<string, unknown> = {}) {
+  return {
+    id: `app-${n}`,
+    jobId: "seed-1",
+    jobTitle: `Lập trình viên Frontend React ${n}`,
+    companyName: "Công ty TNHH Phần mềm Đà Nẵng",
+    location: n % 4 === 0 ? "Remote" : "Đà Nẵng",
+    applicantId: "e2e-User",
+    status,
+    coverLetter: null,
+    cvFileName: "cv-nguyen-van-a.pdf",
+    cvUrl: "/files/cv-nguyen-van-a.pdf",
+    createdAt: `2026-11-0${(n % 5) + 1}T09:30:00Z`,
+    updatedAt: `2026-11-0${(n % 5) + 1}T09:30:00Z`,
+    ...extra,
+  };
+}
+
+const ALL_STATUSES: Status[] = ["pending", "reviewed", "shortlisted", "accepted", "rejected"];
+
+/** app-svc is 1-based and answers { items, total, page, size }; the filter in the URL is passed through. */
+async function applicationsFromBackend(page: Page, items: object[], requests: string[] = []) {
+  await page.route(/\/api\/applications\/me(\?|$)/, (route) => {
+    const url = new URL(route.request().url());
+    requests.push(url.search);
+    const status = url.searchParams.get("status");
+    const rows = status ? items.filter((a) => (a as { status: string }).status === status) : items;
+    return route.fulfill({ json: { items: rows, total: rows.length, page: 1, size: 8 } });
+  });
+}
+
+test("applications: board with every status, long title, remote job", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  const items = [
+    ...ALL_STATUSES.map((s, i) => application(i + 1, s)),
+    application(6, "pending", { jobTitle: "Chuyên viên phát triển kinh doanh khu vực miền Trung và Tây Nguyên kiêm quản lý đối tác chiến lược dài hạn" }),
+  ];
+  await applicationsFromBackend(page, items);
+  await page.goto("/applications");
+  await expect(page.getByRole("link", { name: "Lập trình viên Frontend React 1" })).toBeVisible();
+  for (const label of ["Chờ xem", "Đã xem", "Vào vòng sau", "Nhận việc", "Không đậu"]) {
+    await expect(page.locator(".jp-app-row").getByText(label, { exact: true }).first()).toBeVisible();
+  }
+  await expect(page.getByText("Làm từ xa").first()).toBeVisible();
+  await expect(page.getByText("6 đơn")).toBeVisible();
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "applications-board");
+});
+
+test("applications: the status filter asks the backend and can be cleared", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  const requests: string[] = [];
+  await applicationsFromBackend(page, ALL_STATUSES.map((s, i) => application(i + 1, s)), requests);
+  await page.goto("/applications");
+  await expect(page.locator(".jp-app-row")).toHaveCount(5);
+  await page.getByRole("button", { name: "Nhận việc" }).click();
+  await expect(page).toHaveURL(/status=accepted/);
+  await expect(page.locator(".jp-app-row")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Nhận việc" })).toHaveAttribute("aria-pressed", "true");
+  expect(requests.some((s) => s.includes("status=accepted"))).toBe(true);
+  await shoot(page, testInfo, "applications-filtered");
+  await page.getByRole("button", { name: "Tất cả" }).click();
+  await expect(page.locator(".jp-app-row")).toHaveCount(5);
+});
+
+test("applications: empty list, and an empty filter that offers to clear itself", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await applicationsFromBackend(page, []);
+  await page.goto("/applications");
+  await expect(page.getByRole("heading", { name: "Chưa có đơn nào" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Xem bảng việc làm" })).toBeVisible();
+  await shoot(page, testInfo, "applications-empty");
+  await page.goto("/applications?status=rejected");
+  await expect(page.getByRole("heading", { name: "Không có đơn nào ở trạng thái “Không đậu”" })).toBeVisible();
+  await page.getByRole("button", { name: "Xem tất cả đơn" }).click();
+  await expect(page).not.toHaveURL(/status=/);
+});
+
+test("applications: load error is Vietnamese and retry works", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  let fail = true;
+  await page.route(/\/api\/applications\/me(\?|$)/, (route) =>
+    fail
+      ? route.fulfill({ status: 400, json: { message: "Bad request" } })
+      : route.fulfill({ json: { items: [application(1, "pending")], total: 1, page: 1, size: 8 } }),
+  );
+  await page.goto("/applications");
+  await expect(page.getByRole("alert").filter({ hasText: "Không tải được danh sách đơn ứng tuyển" })).toBeVisible();
+  await shoot(page, testInfo, "applications-error");
+  fail = false;
+  await page.getByRole("button", { name: "Thử lại" }).click();
+  await expect(page.locator(".jp-app-row")).toHaveCount(1);
+});
+
+test("applications: recruiter is told the page is for candidates", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page, "Recruiter");
+  await page.goto("/applications");
+  await expect(page.getByRole("heading", { name: "Trang này dành cho người tìm việc." })).toBeVisible();
+});
+
+const DETAIL = application(1, "shortlisted", {
+  coverLetter: "Kính gửi nhà tuyển dụng,\n\nTôi quan tâm đến vị trí này vì đã có 3 năm làm React.",
+  statusHistory: [
+    { id: "h2", applicationId: "app-1", status: "shortlisted", note: "Mời phỏng vấn vòng 2 vào thứ Sáu.", changedAt: "2026-11-04T08:00:00Z" },
+    { id: "h1", applicationId: "app-1", status: "pending", note: null, changedAt: "2026-11-02T09:30:00Z" },
+    { id: "h3", applicationId: "app-1", status: "reviewed", note: null, changedAt: "2026-11-03T10:15:00Z" },
+  ],
+});
+
+test("application detail: status, letter, history oldest first, CV, no internal ids", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await page.route(/\/api\/applications\/app-1$/, (route) => route.fulfill({ json: DETAIL }));
+  await page.goto("/applications/app-1");
+  await expect(page.getByRole("heading", { level: 1, name: "Lập trình viên Frontend React 1" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Thư xin việc" })).toBeVisible();
+  await expect(page.getByText("Mời phỏng vấn vòng 2 vào thứ Sáu.")).toBeVisible();
+  const order = await page.locator(".jp-history-row .jp-status").allTextContents();
+  expect(order.map((t) => t.trim())).toEqual(["Chờ xem", "Đã xem", "Vào vòng sau"]);
+  await expect(page.getByRole("button", { name: /cv-nguyen-van-a\.pdf/ })).toBeVisible();
+  await expect(page.locator("main")).not.toContainText("e2e-User");
+  await expect(page.locator("main")).not.toContainText("app-1");
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "application-detail");
+});
+
+test("application detail: unknown id and failed load", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await page.route(/\/api\/applications\/app-404$/, (route) => route.fulfill({ status: 404, json: { message: "not found" } }));
+  await page.goto("/applications/app-404");
+  await expect(page.getByRole("heading", { name: "Không tìm thấy đơn ứng tuyển." })).toBeVisible();
+  await shoot(page, testInfo, "application-not-found");
+  await page.route(/\/api\/applications\/app-bad$/, (route) => route.fulfill({ status: 403, json: { message: "forbidden" } }));
+  await page.goto("/applications/app-bad");
+  await expect(page.getByRole("alert").filter({ hasText: "Bạn không có quyền xem đơn ứng tuyển này" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Thử lại" })).toBeVisible();
+});
+
+test("profile: edit info, add and delete skill, experience and education", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await page.goto("/profile");
+  await expect(page.getByRole("heading", { level: 2, name: "Thông tin cá nhân" })).toBeVisible();
+  await shoot(page, testInfo, "profile-empty");
+
+  // Info: a too-short name is reported on the field, then it saves.
+  await page.getByRole("button", { name: "Sửa thông tin" }).click();
+  await page.getByLabel(/^Họ tên/).fill("A");
+  await page.getByRole("button", { name: "Lưu hồ sơ" }).click();
+  await expect(page.getByText("Họ tên cần từ 2 ký tự.")).toBeVisible();
+  await page.getByLabel(/^Họ tên/).fill("Nguyễn Văn An");
+  await page.getByLabel(/^Chức danh/).fill("Lập trình viên Frontend");
+  await page.getByLabel(/^Điện thoại/).fill("0905123456");
+  await page.getByLabel(/^Ngày sinh/).fill("2000-01-31");
+  await page.getByLabel(/^Giới thiệu ngắn/).fill("Ba năm làm React và TypeScript.");
+  await shoot(page, testInfo, "profile-edit");
+  await page.getByRole("button", { name: "Lưu hồ sơ" }).click();
+  await expect(page.getByText("Đã lưu hồ sơ.")).toBeVisible();
+  await expect(page.getByText("Nguyễn Văn An", { exact: true })).toBeVisible();
+  await expect(page.getByText("31/1/2000")).toBeVisible();
+
+  // Skill: empty name is refused; a valid one is listed; it can be deleted.
+  const skills = page.locator(".jp-profile-side");
+  await skills.getByRole("button", { name: "Thêm" }).click();
+  await skills.getByRole("button", { name: "Lưu kỹ năng" }).click();
+  await expect(skills.getByText("Nhập tên kỹ năng.")).toBeVisible();
+  await skills.getByLabel(/^Tên kỹ năng/).fill("React");
+  await skills.getByLabel("Mức thành thạo").selectOption("4");
+  await skills.getByRole("button", { name: "Lưu kỹ năng" }).click();
+  await expect(skills.getByText("Mức 4/5 · 1 năm")).toBeVisible();
+
+  // Experience, current job: no end date field.
+  const main = page.locator(".jp-profile-main");
+  const experience = main.locator("section", { has: page.getByRole("heading", { name: "Kinh nghiệm làm việc" }) });
+  await experience.getByRole("button", { name: "Thêm" }).click();
+  await experience.getByRole("button", { name: "Lưu kinh nghiệm" }).click();
+  await expect(experience.getByText("Nhập tên công ty.")).toBeVisible();
+  await experience.getByLabel(/^Công ty/).fill("Công ty Phần mềm Hải Châu");
+  await experience.getByLabel(/^Chức danh/).fill("Kỹ sư phần mềm");
+  await experience.getByLabel(/^Bắt đầu/).fill("2022-03-01");
+  await experience.getByLabel("Đang làm việc ở đây").check({ force: true });
+  await expect(experience.getByLabel(/^Kết thúc/)).toHaveCount(0);
+  await experience.getByRole("button", { name: "Lưu kinh nghiệm" }).click();
+  await expect(experience.getByText("1/3/2022 – Hiện tại")).toBeVisible();
+
+  // Education
+  const education = main.locator("section", { has: page.getByRole("heading", { name: "Học vấn" }) });
+  await education.getByRole("button", { name: "Thêm" }).click();
+  await education.getByLabel(/^Trường/).fill("Đại học Bách khoa Đà Nẵng");
+  await education.getByLabel(/^Bằng cấp/).fill("Kỹ sư");
+  await education.getByLabel(/^Ngành/).fill("Công nghệ thông tin");
+  await education.getByLabel(/^Bắt đầu/).fill("2018-09-01");
+  await education.getByRole("button", { name: "Lưu học vấn" }).click();
+  await expect(education.getByText("Kỹ sư · Công nghệ thông tin")).toBeVisible();
+  await expect(education.getByText("Từ 1/9/2018")).toBeVisible();
+  await shoot(page, testInfo, "profile-filled");
+  await expectSoundLayout(page);
+
+  await skills.getByRole("button", { name: "Xóa kỹ năng React" }).click();
+  await expect(skills.getByText("Chưa có kỹ năng nào.")).toBeVisible();
+  await education.getByRole("button", { name: "Xóa học vấn Đại học Bách khoa Đà Nẵng" }).click();
+  await expect(education.getByText("Chưa có học vấn nào.")).toBeVisible();
+});
+
+test("profile: load error is Vietnamese and retry works", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  let fail = true;
+  await page.route(/\/api\/profiles\/me$/, (route) =>
+    fail
+      ? route.fulfill({ status: 400, json: { message: "Bad request" } })
+      : route.fulfill({ json: { id: "p1", userId: "e2e-User", fullName: "Người dùng thử", skills: [], experiences: [], education: [] } }),
+  );
+  await page.goto("/profile");
+  await expect(page.getByRole("alert").filter({ hasText: "Không tải được hồ sơ" })).toBeVisible();
+  await shoot(page, testInfo, "profile-error");
+  fail = false;
+  await page.getByRole("button", { name: "Thử lại" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "Thông tin cá nhân" })).toBeVisible();
+});
