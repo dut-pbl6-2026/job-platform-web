@@ -32,6 +32,9 @@ export function loadErrorMessage(e: unknown, what: string): string {
   if (status === 401 || status === 403) return `Bạn không có quyền xem ${what}. Hãy đăng nhập lại.`;
   if (status === 404) return `Không tìm thấy ${what}.`;
   if (status) return `Không tải được ${what} (lỗi ${status}).`;
+  // Not an HTTP failure: most likely a bug or a contract change (e.g. normalizeJob throwing on a new
+  // shape). React Query does not log query errors, so log it for whoever opens the console.
+  console.error("[load]", what, e);
   return `Đã xảy ra lỗi khi tải ${what}.`;
 }
 
@@ -70,14 +73,31 @@ export function pickNum(obj: Record<string, unknown>, ...keys: string[]): number
 }
 
 /**
- * Readable error text from an axios error: job-svc/app-svc send { message },
- * auth-svc/profile-svc/search-svc send ProblemDetails { title, detail }.
+ * Vietnamese text for a failed action (`fallback` names the action: "Không cập nhật được tin").
+ * - No response or 5xx: a generic message; a 5xx body may carry internals.
+ * - 4xx: the backend's own message, since it says what the user must fix (409, 422). job-svc/app-svc
+ *   send { message }, auth-svc/profile-svc/search-svc send ProblemDetails { title, detail }. The
+ *   title of a validation ProblemDetails (with `errors`) is .NET's English boilerplate, so skip it.
+ * - Never axios's own English text ("Network Error", "Request failed with status code 403").
+ * - Errors this client throws on purpose keep their (Vietnamese) message; JS runtime errors are bugs,
+ *   so they are logged and replaced by `fallback`.
  */
 export function apiErrorMessage(e: unknown, fallback: string): string {
-  const data = (e as { response?: { data?: unknown } })?.response?.data;
-  if (data && typeof data === "object") {
-    const msg = pickStr(data as Record<string, unknown>, "message", "detail", "title");
-    if (msg) return msg;
+  if (isAxiosError(e)) {
+    if (!e.response) return "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";
+    const status = e.response.status;
+    if (status >= 500) return `Máy chủ đang gặp sự cố (lỗi ${status}). Vui lòng thử lại sau.`;
+    const data = e.response.data;
+    if (data && typeof data === "object") {
+      const body = data as Record<string, unknown>;
+      const msg = pickStr(body, "message", "detail") ?? ("errors" in body ? undefined : pickStr(body, "title"));
+      if (msg) return msg;
+    }
+    return fallback;
   }
-  return (e as { message?: string })?.message || fallback;
+  if (e instanceof TypeError || e instanceof SyntaxError || e instanceof RangeError || e instanceof ReferenceError) {
+    console.error("[api]", fallback, e);
+    return fallback;
+  }
+  return (e instanceof Error && e.message) || fallback;
 }

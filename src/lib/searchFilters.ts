@@ -1,21 +1,18 @@
 import type { JobSearchParams } from "../types/job";
+import { employmentTypeLabel, experienceLevelLabel } from "./labels";
 
 export const JOB_PAGE_SIZE = 9;
 
 // Only values job-svc accepts (api-conventions §6). Freelance / Junior are an open decision there.
-export const EMPLOYMENT_OPTIONS = [
-  { value: "FullTime", label: "Toàn thời gian" },
-  { value: "PartTime", label: "Bán thời gian" },
-  { value: "Contract", label: "Hợp đồng" },
-  { value: "Internship", label: "Thực tập" },
-] as const;
+export const EMPLOYMENT_OPTIONS = (["FullTime", "PartTime", "Contract", "Internship"] as const).map((value) => ({
+  value,
+  label: employmentTypeLabel(value),
+}));
 
-export const EXPERIENCE_OPTIONS = [
-  { value: "Entry", label: "Mới vào nghề" },
-  { value: "Mid", label: "Trung cấp" },
-  { value: "Senior", label: "Senior" },
-  { value: "Lead", label: "Lead" },
-] as const;
+export const EXPERIENCE_OPTIONS = (["Entry", "Mid", "Senior", "Lead"] as const).map((value) => ({
+  value,
+  label: experienceLevelLabel(value),
+}));
 
 export const SORT_OPTIONS = [
   { value: "relevance", label: "Liên quan" },
@@ -38,13 +35,8 @@ export const SALARY_BANDS_USD = [
   { label: "Trên $2.000", min: 2_000, max: undefined },
 ] as const;
 
-export const LOCATION_PILLS = [
-  { label: "Ngẫu nhiên", value: "" },
-  { label: "Hà Nội", value: "Hà Nội" },
-  { label: "Thành phố Hồ Chí Minh (cũ)", value: "Hồ Chí Minh" },
-  { label: "Miền Bắc", value: "Miền Bắc" },
-  { label: "Miền Nam", value: "Miền Nam" },
-] as const;
+/** Suggestions under the place field; the visitor can still type any place. */
+export const LOCATION_SUGGESTIONS = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Hải Phòng", "Cần Thơ", "Bình Dương", "Đồng Nai", "Bắc Ninh"] as const;
 
 const NORTH = ["hà nội", "hải phòng", "bắc ninh", "quảng ninh", "hải dương", "nam định", "thanh hóa", "nghệ an", "ha noi"];
 const SOUTH = ["hồ chí minh", "bình dương", "đồng nai", "long an", "cần thơ", "ho chi minh"];

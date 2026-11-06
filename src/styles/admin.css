@@ -1,26 +1,290 @@
-.admin-layout{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:start}
-.admin-nav{display:flex;flex-direction:column;gap:6px;position:sticky;top:16px}
-.admin-nav a{padding:10px 12px;border-radius:12px;text-decoration:none;color:#334155;font-weight:700;font-size:14px;border:1px solid transparent}
-.admin-nav a.active,.admin-nav a:hover{background:#e6f7ed;color:#00b14f;border-color:#bbf7d0}
-.admin-main{min-width:0;display:flex;flex-direction:column;gap:12px}
-.admin-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.admin-kpi{display:flex;flex-direction:column;gap:4px;background:white;border:1px solid var(--border);border-radius:14px;padding:14px;text-decoration:none;color:inherit}
-.admin-kpi strong{font-size:22px}
-.admin-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
-.admin-bars{list-style:none;padding:0;margin:12px 0;display:flex;flex-direction:column;gap:8px}
-.admin-bars li{display:grid;grid-template-columns:72px 1fr 28px;gap:8px;align-items:center;font-size:12px}
-.admin-bar-track{height:8px;background:#f1f5f9;border-radius:999px;overflow:hidden}
-.admin-bar-track i{display:block;height:100%;background:#00b14f}
-.admin-health{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-wrap:wrap;gap:10px}
-.admin-health li{display:flex;align-items:center;gap:8px;background:#f8fafc;border-radius:12px;padding:8px 10px}
-.admin-filters{display:flex;gap:8px;flex-wrap:wrap}
-.admin-filters .input{max-width:220px}
-.admin-table-wrap{overflow:auto}
-.admin-table{width:100%;border-collapse:collapse;font-size:14px}
-.admin-table th,.admin-table td{text-align:left;padding:10px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-.admin-table select.input{height:36px}
-.admin-job .job-desc{margin:8px 0 0}
-@media (max-width:800px){
-  .admin-layout,.admin-grid,.admin-kpis{grid-template-columns:1fr}
-  .admin-nav{position:static;flex-direction:row;flex-wrap:wrap}
+/*
+ * Admin (/admin, /admin/jobs, /admin/users): the same world as the job board. A second bar for the three
+ * sections, number groups with a navy header band, the review queue as a board, and one table style for
+ * services and users.
+ */
+
+/* Second bar ---------------------------------------------------------------------------------------- */
+
+.jp-subnav {
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-rule);
+}
+.jp-subnav-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 calc(40px - var(--sp-4));
+  display: flex;
+  gap: var(--sp-1);
+}
+.jp-subnav-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 var(--sp-4);
+  border-bottom: 3px solid transparent;
+  color: var(--c-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+.jp-subnav-link:hover { color: var(--c-ink); background: var(--c-hover); text-decoration: none; }
+/* Amber means "where you are". */
+.jp-subnav-link.active {
+  color: var(--c-ink);
+  font-weight: 700;
+  border-bottom-color: var(--c-amber);
+}
+
+@media (max-width: 767px) {
+  .jp-subnav-inner { padding: 0 var(--sp-2); }
+}
+
+/* Numbers -------------------------------------------------------------------------------------------- */
+
+.jp-stat-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+.jp-statgroup--wide { grid-column: 1 / -1; }
+
+.jp-statgroup {
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+}
+.jp-statgroup-title {
+  margin: 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sp-6);
+  background: var(--c-navy);
+  color: #fff;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Cells draw their own top and left rule; the list is pulled back by 1px so the outer edge has none. */
+.jp-stats {
+  margin: -1px 0 0 -1px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+.jp-stat {
+  min-width: 0;
+  padding: var(--sp-4) var(--sp-6);
+  border-top: 1px solid var(--c-row-rule);
+  border-left: 1px solid var(--c-row-rule);
+}
+.jp-stat dt { font-size: 14px; color: var(--c-muted); }
+.jp-stat dd {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-h2);
+  line-height: var(--lh-tight);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+@media (max-width: 1099px) {
+  .jp-stat-groups { grid-template-columns: minmax(0, 1fr); }
+  .jp-stat { padding: var(--sp-3) var(--sp-4); }
+  .jp-statgroup-title { padding: 0 var(--sp-4); }
+}
+
+.jp-health { margin-top: var(--sp-8); display: grid; gap: var(--sp-3); }
+.jp-health .jp-table-wrap { max-width: 720px; }
+
+/* Tables --------------------------------------------------------------------------------------------- */
+
+.jp-table-wrap {
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+}
+.jp-table { width: 100%; border-collapse: collapse; }
+.jp-table thead th {
+  height: 44px;
+  padding: 0 var(--sp-4);
+  background: var(--c-navy);
+  color: #fff;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+}
+.jp-table tbody th,
+.jp-table tbody td {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--c-row-rule);
+  vertical-align: middle;
+  text-align: left;
+}
+.jp-table tbody tr:first-child > * { border-top: 0; }
+.jp-table tbody th { font-weight: 600; }
+.jp-table .jp-num { text-align: right; }
+@media (min-width: 768px) {
+  .jp-table thead th:first-child,
+  .jp-table tbody th:first-child,
+  .jp-table tbody td:first-child { padding-left: var(--sp-6); }
+  .jp-table thead th:last-child,
+  .jp-table tbody td:last-child { padding-right: var(--sp-6); }
+}
+
+/* Users */
+.jp-user-name { min-width: 0; overflow-wrap: anywhere; }
+.jp-user-name strong { display: block; }
+.jp-user-name span { display: block; font-size: 14px; font-weight: 400; color: var(--c-muted); }
+.jp-table .jp-table-actions { text-align: right; }
+.jp-table-actions .jp-muted { font-size: 14px; }
+
+.jp-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2) var(--sp-3);
+}
+.jp-confirm-text { font-size: 14px; font-weight: 600; }
+
+.jp-user-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px 200px auto;
+  gap: var(--sp-4);
+  align-items: end;
+  margin-bottom: var(--sp-6);
+}
+
+@media (max-width: 1099px) {
+  .jp-user-filters { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .jp-user-filters-q { grid-column: 1 / -1; }
+}
+
+@media (max-width: 767px) {
+  .jp-user-filters { grid-template-columns: minmax(0, 1fr); }
+  .jp-user-filters-go { width: 100%; }
+
+  /* A user is two lines: name and email, then role, status and date; the action sits under them. */
+  .jp-table--users thead { display: none; }
+  .jp-table--users,
+  .jp-table--users tbody { display: block; }
+  .jp-table--users tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    padding: var(--sp-4);
+    border-top: 1px solid var(--c-row-rule);
+  }
+  .jp-table--users tbody tr:first-child { border-top: 0; }
+  .jp-table--users tbody th,
+  .jp-table--users tbody td { padding: 0; border: 0; }
+  .jp-table--users tbody th.jp-user-name { flex: 1 1 100%; margin-bottom: var(--sp-2); }
+  .jp-table--users tbody td:not(.jp-table-actions):not(:nth-last-child(2))::after {
+    content: "·";
+    margin: 0 var(--sp-2);
+    color: var(--c-muted);
+  }
+  .jp-table--users tbody td.jp-table-actions { flex: 1 1 100%; margin-top: var(--sp-3); text-align: left; }
+  .jp-table--users .jp-confirm { justify-content: flex-start; }
+  .jp-table--users .jp-table-actions .jp-btn { flex: 1 1 auto; }
+}
+
+/* Review queue --------------------------------------------------------------------------------------- */
+
+.jp-queue {
+  --queue-cols: minmax(0, 1fr) 180px 110px 352px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+  overflow: hidden;
+}
+
+.jp-queue-head,
+.jp-queue-row {
+  display: grid;
+  grid-template-columns: var(--queue-cols);
+  align-items: center;
+  column-gap: var(--sp-4);
+  padding: 0 var(--sp-6);
+}
+.jp-queue-head {
+  min-height: 44px;
+  background: var(--c-navy);
+  color: #fff;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.jp-queue-head-actions { text-align: right; }
+
+.jp-queue-rows { margin: 0; padding: 0; list-style: none; }
+.jp-queue-item { border-top: 1px solid var(--c-row-rule); }
+.jp-queue-rows > .jp-queue-item:first-child { border-top: 0; }
+
+.jp-queue-row {
+  min-height: 72px;
+  padding-top: var(--sp-3);
+  padding-bottom: var(--sp-3);
+}
+.jp-queue-by { margin: 2px 0 0; font-size: var(--fs-caption); color: var(--c-muted); }
+.jp-queue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+.jp-queue-detail {
+  display: grid;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-6) var(--sp-6);
+  background: var(--c-ground);
+  border-top: 1px solid var(--c-row-rule);
+}
+.jp-queue-detail .jp-detail-section,
+.jp-queue-detail .jp-detail-section + .jp-detail-section { margin: 0; padding: 0; border: 0; }
+.jp-queue-detail .jp-detail-section .jp-h3 { font-size: var(--fs-body); }
+
+.jp-queue-reject {
+  display: grid;
+  gap: var(--sp-3);
+  max-width: 720px;
+  padding: var(--sp-4) var(--sp-6) var(--sp-6);
+  border-top: 1px solid var(--c-row-rule);
+}
+
+@media (max-width: 1099px) {
+  .jp-queue { --queue-cols: minmax(0, 1fr) 160px 110px; }
+  .jp-queue-head,
+  .jp-queue-row { padding-inline: var(--sp-4); }
+  .jp-queue-head-actions { display: none; }
+  .jp-queue-actions { grid-column: 1 / -1; justify-content: flex-start; padding-top: var(--sp-3); }
+  .jp-queue-detail,
+  .jp-queue-reject { padding-inline: var(--sp-4); }
+}
+
+/* Below 768px: title and company, then category and age, then the three actions. */
+@media (max-width: 767px) {
+  .jp-queue-head { display: none; }
+  .jp-queue-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0;
+    row-gap: 2px;
+    padding: var(--sp-4);
+  }
+  .jp-queue-row .jp-row-main { flex: 1 1 100%; margin-bottom: var(--sp-2); }
+  .jp-queue-row .jp-cell { display: inline; flex: none; white-space: normal; }
+  .jp-queue-row .jp-cell:not(:last-of-type)::after { content: "·"; margin: 0 var(--sp-2); color: var(--c-muted); }
+  .jp-queue-actions { flex: 1 1 100%; margin-top: var(--sp-3); padding-top: 0; }
+  /* Reading gets its own line; the two decisions share the next one. */
+  .jp-queue-actions .jp-btn { flex: 1 1 0; }
+  .jp-queue-actions .jp-btn:first-child { flex-basis: 100%; }
 }

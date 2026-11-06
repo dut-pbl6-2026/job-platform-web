@@ -19,3 +19,13 @@ coverage/
 .env.development.local
 .env.production.local
 
+
+# tsc -b incremental state, rewritten by every build
+*.tsbuildinfo
+# impeccable runtime output (sketches, review captures); plan and briefs stay tracked
+.impeccable/mocks/
+.impeccable/review/
+# Playwright output (npm run shots)
+screenshots/
+test-results/
+playwright-report/

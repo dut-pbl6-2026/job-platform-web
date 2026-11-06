@@ -5,6 +5,7 @@ import { normalizeEmploymentType, normalizeExperienceLevel } from "../types/job"
 import { splitCsv, locationMatches } from "./searchFilters";
 import { pickNum, pickStr, shouldUseMock, httpStatus } from "./http";
 import { MOCKS_ENABLED } from "./config";
+import { categoryLabel } from "./labels";
 
 /**
  * Single adapter for every Job source, until the services return one shape (Phase 2):
@@ -270,20 +271,6 @@ export async function fetchJobs(params: JobSearchParams): Promise<PaginatedJobs>
   }
 }
 
-export async function fetchSuggestions(q: string, limit = 8): Promise<string[]> {
-  const keyword = q.trim();
-  if (!keyword) return [];
-  try {
-    const { data } = await api.get("/search/suggest", { params: { q: keyword, limit } });
-    // API returns a bare array; tolerate { items: [...] } envelope too.
-    if (Array.isArray(data)) return data as string[];
-    const items = (data as any)?.items;
-    return Array.isArray(items) ? (items as string[]) : [];
-  } catch {
-    return [];
-  }
-}
-
 export async function fetchJobById(id: string): Promise<Job | null> {
   try {
     const { data } = await api.get(`/jobs/${id}`);
@@ -311,6 +298,42 @@ export async function fetchCategories(): Promise<{ id: string; name: string }[]>
   } catch (e) {
     if (!shouldUseMock(e, "GET /categories")) throw e;
     return MOCK_CATEGORIES;
+  }
+}
+
+/** What the recruiter sign-up needs from a company: an id to send, and a name plus a line to tell similar names apart. */
+export type CompanyOption = { id: string; name: string; industry?: string; address?: string };
+
+function toCompanyOption(raw: unknown): CompanyOption | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const id = pickStr(o, "id");
+  const name = pickStr(o, "name");
+  if (!id || !name) return null;
+  return { id, name, industry: pickStr(o, "industry"), address: pickStr(o, "address") };
+}
+
+const MOCK_COMPANIES: CompanyOption[] = [
+  ...new Map(MOCK_JOBS.map((job) => [job.company.id, job.company] as const)).values(),
+]
+  // The mock catalogue stores the backend category name as `industry`; show its Vietnamese label.
+  .map((c) => toCompanyOption({ id: c.id, name: c.name, industry: c.industry && categoryLabel(c.industry), address: c.address }))
+  .filter((c): c is CompanyOption => c !== null);
+
+/**
+ * Companies by name for the recruiter sign-up. job-svc `GET /api/companies` is public, pages from 1 and
+ * returns `{ items, total, page, size, totalPages }`; only the first page is read, the user narrows by typing.
+ */
+export async function fetchCompanies(q: string, size = 8): Promise<CompanyOption[]> {
+  try {
+    const { data } = await api.get("/companies", { params: { q: q.trim(), page: 1, size } });
+    const items = (data as { items?: unknown } | null)?.items;
+    return (Array.isArray(items) ? items : []).map(toCompanyOption).filter((c): c is CompanyOption => c !== null);
+  } catch (e) {
+    if (!shouldUseMock(e, "GET /companies")) throw e;
+    await new Promise((r) => setTimeout(r, 200));
+    const keyword = q.trim().toLowerCase();
+    return MOCK_COMPANIES.filter((c) => c.name.toLowerCase().includes(keyword)).slice(0, size);
   }
 }
 
@@ -348,22 +371,46 @@ export function companyInitials(name: string) {
   return letters.toUpperCase();
 }
 
-export function formatSalaryShort(min: number, max: number, currency = "VND") {
-  if (!min && !max) return "Thỏa thuận";
+const viNumber = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 });
+const viInteger = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
+
+/**
+ * The one salary format, shared by the board row, the detail page and the apply page so the same job
+ * never reads differently in two places. A missing bound means "open ended", and no bound at all means
+ * the employer did not publish a salary.
+ *   VND, whole millions   5 – 10 triệu · Từ 5 triệu · Tới 10 triệu · 7,5 triệu
+ *   VND, below 1 million  500.000 – 900.000 đ
+ *   other currency        1.000 – 2.000 USD
+ */
+export function formatSalary(min: number, max: number, currency = "VND") {
+  const lo = Number.isFinite(min) && min > 0 ? min : 0;
+  const hi = Number.isFinite(max) && max > 0 ? max : 0;
+  if (!lo && !hi) return "Thỏa thuận";
+
+  let fmt: (n: number) => string;
+  let unit: string;
   if (currency === "VND") {
-    const a = min ? Math.round(min / 1_000_000) : null;
-    const b = max ? Math.round(max / 1_000_000) : null;
-    if (a && b) return `${a} - ${b} triệu`;
-    return `${a || b} triệu`;
+    if ((!lo || lo >= 1_000_000) && (!hi || hi >= 1_000_000)) {
+      fmt = (n) => viNumber.format(n / 1_000_000);
+      unit = "triệu";
+    } else {
+      fmt = (n) => viInteger.format(n);
+      unit = "đ";
+    }
+  } else {
+    fmt = (n) => viInteger.format(n);
+    unit = currency;
   }
-  return formatSalary(min, max, currency);
+
+  if (lo && hi && lo !== hi) return `${fmt(lo)} – ${fmt(hi)} ${unit}`;
+  if (lo && hi) return `${fmt(lo)} ${unit}`;
+  return lo ? `Từ ${fmt(lo)} ${unit}` : `Tới ${fmt(hi)} ${unit}`;
 }
 
-export function formatSalary(min: number, max: number, currency = "VND") {
-  const fmt = (n: number) => new Intl.NumberFormat("vi-VN").format(n);
-  if (!min && !max) return "Thỏa thuận";
-  if (min && max) return `${fmt(min)} - ${fmt(max)} ${currency}`;
-  return `${fmt(min || max)} ${currency}`;
+/** "Mới" marker rule (plan §3.1): posted less than 24 hours ago. */
+export function isNewJob(iso: string, now = Date.now()) {
+  const t = new Date(iso).getTime();
+  return Number.isFinite(t) && now - t >= 0 && now - t < 86_400_000;
 }
 
 export function timeAgo(iso: string) {

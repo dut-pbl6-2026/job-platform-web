@@ -1,13 +1,17 @@
-import { AppHeader } from "../components/AppHeader";
+import { DevTag, PageHead, TopBar } from "../components/ui";
 import { ChatPanel } from "../components/ChatPanel";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ChatPage() {
+  useDocumentTitle("Trợ lý AI");
   return (
     <>
-      <AppHeader />
-      <main className="container chat-page">
-        <h1>Trợ lý việc làm</h1>
-        <p className="hint">Chat có ngữ cảnh theo phiên (AI-01). Gửi câu hỏi về tin tuyển, CV hoặc nghề nghiệp.</p>
+      <TopBar />
+      <main className="jp-page jp-page--narrow">
+        <PageHead
+          title={<>Trợ lý việc làm <DevTag /></>}
+          lead="Gửi câu hỏi về tin tuyển dụng, CV hoặc nghề nghiệp. Cuộc trò chuyện được giữ theo từng phiên."
+        />
         <ChatPanel variant="page" />
       </main>
     </>

@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-11-05T15:24:23.957Z",
+        "reason": "assistant: throwaway decision-round sketch, not shipping UI; the real build is checked by the detector separately"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-05T15:24:24.277Z",
+        "reason": "assistant: throwaway decision-round sketch, not shipping UI; the real build is checked by the detector separately"
+      }
+    ]
+  }
+}

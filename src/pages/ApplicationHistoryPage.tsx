@@ -1,105 +1,172 @@
-import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { AppHeader } from "../components/AppHeader";
-import { Pagination } from "../components/Pagination";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Alert,
+  ApplicationStatusMark,
+  Button,
+  ButtonLink,
+  EmptyState,
+  FilterChip,
+  PageHead,
+  Pagination,
+  SkeletonRows,
+  TopBar,
+} from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { isUser } from "../lib/roles";
 import { fetchMyApplications } from "../lib/applicationsApi";
+import { formatDate } from "../lib/dates";
 import { loadErrorMessage } from "../lib/http";
-import { timeAgo } from "../lib/jobsApi";
-import type { Application, ApplicationStatus, PaginatedApplications } from "../types/application";
+import { locationLabel } from "../lib/labels";
+import { queryKeys } from "../lib/queryClient";
+import type { Application, ApplicationStatus } from "../types/application";
 import { APPLICATION_STATUSES, STATUS_LABEL } from "../types/application";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const PAGE_SIZE = 8;
 
+function parseStatus(raw: string | null): ApplicationStatus | "" {
+  return APPLICATION_STATUSES.find((s) => s === raw) ?? "";
+}
+
 export default function ApplicationHistoryPage() {
+  useDocumentTitle("Đơn ứng tuyển của tôi");
   const { user } = useAuth();
   const [sp, setSp] = useSearchParams();
-  const status = (sp.get("status") || "") as ApplicationStatus | "";
+  const status = parseStatus(sp.get("status"));
   const page = Math.max(0, Number(sp.get("page")) || 0);
-  const [data, setData] = useState<PaginatedApplications | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const candidate = isUser(user?.role);
 
-  useEffect(() => {
-    if (!user) return;
-    let alive = true;
-    setLoading(true);
-    setErr(null);
-    fetchMyApplications({ status: status || undefined, page, size: PAGE_SIZE, userId: user.id })
-      .then((d) => { if (alive) setData(d); })
-      .catch((e) => { if (alive) setErr(loadErrorMessage(e, "lịch sử ứng tuyển")); })
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
-  }, [user, status, page]);
+  const query = useQuery({
+    queryKey: queryKeys.applications({ userId: user?.id, status, page }),
+    queryFn: () => fetchMyApplications({ status: status || undefined, page, size: PAGE_SIZE, userId: user!.id }),
+    enabled: !!user && candidate,
+    // A CV sent a minute ago must show up here, so this list is never served from the 5-minute cache.
+    staleTime: 0,
+  });
 
-  if (!isUser(user?.role)) {
+  if (!candidate) {
     return (
       <>
-        <AppHeader />
-        <div className="container apply-wrap">
-          <div className="alert alert-error">Trang này dành cho người tìm việc.</div>
-          <Link to="/jobs" className="btn btn-ghost">← Việc làm</Link>
-        </div>
+        <TopBar />
+        <main className="jp-page jp-page--narrow">
+          <EmptyState
+            title="Trang này dành cho người tìm việc."
+            action={<ButtonLink to="/jobs">Xem bảng việc làm</ButtonLink>}
+          />
+        </main>
       </>
     );
   }
 
-  function setFilter(s: string) {
-    const next = new URLSearchParams(sp);
-    if (s) next.set("status", s); else next.delete("status");
-    next.delete("page");
-    setSp(next);
+  function setFilter(next: ApplicationStatus | "") {
+    const params = new URLSearchParams(sp);
+    if (next) params.set("status", next);
+    else params.delete("status");
+    params.delete("page");
+    setSp(params);
   }
+
+  function setPage(next: number) {
+    const params = new URLSearchParams(sp);
+    if (next) params.set("page", String(next));
+    else params.delete("page");
+    setSp(params);
+    window.scrollTo({ top: 0 });
+  }
+
+  const data = query.data;
+  const failure = query.isError ? loadErrorMessage(query.error, "danh sách đơn ứng tuyển") : null;
 
   return (
     <>
-      <AppHeader />
-      <div className="container apply-wrap">
-        <h1 className="page-h1">Đơn của tôi</h1>
-        <p className="hint page-lead">Theo dõi trạng thái từng lần ứng tuyển.</p>
+      <TopBar />
+      <main className="jp-page">
+        <PageHead title="Đơn của tôi" lead="Theo dõi trạng thái từng lần ứng tuyển." />
 
-        <div className="status-pills" role="tablist">
-          <button type="button" className={`status-pill ${!status ? "active" : ""}`} onClick={() => setFilter("")}>Tất cả</button>
+        <div className="jp-filter-row" role="group" aria-label="Lọc theo trạng thái">
+          <FilterChip pressed={!status} onClick={() => setFilter("")}>Tất cả</FilterChip>
           {APPLICATION_STATUSES.map((s) => (
-            <button key={s} type="button" className={`status-pill status-pill--${s} ${status === s ? "active" : ""}`} onClick={() => setFilter(s)}>
+            <FilterChip key={s} pressed={status === s} onClick={() => setFilter(s)}>
               {STATUS_LABEL[s]}
-            </button>
+            </FilterChip>
           ))}
         </div>
 
-        {err && <div className="alert alert-error">{err}</div>}
-        {loading && <div className="skeleton-detail" />}
-        {!loading && data && data.items.length === 0 && (
-          <div className="empty">
-            <h3>Chưa có đơn nào</h3>
-            <p className="hint">Ứng tuyển một tin để theo dõi tại đây.</p>
-            <Link className="btn btn-primary" to="/jobs">Tìm việc</Link>
-          </div>
+        {failure && (
+          <Alert
+            tone="error"
+            action={
+              <Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>
+                {query.isFetching ? "Đang thử lại…" : "Thử lại"}
+              </Button>
+            }
+          >
+            {failure}
+          </Alert>
         )}
-        {!loading && data && data.items.length > 0 && (
-          <div className="app-list">
-            {data.items.map((a) => <ApplicationRow key={a.id} app={a} />)}
-            <Pagination page={data.page} totalPages={data.totalPages} onPage={(p) => {
-              const next = new URLSearchParams(sp);
-              if (p) next.set("page", String(p)); else next.delete("page");
-              setSp(next);
-            }} />
-          </div>
+
+        {query.isPending && <SkeletonRows rows={5} label="Đang tải đơn ứng tuyển" />}
+
+        {data && data.items.length === 0 && (
+          <EmptyState
+            title={status ? `Không có đơn nào ở trạng thái “${STATUS_LABEL[status]}”` : "Chưa có đơn nào"}
+            action={
+              status ? (
+                <Button variant="secondary" onClick={() => setFilter("")}>Xem tất cả đơn</Button>
+              ) : (
+                <ButtonLink to="/jobs">Xem bảng việc làm</ButtonLink>
+              )
+            }
+          >
+            {!status && <p>Ứng tuyển một việc làm để theo dõi tại đây.</p>}
+          </EmptyState>
         )}
-      </div>
+
+        {data && data.items.length > 0 && (
+          <>
+            <p className="jp-count" aria-live="polite">{data.total.toLocaleString("vi-VN")} đơn</p>
+            <div className="jp-apps">
+              <div className="jp-apps-head" aria-hidden="true">
+                <span>Vị trí · Công ty</span>
+                <span>Nơi làm</span>
+                <span>Ngày nộp</span>
+                <span>Trạng thái</span>
+              </div>
+              <ol className="jp-apps-rows" aria-label="Đơn ứng tuyển">
+                {data.items.map((a) => <ApplicationRow key={a.id} app={a} />)}
+              </ol>
+            </div>
+            <Pagination page={page} totalPages={data.totalPages} onPage={setPage} />
+          </>
+        )}
+      </main>
     </>
   );
 }
 
 function ApplicationRow({ app }: { app: Application }) {
+  const company = app.companyName?.trim() || "Chưa cập nhật";
   return (
-    <Link to={`/applications/${app.id}`} className="app-row">
-      <div>
-        <strong>{app.jobTitle || "Tin tuyển dụng"}</strong>
-        <div className="hint">{app.companyName || "—"} {app.location ? `• ${app.location}` : ""} • {timeAgo(app.createdAt)}</div>
+    <li className="jp-app-row">
+      <div className="jp-row-main">
+        <h3 className="jp-row-title">
+          <Link to={`/applications/${app.id}`} className="jp-row-link">{app.jobTitle || "Tin tuyển dụng"}</Link>
+        </h3>
+        <p className="jp-row-company" title={company}>{company}</p>
       </div>
-      <span className={`status-badge status-badge--${app.status}`}>{STATUS_LABEL[app.status]}</span>
-    </Link>
+      <span className="jp-cell">
+        <span className="jp-sr">Nơi làm: </span>
+        {locationLabel(app.location)}
+      </span>
+      <span className="jp-cell jp-cell--date">
+        <span className="jp-sr">Ngày nộp: </span>
+        {formatDate(app.createdAt) || "Chưa cập nhật"}
+      </span>
+      <span className="jp-cell jp-cell--status">
+        <span className="jp-sr">Trạng thái: </span>
+        <ApplicationStatusMark status={app.status} />
+      </span>
+    </li>
   );
 }
