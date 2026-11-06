@@ -25,6 +25,7 @@ export default function ApplyPage() {
     let alive = true;
     fetchJobById(id)
       .then((j) => { if (alive) setJob(j); })
+      .catch(() => { if (alive) setJob(null); }) // errors now reach the UI instead of a mock job
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [id]);

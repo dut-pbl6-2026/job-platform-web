@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
-import { createChatSession, deleteChatSession, fetchChatHistory, sendChatMessage } from "../lib/chatApi";
+import { ChatUnavailableError, createChatSession, deleteChatSession, fetchChatHistory, sendChatMessage } from "../lib/chatApi";
 import type { ChatJobHint, ChatMessage } from "../types/chat";
 import { CHAT_TRUNCATION_NOTICE } from "../types/chat";
 
@@ -60,8 +60,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         persistSession(id);
         const history = await fetchChatHistory(userId, id);
         if (!cancelled) setMessages(history);
-      } catch {
-        if (!cancelled) setError("Không tải được phiên chat.");
+      } catch (e) {
+        if (!cancelled) setError(e instanceof ChatUnavailableError ? e.message : "Không tải được phiên chat.");
       }
     })();
     return () => { cancelled = true; };
@@ -105,6 +105,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       } else if ((e as { status?: number }).status === 429) {
         setError("Bạn đã gửi quá 20 câu trong một giờ. Thử lại sau.");
         setMessages((list) => list.filter((m) => m.id !== assistantId && m.id !== userMsg.id));
+      } else if (e instanceof ChatUnavailableError) {
+        setError(e.message);
+        setMessages((list) => list.filter((m) => m.id !== assistantId));
       } else {
         setError("Không gửi được tin. Kiểm tra đăng nhập hoặc thử lại.");
         setMessages((list) => list.filter((m) => m.id !== assistantId));

@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { unwrap, pickStr, pickNum } from "./http";
+import { unwrap, pickStr, pickNum, toOneBased, fromOneBased, shouldUseMock, httpStatus } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
 import type { Application, ApplicationStatus, PaginatedApplications, StatusHistoryEntry } from "../types/application";
 import { APPLICATION_STATUSES } from "../types/application";
@@ -111,15 +111,11 @@ export async function submitApplication(payload: {
   cvFile: File;
   applicantId: string;
 }): Promise<{ id: string; message: string }> {
+  // app-svc reads multipart fields job_id, cover_letter, cv_file (api-conventions §8). Send each once.
   const form = new FormData();
   form.append("job_id", payload.jobId);
-  form.append("jobId", payload.jobId);
-  if (payload.coverLetter) {
-    form.append("cover_letter", payload.coverLetter);
-    form.append("coverLetter", payload.coverLetter);
-  }
+  if (payload.coverLetter) form.append("cover_letter", payload.coverLetter);
   form.append("cv_file", payload.cvFile);
-  form.append("cvFile", payload.cvFile);
   try {
     const { data } = await api.post("/applications", form);
     const body = unwrap<Record<string, unknown>>(data);
@@ -127,9 +123,7 @@ export async function submitApplication(payload: {
     const message = pickStr(body, "message") || "Đã gửi hồ sơ";
     return { id, message };
   } catch (e: unknown) {
-    const status = (e as { response?: { status?: number } })?.response?.status;
-    if (status === 409) throw e;
-    if (status && status !== 404 && status < 500) throw e;
+    if (!shouldUseMock(e, "POST /applications")) throw e;
     const existing = loadStore();
     if (existing.some((a) => a.applicantId === payload.applicantId && a.jobId === payload.jobId)) {
       const err = Object.assign(new Error("Đã ứng tuyển tin này"), { response: { status: 409, data: { message: "Bạn đã ứng tuyển tin này rồi" } } });
@@ -163,14 +157,17 @@ export async function fetchMyApplications(params: { status?: string; page?: numb
   const page = params.page ?? 0;
   const size = params.size ?? 10;
   try {
-    const { data } = await api.get("/applications/me", { params: { status: params.status || undefined, page, size } });
-    const raw = unwrap<Record<string, unknown>>(data);
-    const itemsRaw = (Array.isArray(raw.items) ? raw.items : Array.isArray(raw.content) ? raw.content : Array.isArray(data) ? data : []) as unknown[];
+    // app-svc pages from 1 and returns { items, total, page (1-based), size } without totalPages.
+    const { data } = await api.get("/applications/me", { params: { status: params.status || undefined, page: toOneBased(page), size } });
+    const raw = (data ?? {}) as Record<string, unknown>;
+    const itemsRaw = (Array.isArray(raw.items) ? raw.items : Array.isArray(data) ? data : []) as unknown[];
     const items = itemsRaw.map(normalizeApplication).map(enrichFromJobs);
-    const total = typeof raw.total === "number" ? raw.total : typeof raw.totalElements === "number" ? raw.totalElements : items.length;
-    const totalPages = typeof raw.totalPages === "number" ? raw.totalPages : Math.ceil(total / size) || 1;
-    return { items, total, page: typeof raw.page === "number" ? raw.page : page, size: typeof raw.size === "number" ? raw.size : size, totalPages };
-  } catch {
+    const s = pickNum(raw, "size") ?? size;
+    const total = pickNum(raw, "total") ?? items.length;
+    const totalPages = pickNum(raw, "totalPages") ?? (Math.ceil(total / s) || 1);
+    return { items, total, page: fromOneBased(raw.page, page), size: s, totalPages };
+  } catch (e) {
+    if (!shouldUseMock(e, "GET /applications/me")) throw e;
     await new Promise((r) => setTimeout(r, 200));
     const res = mockList(params.userId, params.status, page, size);
     return { ...res, items: res.items.map(enrichFromJobs) };
@@ -181,9 +178,34 @@ export async function fetchApplicationById(id: string, userId: string): Promise<
   try {
     const { data } = await api.get(`/applications/${id}`);
     return enrichFromJobs(normalizeApplication(unwrap(data)));
-  } catch {
+  } catch (e) {
+    if (httpStatus(e) === 404) return null;
+    if (!shouldUseMock(e, "GET /applications/{id}")) throw e;
     await new Promise((r) => setTimeout(r, 180));
     const found = loadStore().find((a) => a.id === id && a.applicantId === userId) ?? null;
     return found ? enrichFromJobs(found) : null;
   }
+}
+
+/**
+ * app-svc stores cvUrl as a gateway-relative path ("/api/applications/cv/<file>") behind the
+ * Authenticated route. A plain <a href> sends no Bearer token (401) and, on Vercel, the SPA
+ * rewrite serves index.html for it. Fetch it through the API client and save the blob instead.
+ */
+export async function downloadCv(cvUrl: string, fileName?: string | null): Promise<void> {
+  if (!cvUrl.startsWith("/")) {
+    // blob: (mock mode) or an absolute storage URL: nothing to authenticate.
+    window.open(cvUrl, "_blank", "noopener");
+    return;
+  }
+  const path = cvUrl.replace(/^\/api(?=\/)/, ""); // API_BASE_URL already ends with /api
+  const { data } = await api.get<Blob>(path, { responseType: "blob" });
+  const url = URL.createObjectURL(data);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName || path.split("/").pop() || "cv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

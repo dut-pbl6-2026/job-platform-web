@@ -238,9 +238,18 @@ export function AdvancedFilters({ params, facets, categories, onChange, onClear 
           <div className="adv-skill-row">
             <input
               className="input"
-              placeholder="Gõ kỹ năng (React, Python…)"
+              placeholder="Gõ kỹ năng rồi Enter (React, Python…)"
               value={skillQ}
               onChange={(e) => setSkillQ(e.target.value)}
+              onKeyDown={(e) => {
+                const typed = skillQ.trim();
+                if (e.key !== "Enter" || !typed) return;
+                e.preventDefault();
+                if (!selectedSkills.some((s) => s.toLowerCase() === typed.toLowerCase())) {
+                  onChange({ skills: toggleCsv(params.skills, typed) || undefined });
+                }
+                setSkillQ("");
+              }}
               aria-label="Tìm kỹ năng"
             />
             <label className="adv-op">

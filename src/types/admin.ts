@@ -1,7 +1,5 @@
 import type { Job } from "./job";
 
-export type AdminPeriod = "daily" | "weekly" | "monthly";
-
 export interface AdminUser {
   id: string;
   email: string;
@@ -19,29 +17,23 @@ export interface Paginated<T> {
   totalPages: number;
 }
 
-export interface StatPoint {
-  label: string;
-  users: number;
-  jobs: number;
-  applications: number;
-}
-
-export interface CategoryStat {
-  name: string;
-  count: number;
-}
-
+/**
+ * GET /api/admin/stats (auth-svc AdminStatsResponse). Each section can be "unavailable"
+ * when job-svc / app-svc does not answer: those numbers are null and the section is listed
+ * in `unavailable`. No time series or per-period filter on the backend yet.
+ */
 export interface AdminStatistics {
-  period: AdminPeriod;
-  totalUsers: number;
-  totalRecruiters: number;
-  totalJobSeekers: number;
-  totalJobs: number;
-  totalApplications: number;
-  pendingJobs: number;
-  series: StatPoint[];
-  categories: CategoryStat[];
-  applicationStatus: { pending: number; reviewed: number; accepted: number; rejected: number };
+  totalUsers: number | null;
+  activeUsers: number | null;
+  newUsersThisMonth: number | null;
+  totalRecruiters: number | null;
+  totalJobSeekers: number | null;
+  totalJobs: number | null;
+  activeJobs: number | null;
+  pendingJobs: number | null;
+  totalApplications: number | null;
+  applicationStatus: { pending: number; accepted: number; rejected: number } | null;
+  unavailable: Array<"users" | "jobs" | "applications">;
 }
 
 export interface HealthService {

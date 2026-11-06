@@ -1,17 +1,14 @@
 import { api } from "./api";
-import { unwrap, pickNum, pickStr } from "./http";
+import { unwrap, pickNum, pickStr, toOneBased, fromOneBased, shouldUseMock } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
+import { normalizeJob } from "./jobsApi";
 import { normalizeRole } from "./roles";
-import type { AdminHealth, AdminPeriod, AdminStatistics, AdminUser, Paginated, PendingJob } from "../types/admin";
-import type { Job } from "../types/job";
+import type { AdminHealth, AdminStatistics, AdminUser, Paginated, PendingJob } from "../types/admin";
 
 const USERS_KEY = "jp.mock.admin.users";
 const JOBS_KEY = "jp.mock.admin.jobs";
 
-function isOffline(e: unknown): boolean {
-  const status = (e as { response?: { status?: number } })?.response?.status;
-  return !status || status === 404 || status >= 500;
-}
+const isOffline = (e: unknown) => shouldUseMock(e, "admin API");
 
 function paginate<T>(items: T[], page: number, size: number): Paginated<T> {
   const total = items.length;
@@ -21,14 +18,18 @@ function paginate<T>(items: T[], page: number, size: number): Paginated<T> {
   return { items: items.slice(p * s, p * s + s), total, page: p, size: s, totalPages };
 }
 
-function readPage(raw: unknown, page: number, size: number): { items: unknown[]; page: number; size: number; total: number; totalPages: number } {
-  const body = unwrap<Record<string, unknown>>(raw);
-  const items = (Array.isArray(body.items) ? body.items : Array.isArray(body.content) ? body.content : Array.isArray(raw) ? raw : []) as unknown[];
-  const total = pickNum(body, "total", "totalElements") ?? items.length;
-  const p = pickNum(body, "page", "number") ?? page;
-  const s = pickNum(body, "size") ?? size;
-  const totalPages = pickNum(body, "totalPages") ?? (Math.ceil(total / s) || 1);
-  return { items, page: p, size: s, total, totalPages };
+/**
+ * auth-svc and job-svc admin lists return { data: [...], pagination: { page (1-based), pageSize, totalItems, totalPages } }.
+ * Do not unwrap() first: an array `data` is an object too, and the items would be lost.
+ */
+function readPage(raw: unknown, page0: number, size: number): { items: unknown[]; page: number; size: number; total: number; totalPages: number } {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const items = (Array.isArray(r.items) ? r.items : Array.isArray(r.data) ? r.data : Array.isArray(raw) ? raw : []) as unknown[];
+  const meta = (r.pagination && typeof r.pagination === "object" ? r.pagination : r) as Record<string, unknown>;
+  const s = pickNum(meta, "size", "pageSize") ?? size;
+  const total = pickNum(meta, "total", "totalItems") ?? items.length;
+  const totalPages = pickNum(meta, "totalPages") ?? (Math.ceil(total / s) || 1);
+  return { items, page: fromOneBased(pickNum(meta, "page"), page0), size: s, total, totalPages };
 }
 
 function seedUsers(): AdminUser[] {
@@ -100,123 +101,91 @@ function asUser(raw: unknown): AdminUser | null {
     email: pickStr(o, "email") || "",
     fullName: pickStr(o, "fullName", "full_name") || "",
     role,
-    isActive: Boolean(o.isActive ?? o.is_active ?? true),
+    isActive: typeof o.isActive === "boolean" ? o.isActive : true,
     createdAt: pickStr(o, "createdAt", "created_at") || new Date().toISOString(),
   };
 }
 
+/** Same adapter as search/job pages (normalizeJob), plus the admin-only recruiterName. */
 function asJob(raw: unknown): PendingJob | null {
   if (!raw || typeof raw !== "object") return null;
-  const o = raw as Record<string, unknown>;
-  const companyRaw = (o.company && typeof o.company === "object" ? o.company : {}) as Record<string, unknown>;
-  const categoryRaw = (o.category && typeof o.category === "object" ? o.category : {}) as Record<string, unknown>;
-  const id = pickStr(o, "id") || "";
-  if (!id) return null;
-  const job = {
-    id,
-    title: pickStr(o, "title") || "Tin tuyển dụng",
-    description: pickStr(o, "description") || "",
-    requirements: pickStr(o, "requirements") ?? null,
-    benefits: pickStr(o, "benefits") ?? null,
-    company: { id: pickStr(companyRaw, "id") || pickStr(o, "companyId", "company_id") || "", name: pickStr(companyRaw, "name") || pickStr(o, "companyName", "company_name") || "—" },
-    companyId: pickStr(o, "companyId", "company_id") || pickStr(companyRaw, "id") || "",
-    location: pickStr(o, "location") || "",
-    salaryMin: pickNum(o, "salaryMin", "salary_min") ?? 0,
-    salaryMax: pickNum(o, "salaryMax", "salary_max") ?? 0,
-    salaryCurrency: pickStr(o, "salaryCurrency", "salary_currency") || "VND",
-    category: { id: pickStr(categoryRaw, "id") || "", name: pickStr(categoryRaw, "name") || pickStr(o, "categoryName", "category_name") || "—" },
-    categoryId: pickStr(o, "categoryId", "category_id") || "",
-    employmentType: (pickStr(o, "employmentType", "employment_type") || "Full-time") as Job["employmentType"],
-    experienceLevel: (pickStr(o, "experienceLevel", "experience_level") || "Junior") as Job["experienceLevel"],
-    status: "pending",
-    viewCount: pickNum(o, "viewCount", "view_count") ?? 0,
-    createdAt: pickStr(o, "createdAt", "created_at") || new Date().toISOString(),
-    updatedAt: pickStr(o, "updatedAt", "updated_at") || new Date().toISOString(),
-    recruiterId: pickStr(o, "recruiterId", "recruiter_id"),
-    recruiterName: pickStr(o, "recruiterName", "recruiter_name"),
-  } as PendingJob;
-  return job;
+  const job = normalizeJob(raw);
+  if (!job.id) return null;
+  return { ...job, recruiterName: pickStr(raw as Record<string, unknown>, "recruiterName", "recruiter_name") };
 }
 
-function mockStats(period: AdminPeriod): AdminStatistics {
+function mockStats(): AdminStatistics {
   const users = loadUsers();
-  const jobs = loadJobs();
-  const buckets = period === "daily" ? 7 : period === "weekly" ? 4 : 6;
-  const series = Array.from({ length: buckets }, (_, i) => ({
-    label: period === "monthly" ? `T${i + 1}` : period === "weekly" ? `Tuần ${i + 1}` : `Ngày ${i + 1}`,
-    users: 2 + ((i * 3) % 5),
-    jobs: 1 + (i % 4),
-    applications: 4 + ((i * 5) % 9),
-  }));
-  const byCat = new Map<string, number>();
-  for (const job of jobs) byCat.set(job.category.name, (byCat.get(job.category.name) || 0) + 1);
   return {
-    period,
     totalUsers: users.length,
+    activeUsers: users.filter((u) => u.isActive).length,
+    newUsersThisMonth: 2,
     totalRecruiters: users.filter((u) => u.role === "Recruiter").length,
     totalJobSeekers: users.filter((u) => u.role === "User").length,
     totalJobs: MOCK_JOBS.length,
+    activeJobs: MOCK_JOBS.length,
+    pendingJobs: loadJobs().length,
     totalApplications: 24,
-    pendingJobs: jobs.length,
-    series,
-    categories: [...byCat.entries()].map(([name, count]) => ({ name, count })),
-    applicationStatus: { pending: 10, reviewed: 6, accepted: 5, rejected: 3 },
+    applicationStatus: { pending: 10, accepted: 5, rejected: 3 },
+    unavailable: [],
   };
 }
 
-export async function fetchAdminStatistics(period: AdminPeriod): Promise<AdminStatistics> {
+const STAT_SECTIONS = ["users", "jobs", "applications"] as const;
+
+/** auth-svc GET /api/admin/stats → { users, jobs, applications }, each a StatsSection. */
+export async function fetchAdminStatistics(): Promise<AdminStatistics> {
   try {
-    const { data } = await api.get("/admin/statistics", { params: { period } });
-    const body = unwrap<Record<string, unknown>>(data);
-    const totals = (body.totals && typeof body.totals === "object" ? body.totals : body) as Record<string, unknown>;
-    const seriesRaw = Array.isArray(body.series) ? body.series : [];
-    const catsRaw = Array.isArray(body.categories) ? body.categories : [];
-    const status = (body.applicationStatus ?? body.application_status ?? {}) as Record<string, unknown>;
+    const { data } = await api.get("/admin/stats");
+    const body = (data ?? {}) as Record<string, unknown>;
+    const sec = (key: string) => (body[key] && typeof body[key] === "object" ? body[key] : {}) as Record<string, unknown>;
+    const ok = (key: string) => String(sec(key).status ?? "").toLowerCase() === "ok";
+    const users = sec("users");
+    const jobs = sec("jobs");
+    const apps = sec("applications");
+    const byRole = (users.byRole && typeof users.byRole === "object" ? users.byRole : {}) as Record<string, unknown>;
     return {
-      period,
-      totalUsers: pickNum(totals, "totalUsers", "users", "total_users") ?? 0,
-      totalRecruiters: pickNum(totals, "totalRecruiters", "recruiters", "total_recruiters") ?? 0,
-      totalJobSeekers: pickNum(totals, "totalJobSeekers", "jobSeekers", "job_seekers") ?? 0,
-      totalJobs: pickNum(totals, "totalJobs", "jobs", "total_jobs") ?? 0,
-      totalApplications: pickNum(totals, "totalApplications", "applications", "total_applications") ?? 0,
-      pendingJobs: pickNum(totals, "pendingJobs", "pending_jobs") ?? 0,
-      series: seriesRaw.map((row) => {
-        const o = row as Record<string, unknown>;
-        return {
-          label: pickStr(o, "label", "date") || "",
-          users: pickNum(o, "users", "newUsers", "new_users") ?? 0,
-          jobs: pickNum(o, "jobs") ?? 0,
-          applications: pickNum(o, "applications") ?? 0,
-        };
-      }),
-      categories: catsRaw.map((row) => {
-        const o = row as Record<string, unknown>;
-        return { name: pickStr(o, "name") || "—", count: pickNum(o, "count") ?? 0 };
-      }),
-      applicationStatus: {
-        pending: pickNum(status, "pending") ?? 0,
-        reviewed: pickNum(status, "reviewed") ?? 0,
-        accepted: pickNum(status, "accepted") ?? 0,
-        rejected: pickNum(status, "rejected") ?? 0,
-      },
+      totalUsers: pickNum(users, "total") ?? null,
+      activeUsers: pickNum(users, "active") ?? null,
+      newUsersThisMonth: pickNum(users, "newThisMonth") ?? null,
+      totalRecruiters: pickNum(byRole, "Recruiter", "recruiter") ?? 0,
+      totalJobSeekers: pickNum(byRole, "User", "user") ?? 0,
+      totalJobs: pickNum(jobs, "total") ?? null,
+      activeJobs: pickNum(jobs, "active") ?? null,
+      pendingJobs: pickNum(jobs, "pending") ?? null,
+      totalApplications: pickNum(apps, "total") ?? null,
+      applicationStatus: ok("applications")
+        ? { pending: pickNum(apps, "pending") ?? 0, accepted: pickNum(apps, "accepted") ?? 0, rejected: pickNum(apps, "rejected") ?? 0 }
+        : null,
+      unavailable: STAT_SECTIONS.filter((key) => !ok(key)),
     };
   } catch (e) {
     if (!isOffline(e)) throw e;
-    return mockStats(period);
+    return mockStats();
   }
 }
 
+/** Gateway GET /api/health → { status, services: [{ name, status: "UP" | "DOWN", latencyMs }] }. */
 export async function fetchAdminHealth(): Promise<AdminHealth> {
   try {
-    const { data } = await api.get("/admin/health");
-    const body = unwrap<Record<string, unknown>>(data);
+    const started = performance.now();
+    const { data } = await api.get("/health");
+    const gatewayMs = Math.round(performance.now() - started);
+    const body = (data ?? {}) as Record<string, unknown>;
     const services = Array.isArray(body.services) ? body.services : [];
     return {
-      services: services.map((row) => {
-        const o = row as Record<string, unknown>;
-        const status = String(o.status || "offline").toLowerCase() === "online" ? "online" : "offline";
-        return { name: pickStr(o, "name") || "service", status, latencyMs: pickNum(o, "latencyMs", "latency_ms") ?? null };
-      }),
+      services: [
+        { name: "gateway", status: "online", latencyMs: gatewayMs },
+        ...services.map((row) => {
+          const o = row as Record<string, unknown>;
+          const up = String(o.status ?? "").toUpperCase() === "UP";
+          return {
+            name: pickStr(o, "name") || "service",
+            status: up ? ("online" as const) : ("offline" as const),
+            latencyMs: up ? pickNum(o, "latencyMs") ?? null : null,
+          };
+        }),
+      ],
     };
   } catch (e) {
     if (!isOffline(e)) throw e;
@@ -230,11 +199,21 @@ export async function fetchAdminHealth(): Promise<AdminHealth> {
   }
 }
 
+/** auth-svc GET /api/admin/users?search=&role=&isActive=&page(1-based)&size. */
 export async function fetchAdminUsers(params: { q?: string; role?: string; status?: string; page?: number; size?: number }): Promise<Paginated<AdminUser>> {
   const page = params.page ?? 0;
   const size = params.size ?? 8;
   try {
-    const { data } = await api.get("/admin/users", { params: { q: params.q || undefined, role: params.role || undefined, status: params.status || undefined, page, size } });
+    const { data } = await api.get("/admin/users", {
+      params: {
+        // api-conventions target is `q`; auth-svc only reads `search` today (D4).
+        search: params.q?.trim() || undefined,
+        role: params.role || undefined,
+        isActive: params.status === "active" ? true : params.status === "inactive" ? false : undefined,
+        page: toOneBased(page),
+        size,
+      },
+    });
     const parsed = readPage(data, page, size);
     return { ...parsed, items: parsed.items.map(asUser).filter((x): x is AdminUser => !!x) };
   } catch (e) {
@@ -249,21 +228,26 @@ export async function fetchAdminUsers(params: { q?: string; role?: string; statu
   }
 }
 
-export async function updateAdminUser(userId: string, payload: { role?: string; isActive?: boolean }): Promise<void> {
+/**
+ * auth-svc PATCH /api/admin/users/{id}/activate | /deactivate { reason? }.
+ * There is no endpoint to change a role, so the UI does not offer it.
+ */
+export async function setAdminUserActive(userId: string, isActive: boolean, reason?: string): Promise<void> {
   try {
-    await api.put(`/admin/users/${userId}`, { role: payload.role, isActive: payload.isActive, is_active: payload.isActive });
+    if (isActive) await api.patch(`/admin/users/${userId}/activate`);
+    else await api.patch(`/admin/users/${userId}/deactivate`, { reason: reason?.trim() || undefined });
   } catch (e) {
     if (!isOffline(e)) throw e;
-    const users = loadUsers().map((u) => u.id === userId ? { ...u, role: payload.role ? normalizeRole(payload.role) : u.role, isActive: payload.isActive ?? u.isActive } : u);
-    saveUsers(users);
+    saveUsers(loadUsers().map((u) => (u.id === userId ? { ...u, isActive } : u)));
   }
 }
 
+/** job-svc GET /api/admin/jobs?status=Pending&page(1-based)&size. */
 export async function fetchPendingJobs(params: { page?: number; size?: number }): Promise<Paginated<PendingJob>> {
   const page = params.page ?? 0;
   const size = params.size ?? 8;
   try {
-    const { data } = await api.get("/admin/jobs/pending", { params: { page, size } });
+    const { data } = await api.get("/admin/jobs", { params: { status: "Pending", page: toOneBased(page), size } });
     const parsed = readPage(data, page, size);
     return { ...parsed, items: parsed.items.map(asJob).filter((x): x is PendingJob => !!x) };
   } catch (e) {
@@ -272,9 +256,33 @@ export async function fetchPendingJobs(params: { page?: number; size?: number })
   }
 }
 
-export async function decideJob(jobId: string, approved: boolean, reason?: string): Promise<string> {
+/**
+ * job-svc GET /api/admin/jobs/{id}: full content of a job in any status. The list above only has
+ * title/company/category, and the public GET /api/jobs/{id} hides Pending jobs (404), so this is
+ * the only way for an admin to read a job before approving or rejecting it.
+ */
+export async function fetchAdminJob(jobId: string): Promise<PendingJob | null> {
   try {
-    const { data } = await api.post(`/admin/jobs/${jobId}/approve`, { approved, reason: reason || undefined });
+    const { data } = await api.get(`/admin/jobs/${jobId}`);
+    return asJob(data);
+  } catch (e) {
+    if ((e as { response?: { status?: number } })?.response?.status === 404) return null;
+    if (!isOffline(e)) throw e;
+    return loadJobs().find((j) => j.id === jobId) ?? null;
+  }
+}
+
+/**
+ * job-svc: approve and reject are separate endpoints. POST /approve { note? } always approves,
+ * so a rejection must go to POST /reject { reason }, and reason is required there.
+ */
+export async function decideJob(jobId: string, approved: boolean, reason?: string): Promise<string> {
+  const trimmed = reason?.trim() ?? "";
+  if (!approved && !trimmed) throw new Error("Cần nhập lý do từ chối");
+  try {
+    const { data } = approved
+      ? await api.post(`/admin/jobs/${jobId}/approve`, { note: trimmed || undefined })
+      : await api.post(`/admin/jobs/${jobId}/reject`, { reason: trimmed });
     const body = unwrap<Record<string, unknown>>(data);
     return pickStr(body, "message") || (approved ? "Đã duyệt tin" : "Đã từ chối tin");
   } catch (e) {
