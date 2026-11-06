@@ -806,3 +806,93 @@ test("admin users: load error is Vietnamese and retry works", async ({ page }) =
   await page.getByRole("button", { name: "Thử lại" }).click();
   await expect(page.getByRole("heading", { name: "Chưa có người dùng" })).toBeVisible();
 });
+
+/* Deferred surfaces (S9): chat and CV scoring take the tokens, behaviour is unchanged ------------------- */
+
+test("chat page: labelled as in development, starter question gets an answer", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await page.goto("/chat");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Trợ lý việc làm");
+  await expect(page.locator("main .jp-devtag")).toBeVisible();
+  // No requirement code or service name leaks into the page.
+  await expect(page.locator("main")).not.toContainText(/AI-01|AI-svc/);
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "chat-empty");
+  await page.getByRole("button", { name: "Mẹo phỏng vấn backend" }).click();
+  await expect(page.locator(".chat-bubble--user")).toContainText("Mẹo phỏng vấn backend");
+  await expect(page.locator(".chat-bubble--assistant").first()).toBeVisible();
+  await shoot(page, testInfo, "chat-answer");
+});
+
+test("chat dock: opens from the button, can jump to the page and shrink", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await page.goto("/jobs");
+  await page.getByRole("button", { name: "Mở trợ lý việc làm" }).click();
+  await expect(page.getByRole("dialog", { name: "Trợ lý việc làm" })).toBeVisible();
+  await shoot(page, testInfo, "chat-dock");
+  await page.getByRole("button", { name: "Thu nhỏ" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Mở trợ lý việc làm" }).click();
+  await page.getByRole("link", { name: "Mở trang chat" }).click();
+  await expect(page).toHaveURL(/\/chat$/);
+});
+
+const SCORE = {
+  overall_score: 72,
+  band: "Good",
+  breakdown: {
+    skills: {
+      score: 68,
+      matching: ["React", "TypeScript"],
+      missing: ["GraphQL"],
+      negated: ["Docker"],
+      extra: ["Figma"],
+      evidence: { React: "3 năm React tại công ty A" },
+    },
+    semantic: { score: 74, title_fit: 0.8, top_matches: [{ requirement: "Xây dựng giao diện web", cv_excerpt: "Phát triển giao diện cho ứng dụng bán hàng", similarity: 0.8 }] },
+    experience: { score: 80, cv_years: 3, required_years: 2 },
+    education: { score: 100, cv_level: "bachelor", required_level: "none" },
+  },
+  suggestions: ["Thêm số liệu cụ thể cho từng dự án."],
+  warnings: ["pages_truncated: 7"],
+  meta: { parser: "pdf", pages: 7, language: "vi", model: "x", cached: false, elapsed_ms: 2300 },
+};
+
+test("resume score: pick a job, wrong file type, then a result with every band label", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await page.route(/\/api\/ai\/score-resume$/, (route) => route.fulfill({ json: SCORE }));
+  await page.goto("/resume-score");
+  await expect(page.locator("main .jp-devtag")).toBeVisible();
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "resume-score-pick");
+
+  await page.getByLabel("Chọn việc làm").selectOption({ index: 1 });
+  await expect(page).toHaveURL(/jobId=/);
+  await expect(page.locator(".jp-row").first()).toBeVisible();
+
+  await page.locator('input[type="file"]').setInputFiles({ name: "cv.txt", mimeType: "text/plain", buffer: Buffer.from("x") });
+  await expect(page.getByText("Chỉ nhận PDF hoặc DOCX")).toBeVisible();
+  await shoot(page, testInfo, "resume-score-bad-file");
+
+  await page.locator('input[type="file"]').setInputFiles(PDF);
+  await page.getByRole("button", { name: "Chấm điểm CV" }).click();
+  await expect(page.getByText("Phù hợp", { exact: true })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Điểm phù hợp 72 trên 100" })).toBeVisible();
+  await expect(page.getByText("CV dài, chỉ 5 trang đầu được chấm.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "CV ghi là chưa có" })).toBeVisible();
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "resume-score-result");
+});
+
+test("resume score: a service error is shown in Vietnamese", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await page.route(/\/api\/ai\/score-resume$/, (route) => route.fulfill({ status: 422, json: { code: "cv_encrypted" } }));
+  await page.goto("/resume-score?jobId=seed-1");
+  await page.locator('input[type="file"]').setInputFiles(PDF);
+  await page.getByRole("button", { name: "Chấm điểm CV" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "CV đang đặt mật khẩu" })).toBeVisible();
+});
