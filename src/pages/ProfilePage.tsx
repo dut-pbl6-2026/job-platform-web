@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppHeader } from "../components/AppHeader";
+import { TopBar } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import {
   addEducation,
@@ -79,7 +79,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <AppHeader />
+      <TopBar />
       <div className="container apply-wrap profile-page">
         <h1 className="page-h1">Hồ sơ của tôi</h1>
         <p className="hint page-lead">Nhà tuyển dụng đọc phần này trước CV.</p>

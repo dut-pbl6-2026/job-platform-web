@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { AppHeader } from "../components/AppHeader";
+import { TopBar } from "../components/ui";
 import { fetchJobById, fetchJobs, formatSalary } from "../lib/jobsApi";
 import { SCORE_CV_ACCEPT, scoreResume, toScoreError, validateScoreCv } from "../lib/aiApi";
 import type { Job } from "../types/job";
@@ -164,7 +164,7 @@ export default function ResumeScorePage() {
 
   return (
     <>
-      <AppHeader />
+      <TopBar />
       <div className="container apply-wrap rs-wrap">
         {jobId ? <Link to={`/jobs/${jobId}`} className="hint detail-back">← Quay lại tin</Link> : <Link to="/jobs" className="hint detail-back">← Danh sách việc làm</Link>}
         <h1 className="apply-title">Kiểm tra độ phù hợp CV</h1>

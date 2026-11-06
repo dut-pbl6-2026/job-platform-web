@@ -53,8 +53,8 @@ const EMPLOYMENT_LABELS: Record<string, string> = {
   internship: "Thực tập",
 };
 
-export function employmentTypeLabel(raw: string | null | undefined): string {
-  return lookup(EMPLOYMENT_LABELS, raw) ?? "Chưa cập nhật";
+export function employmentTypeLabel(raw: string | null | undefined, fallback = "Chưa cập nhật"): string {
+  return lookup(EMPLOYMENT_LABELS, raw) ?? fallback;
 }
 
 /* Experience level ------------------------------------------------------------------------------ */
@@ -69,8 +69,8 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   lead: "Trưởng nhóm",
 };
 
-export function experienceLevelLabel(raw: string | null | undefined): string {
-  return lookup(EXPERIENCE_LABELS, raw) ?? "Chưa cập nhật";
+export function experienceLevelLabel(raw: string | null | undefined, fallback = "Chưa cập nhật"): string {
+  return lookup(EXPERIENCE_LABELS, raw) ?? fallback;
 }
 
 /* Job status ------------------------------------------------------------------------------------ */
@@ -85,4 +85,13 @@ const JOB_STATUS_LABELS: Record<string, string> = {
 
 export function jobStatusLabel(raw: string | null | undefined): string {
   return lookup(JOB_STATUS_LABELS, raw) ?? "Chưa cập nhật";
+}
+
+/* Location -------------------------------------------------------------------------------------- */
+
+/** job-svc stores remote jobs as the location "Remote". */
+export function locationLabel(raw: string | null | undefined, fallback = "Chưa cập nhật"): string {
+  const value = raw?.trim();
+  if (!value) return fallback;
+  return key(value) === "remote" ? "Làm từ xa" : value;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { AppHeader } from "../components/AppHeader";
+import { TopBar } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { isUser } from "../lib/roles";
 import { fetchJobById, formatSalary } from "../lib/jobsApi";
@@ -39,7 +39,7 @@ export default function ApplyPage() {
   if (!isUser(user?.role)) {
     return (
       <>
-        <AppHeader />
+        <TopBar />
         <div className="container apply-wrap">
           <div className="alert alert-error">Chỉ người tìm việc mới ứng tuyển được.</div>
           <Link to={`/jobs/${id}`} className="btn btn-ghost">← Về tin tuyển dụng</Link>
@@ -48,8 +48,8 @@ export default function ApplyPage() {
     );
   }
 
-  if (loading) return (<><AppHeader /><div className="container"><div className="skeleton-detail" /></div></>);
-  if (!job) return (<><AppHeader /><div className="container"><div className="alert alert-error" role="alert">{loadErr ?? "Không tìm thấy việc làm"}</div></div></>);
+  if (loading) return (<><TopBar /><div className="container"><div className="skeleton-detail" /></div></>);
+  if (!job) return (<><TopBar /><div className="container"><div className="alert alert-error" role="alert">{loadErr ?? "Không tìm thấy việc làm"}</div></div></>);
   const currentJob = job;
 
   async function onSubmit(e: React.FormEvent) {
@@ -79,7 +79,7 @@ export default function ApplyPage() {
   if (doneId) {
     return (
       <>
-        <AppHeader />
+        <TopBar />
         <div className="container apply-wrap">
           <div className="card apply-success">
             <div className="apply-success-icon" aria-hidden>✓</div>
@@ -97,7 +97,7 @@ export default function ApplyPage() {
 
   return (
     <>
-      <AppHeader />
+      <TopBar />
       <div className="container apply-wrap">
         <Link to={`/jobs/${currentJob.id}`} className="hint detail-back">← Quay lại tin</Link>
         <div className="card apply-job-chip">

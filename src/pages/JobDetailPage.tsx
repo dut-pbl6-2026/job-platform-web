@@ -1,7 +1,7 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { companyInitials, fetchJobById, formatSalary, timeAgo } from "../lib/jobsApi";
-import { AppHeader } from "../components/AppHeader";
+import { TopBar } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { isRecruiter, isUser } from "../lib/roles";
 import { queryKeys } from "../lib/queryClient";
@@ -39,10 +39,10 @@ export default function JobDetailPage() {
   // Title needs the loaded job; it must stay above the early returns below (rules of hooks).
   useDocumentTitle(job ? `${job.title} · ${job.company.name}` : "Việc làm");
 
-  if (loading) return (<><AppHeader /><div className="container"><div className="skeleton-detail" /></div></>);
+  if (loading) return (<><TopBar /><div className="container"><div className="skeleton-detail" /></div></>);
   if (err) return (
     <>
-      <AppHeader />
+      <TopBar />
       <div className="container">
         <div className="alert alert-error" role="alert">{err}</div>
         <div className="row" style={{ marginTop: 12, gap: 8 }}>
@@ -65,7 +65,7 @@ export default function JobDetailPage() {
 
   return (
     <>
-      <AppHeader />
+      <TopBar />
       <div className="container">
         <Link to="/jobs" className="hint detail-back">← Quay lại</Link>
         <div className="detail-layout">

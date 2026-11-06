@@ -1,5 +1,5 @@
 import { Link, Navigate, useLocation } from "react-router-dom";
-import { AppHeader } from "./AppHeader";
+import { TopBar } from "./ui";
 import { useAuth } from "../contexts/AuthContext";
 import { isAdmin } from "../lib/roles";
 
@@ -17,7 +17,7 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
   if (!isAdmin(user?.role)) {
     return (
       <>
-        <AppHeader />
+        <TopBar />
         <div className="container">
           <div className="alert alert-error">Chỉ quản trị viên mới vào được khu vực này.</div>
           <Link className="btn btn-ghost" to="/jobs">← Việc làm</Link>
@@ -32,7 +32,7 @@ export function AdminShell({ title, lead, children }: { title: string; lead?: st
   const { pathname } = useLocation();
   return (
     <>
-      <AppHeader />
+      <TopBar />
       <div className="container admin-layout">
         <aside className="admin-nav" aria-label="Điều hướng quản trị">
           {LINKS.map((link) => (

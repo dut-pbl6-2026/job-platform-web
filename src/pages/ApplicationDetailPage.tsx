@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { AppHeader } from "../components/AppHeader";
+import { TopBar } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { downloadCv, fetchApplicationById } from "../lib/applicationsApi";
 import { apiErrorMessage } from "../lib/http";
@@ -44,7 +44,7 @@ export default function ApplicationDetailPage() {
 
   return (
     <>
-      <AppHeader />
+      <TopBar />
       <div className="container apply-wrap">
         <Link to="/applications" className="hint detail-back">← Đơn của tôi</Link>
         {loading && <div className="skeleton-detail" />}

@@ -370,6 +370,12 @@ export function formatSalary(min: number, max: number, currency = "VND") {
   return lo ? `Từ ${fmt(lo)} ${unit}` : `Tới ${fmt(hi)} ${unit}`;
 }
 
+/** "Mới" marker rule (plan §3.1): posted less than 24 hours ago. */
+export function isNewJob(iso: string, now = Date.now()) {
+  const t = new Date(iso).getTime();
+  return Number.isFinite(t) && now - t >= 0 && now - t < 86_400_000;
+}
+
 export function timeAgo(iso: string) {
   const d = new Date(iso).getTime();
   if (Number.isNaN(d)) return "";

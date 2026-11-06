@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { AppHeader } from "../components/AppHeader";
+import { TopBar } from "../components/ui";
 import { Pagination } from "../components/Pagination";
 import { useAuth } from "../contexts/AuthContext";
 import { isUser } from "../lib/roles";
@@ -38,7 +38,7 @@ export default function ApplicationHistoryPage() {
   if (!isUser(user?.role)) {
     return (
       <>
-        <AppHeader />
+        <TopBar />
         <div className="container apply-wrap">
           <div className="alert alert-error">Trang này dành cho người tìm việc.</div>
           <Link to="/jobs" className="btn btn-ghost">← Việc làm</Link>
@@ -56,7 +56,7 @@ export default function ApplicationHistoryPage() {
 
   return (
     <>
-      <AppHeader />
+      <TopBar />
       <div className="container apply-wrap">
         <h1 className="page-h1">Đơn của tôi</h1>
         <p className="hint page-lead">Theo dõi trạng thái từng lần ứng tuyển.</p>

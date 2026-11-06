@@ -22,6 +22,14 @@
   --c-success: #1f7a4d;       /* approved / done, with text */
   --c-warning: #9a6700;       /* pending, with text */
   --c-on-navy-muted: #c9d6ea; /* secondary text on navy, 7.7:1 */
+  --c-navy-line: #5b7aa6;     /* outline of a secondary button on navy */
+  --c-control: #8593a3;       /* input, checkbox and select borders: 3.1:1 on white (WCAG 1.4.11) */
+  --c-row-rule: #e8ecf1;      /* rule between board rows, lighter than the panel border */
+  --c-hover: #f6f8fb;         /* pointer hover on rows and quiet buttons */
+  --c-danger-soft: #fdf1f0;
+  --c-success-soft: #eef7f2;
+  --c-warning-soft: #fcf6e6;
+  --c-info-soft: #eef3fa;
 
   /* Type: one family, five steps. */
   --font-sans: "Be Vietnam Pro", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;

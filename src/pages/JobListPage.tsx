@@ -5,7 +5,7 @@ import { fetchCategories, fetchJobs } from "../lib/jobsApi";
 import { JobCard } from "../components/JobCard";
 import { SearchBar } from "../components/SearchBar";
 import { Pagination } from "../components/Pagination";
-import { AppHeader } from "../components/AppHeader";
+import { TopBar } from "../components/ui";
 import { AdvancedFilters } from "../components/AdvancedFilters";
 import { HomeShowcase } from "../components/HomeShowcase";
 import { parseSearchParams, hasActiveFilters } from "../lib/searchFilters";
@@ -90,7 +90,7 @@ export default function JobListPage() {
 
   return (
     <div className="home-shell">
-      <AppHeader />
+      <TopBar />
       <section className="topcv-hero">
         <div className="container topcv-hero-inner">
           <h1 className="topcv-hero-title">Job Platform — Tạo CV, Tìm việc làm, Tuyển dụng hiệu quả</h1>
