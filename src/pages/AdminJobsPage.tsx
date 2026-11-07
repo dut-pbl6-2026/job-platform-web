@@ -132,8 +132,16 @@ export default function AdminJobsPage() {
       await refresh(jobId);
     } catch (e: unknown) {
       // Someone else removed or changed the job meanwhile: show why, and reload the list.
-      if (httpStatus(e) === 404 || httpStatus(e) === 409) void refresh(jobId);
-      setActionErr(apiErrorMessage(e, fallback));
+      // job-svc words 404/409 in English, so say it here instead of echoing it.
+      const status = httpStatus(e);
+      if (status === 404 || status === 409) void refresh(jobId);
+      setActionErr(
+        status === 404
+          ? "Tin này không còn tồn tại. Danh sách đã được tải lại."
+          : status === 409
+            ? "Trạng thái tin vừa thay đổi nên chưa thực hiện được. Danh sách đã được tải lại."
+            : apiErrorMessage(e, fallback),
+      );
     } finally {
       setBusyId(null);
     }

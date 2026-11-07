@@ -4,7 +4,7 @@ import { Alert, Button, Field, Icon, Input, Select, Textarea } from "./ui";
 import { CompanyPicker } from "./CompanyPicker";
 import { fetchCategories, type CompanyOption } from "../lib/jobsApi";
 import { validationErrors, type AdminJobInput } from "../lib/adminApi";
-import { apiErrorMessage } from "../lib/http";
+import { apiErrorMessage, httpStatus } from "../lib/http";
 import { categoryLabel, employmentTypeLabel, experienceLevelLabel } from "../lib/labels";
 import { queryKeys } from "../lib/queryClient";
 import type { PendingJob } from "../types/admin";
@@ -126,6 +126,11 @@ export function AdminJobForm({ idPrefix, initial, submitLabel, busyLabel, onSubm
         setFormErr("Một số thông tin chưa hợp lệ. Kiểm tra các ô được đánh dấu.");
       } else if (fields.request) {
         setFormErr("Thông tin tin tuyển dụng chưa hợp lệ. Kiểm tra lại mức lương và các ô bắt buộc.");
+      } else if (httpStatus(err) === 409) {
+        // PUT on a job deleted meanwhile; job-svc words it in English.
+        setFormErr("Tin này đã bị xóa nên không sửa được nữa.");
+      } else if (httpStatus(err) === 404) {
+        setFormErr("Tin này không còn tồn tại.");
       } else {
         setFormErr(apiErrorMessage(err, "Chưa lưu được tin. Vui lòng thử lại."));
       }
