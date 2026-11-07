@@ -29,4 +29,7 @@ export const queryKeys = {
   adminStats: ["admin", "stats"] as const,
   adminHealth: ["admin", "health"] as const,
   adminUsers: (params: unknown) => ["admin", "users", params] as const,
+  allAdminJobs: ["admin", "jobs"] as const,
+  adminJobs: (params: unknown) => ["admin", "jobs", "list", params] as const,
+  adminJob: (id: string) => ["admin", "jobs", "detail", id] as const,
 };

@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
     <AdminShell
       title="Bảng quản trị"
       lead="Số liệu nền tảng và tình trạng các dịch vụ."
-      actions={pending > 0 ? <ButtonLink to="/admin/jobs">Duyệt {pending.toLocaleString("vi-VN")} tin chờ duyệt</ButtonLink> : undefined}
+      actions={pending > 0 ? <ButtonLink to="/admin/jobs?status=Pending">Duyệt {pending.toLocaleString("vi-VN")} tin chờ duyệt</ButtonLink> : undefined}
     >
       {stats.isPending && <SkeletonBlock height={240} label="Đang tải số liệu" />}
 
@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
               cells={[
                 { label: "Tổng số", value: s.totalJobs },
                 { label: "Đang hiển thị", value: s.activeJobs },
-                { label: "Chờ duyệt", value: s.pendingJobs, to: "/admin/jobs" },
+                { label: "Chờ duyệt", value: s.pendingJobs, to: "/admin/jobs?status=Pending" },
               ]}
             />
             <StatGroup
