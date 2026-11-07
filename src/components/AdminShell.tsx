@@ -6,7 +6,7 @@ import { isAdmin } from "../lib/roles";
 
 const LINKS = [
   { to: "/admin", label: "Tổng quan", end: true },
-  { to: "/admin/jobs", label: "Duyệt tin", end: false },
+  { to: "/admin/jobs", label: "Quản lý tin", end: false },
   { to: "/admin/users", label: "Người dùng", end: false },
 ];
 
