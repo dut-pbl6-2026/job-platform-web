@@ -11,7 +11,7 @@ import {
   SkeletonRows,
   Textarea,
 } from "../components/ui";
-import { decideJob, fetchAdminJob, fetchPendingJobs } from "../lib/adminApi";
+import { decideJob, fetchAdminJob, fetchAdminJobs } from "../lib/adminApi";
 import { timeAgo } from "../lib/jobsApi";
 import { apiErrorMessage, loadErrorMessage } from "../lib/http";
 import { categoryLabel } from "../lib/labels";
@@ -66,7 +66,7 @@ export default function AdminJobsPage() {
     setLoading(true);
     setLoadErr(null);
     try {
-      const res = await fetchPendingJobs({ page, size: PAGE_SIZE });
+      const res = await fetchAdminJobs({ status: "Pending", page, size: PAGE_SIZE });
       // Deciding the last job on page N > 0 empties that page; earlier pages may still have jobs.
       if (res.items.length === 0 && page > 0) {
         goToPage(page - 1);

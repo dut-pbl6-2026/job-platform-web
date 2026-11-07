@@ -6,7 +6,8 @@ import { normalizeRole } from "./roles";
 import type { AdminHealth, AdminStatistics, AdminUser, Paginated, PendingJob } from "../types/admin";
 
 const USERS_KEY = "jp.mock.admin.users";
-const JOBS_KEY = "jp.mock.admin.jobs";
+// v2: the mock store keeps every status (management view), not only the pending queue.
+const JOBS_KEY = "jp.mock.admin.jobs.v2";
 
 const isOffline = (e: unknown) => shouldUseMock(e, "admin API");
 
@@ -69,10 +70,10 @@ function saveUsers(users: AdminUser[]) {
 }
 
 function seedJobs(): PendingJob[] {
-  return MOCK_JOBS.slice(0, 8).map((job, i) => ({
+  return MOCK_JOBS.slice(0, 14).map((job, i) => ({
     ...job,
-    id: `pending-${job.id}`,
-    status: "pending",
+    id: i < 8 ? `pending-${job.id}` : `admin-${job.id}`,
+    status: i < 8 ? "pending" : "active",
     recruiterName: ["Minh Tran", "Hoai Nguyen", "Khoa Le"][i % 3],
     recruiterId: `mock-user-${(i % 3) + 2}`,
   }));
@@ -124,7 +125,7 @@ function mockStats(): AdminStatistics {
     totalJobSeekers: users.filter((u) => u.role === "User").length,
     totalJobs: MOCK_JOBS.length,
     activeJobs: MOCK_JOBS.length,
-    pendingJobs: loadJobs().length,
+    pendingJobs: loadJobs().filter((j) => j.status === "pending").length,
     totalApplications: 24,
     applicationStatus: { pending: 10, accepted: 5, rejected: 3 },
     unavailable: [],
@@ -242,17 +243,120 @@ export async function setAdminUserActive(userId: string, isActive: boolean, reas
   }
 }
 
-/** job-svc GET /api/admin/jobs?status=Pending&page(1-based)&size. */
-export async function fetchPendingJobs(params: { page?: number; size?: number }): Promise<Paginated<PendingJob>> {
+/** job-svc JobStatus values the admin list filters on. Omitting the status lists every job except Deleted. */
+export const ADMIN_JOB_STATUSES = ["Active", "Pending", "Rejected", "Closed", "Deleted"] as const;
+export type AdminJobStatus = (typeof ADMIN_JOB_STATUSES)[number];
+
+export function isAdminJobStatus(value: string): value is AdminJobStatus {
+  return (ADMIN_JOB_STATUSES as readonly string[]).includes(value);
+}
+
+/** job-svc GET /api/admin/jobs?status=&q=&page(1-based)&size. `q` matches the title, ignoring case. */
+export async function fetchAdminJobs(params: { status?: AdminJobStatus | ""; q?: string; page?: number; size?: number }): Promise<Paginated<PendingJob>> {
   const page = params.page ?? 0;
   const size = params.size ?? 8;
+  const q = params.q?.trim() || undefined;
   try {
-    const { data } = await api.get("/admin/jobs", { params: { status: "Pending", page: toOneBased(page), size } });
+    const { data } = await api.get("/admin/jobs", {
+      params: { status: params.status || undefined, q, page: toOneBased(page), size },
+    });
     const parsed = readPage(data, page, size);
     return { ...parsed, items: parsed.items.map(asJob).filter((x): x is PendingJob => !!x) };
   } catch (e) {
     if (!isOffline(e)) throw e;
-    return paginate(loadJobs(), page, size);
+    const status = params.status?.toLowerCase();
+    let items = loadJobs().filter((j) => (status ? j.status === status : j.status !== "deleted"));
+    if (q) items = items.filter((j) => j.title.toLowerCase().includes(q.toLowerCase()));
+    return paginate(items, page, size);
+  }
+}
+
+/** Body of POST /api/admin/jobs and PUT /api/admin/jobs/{id} (job-svc JobCreateDto / JobUpdateDto). */
+export interface AdminJobInput {
+  title: string;
+  description: string;
+  companyId: string;
+  location: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryCurrency?: string;
+  categoryId?: string;
+  requirements?: string;
+  benefits?: string;
+  employmentType?: string;
+  experienceLevel?: string;
+}
+
+/**
+ * Field errors of a .NET ValidationProblem (400 { errors: { title: ["..."] } }), keyed by the
+ * backend field name in camelCase. Empty when the response is not a validation problem.
+ */
+export function validationErrors(e: unknown): Record<string, string> {
+  const errors = (e as { response?: { status?: number; data?: { errors?: unknown } } })?.response?.data?.errors;
+  if (!errors || typeof errors !== "object") return {};
+  const out: Record<string, string> = {};
+  for (const [field, messages] of Object.entries(errors as Record<string, unknown>)) {
+    const first = Array.isArray(messages) ? messages[0] : messages;
+    if (typeof first === "string" && first) out[field.charAt(0).toLowerCase() + field.slice(1)] = first;
+  }
+  return out;
+}
+
+function mockJobFromInput(id: string, input: AdminJobInput, base?: PendingJob): PendingJob {
+  const now = new Date().toISOString();
+  return normalizeJob({
+    ...base,
+    ...input,
+    id,
+    company: undefined,
+    category: undefined,
+    companyName: base?.company.name,
+    status: base?.status ?? "active",
+    createdAt: base?.createdAt ?? now,
+    updatedAt: now,
+  }) as PendingJob;
+}
+
+/** job-svc POST /api/admin/jobs → 201 { id, message }. An admin's job is published at once (Active). */
+export async function createAdminJob(input: AdminJobInput): Promise<string> {
+  try {
+    const { data } = await api.post("/admin/jobs", input);
+    return pickStr((data ?? {}) as Record<string, unknown>, "id") ?? "";
+  } catch (e) {
+    if (!isOffline(e)) throw e;
+    const id = `admin-${crypto.randomUUID()}`;
+    saveJobs([mockJobFromInput(id, input), ...loadJobs()]);
+    return id;
+  }
+}
+
+/** job-svc PUT /api/admin/jobs/{id}. 409 when the job is deleted: restore is not offered. */
+export async function updateAdminJob(jobId: string, input: AdminJobInput): Promise<void> {
+  try {
+    await api.put(`/admin/jobs/${jobId}`, input);
+  } catch (e) {
+    if (!isOffline(e)) throw e;
+    saveJobs(loadJobs().map((j) => (j.id === jobId ? mockJobFromInput(jobId, input, j) : j)));
+  }
+}
+
+/** job-svc DELETE /api/admin/jobs/{id}: soft delete. The job leaves the board but stays in the database. */
+export async function softDeleteAdminJob(jobId: string): Promise<void> {
+  try {
+    await api.delete(`/admin/jobs/${jobId}`);
+  } catch (e) {
+    if (!isOffline(e)) throw e;
+    saveJobs(loadJobs().map((j) => (j.id === jobId ? { ...j, status: "deleted" } : j)));
+  }
+}
+
+/** job-svc DELETE /api/admin/jobs/{id}/permanent: removes a soft-deleted job from the database (409 otherwise). */
+export async function hardDeleteAdminJob(jobId: string): Promise<void> {
+  try {
+    await api.delete(`/admin/jobs/${jobId}/permanent`);
+  } catch (e) {
+    if (!isOffline(e)) throw e;
+    saveJobs(loadJobs().filter((j) => j.id !== jobId));
   }
 }
 
@@ -287,7 +391,7 @@ export async function decideJob(jobId: string, approved: boolean, reason?: strin
     return pickStr(body, "message") || (approved ? "Đã duyệt tin" : "Đã từ chối tin");
   } catch (e) {
     if (!isOffline(e)) throw e;
-    saveJobs(loadJobs().filter((j) => j.id !== jobId));
+    saveJobs(loadJobs().map((j) => (j.id === jobId ? { ...j, status: approved ? "active" : "rejected" } : j)));
     return approved ? "Đã duyệt tin (chế độ tạm)" : "Đã từ chối tin (chế độ tạm)";
   }
 }
