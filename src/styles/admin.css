@@ -259,6 +259,50 @@
   border-top: 1px solid var(--c-row-rule);
 }
 
+/* Job management: status column, edit form and delete confirmations under a row ----------------------- */
+
+.jp-queue--manage { --queue-cols: minmax(0, 1fr) 120px 156px 96px 360px; }
+.jp-job-filters { grid-template-columns: minmax(0, 1fr) 240px auto; }
+.jp-queue-more { padding-top: var(--sp-2); border-top: 1px solid var(--c-row-rule); }
+.jp-queue-edit { background: var(--c-surface); }
+.jp-queue-edit > .jp-h3 { margin: 0; font-size: var(--fs-body); }
+
+.jp-jobform { display: grid; gap: var(--sp-4); }
+.jp-jobform-panel { margin-bottom: var(--sp-6); }
+.jp-jobform-note { margin: 0 0 var(--sp-4); font-size: 14px; }
+.jp-jobform-trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+.jp-jobform-salary { margin: 0; padding: 0; border: 0; min-width: 0; }
+.jp-jobform-salary > legend { padding: 0; margin-bottom: var(--sp-2); }
+.jp-jobform-salary-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 120px;
+  gap: var(--sp-4);
+  align-items: end;
+}
+.jp-jobform-salary .jp-error { margin-top: var(--sp-2); }
+
+.jp-queue-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-6);
+  padding: var(--sp-4) var(--sp-6);
+  background: var(--c-ground);
+  border-top: 1px solid var(--c-row-rule);
+}
+.jp-queue-confirm-title { margin: 0; font-weight: 600; }
+.jp-queue-confirm-text { margin: 2px 0 0; max-width: 64ch; font-size: 14px; color: var(--c-muted); }
+/* Purge cannot be undone: the band turns to the danger tint and the warning reads in the danger ink. */
+.jp-queue-confirm--strong { background: var(--c-danger-soft); }
+.jp-queue-confirm--strong .jp-queue-confirm-title,
+.jp-queue-confirm--strong .jp-queue-confirm-text { color: var(--c-danger); }
+
 @media (max-width: 1099px) {
   .jp-queue { --queue-cols: minmax(0, 1fr) 160px 110px; }
   .jp-queue-head,
@@ -266,7 +310,18 @@
   .jp-queue-head-actions { display: none; }
   .jp-queue-actions { grid-column: 1 / -1; justify-content: flex-start; padding-top: var(--sp-3); }
   .jp-queue-detail,
-  .jp-queue-reject { padding-inline: var(--sp-4); }
+  .jp-queue-reject,
+  .jp-queue-confirm { padding-inline: var(--sp-4); }
+  .jp-queue--manage { --queue-cols: minmax(0, 1fr) 128px 160px 100px; }
+  .jp-job-filters { grid-template-columns: minmax(0, 1fr) auto; }
+}
+
+@media (max-width: 767px) {
+  .jp-job-filters { grid-template-columns: minmax(0, 1fr); }
+  .jp-jobform-trio { grid-template-columns: minmax(0, 1fr); }
+  .jp-jobform-salary-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .jp-jobform-salary-row > :last-child { grid-column: 1 / -1; }
+  .jp-queue-confirm .jp-form-actions { width: 100%; }
 }
 
 /* Below 768px: title and company, then category and age, then the three actions. */

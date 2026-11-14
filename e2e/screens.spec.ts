@@ -670,10 +670,10 @@ test("admin: a candidate is not let in", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Chỉ quản trị viên mới vào được khu vực này." })).toBeVisible();
 });
 
-test("admin jobs: read first, reject needs a reason, approve and reject leave the queue", async ({ page }, testInfo) => {
+test("admin jobs: read first, reject needs a reason, approve and reject leave the pending filter", async ({ page }, testInfo) => {
   await offlineBackend(page);
   await signIn(page, "Admin");
-  await page.goto("/admin/jobs");
+  await page.goto("/admin/jobs?status=Pending");
   const rows = page.locator(".jp-queue-item");
   await expect(rows.first()).toBeVisible();
   const before = await rows.count();
@@ -720,12 +720,75 @@ test("admin jobs: a failed list load can be retried", async ({ page }, testInfo)
     fail ? route.fulfill({ status: 400, json: { message: "bad" } }) : route.fulfill({ json: { data: [], pagination: { page: 1, pageSize: 6, totalItems: 0, totalPages: 1 } } }),
   );
   await page.goto("/admin/jobs");
-  await expect(page.getByRole("alert").filter({ hasText: "Không tải được danh sách tin chờ duyệt" })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "Không tải được danh sách tin" })).toBeVisible();
   await shoot(page, testInfo, "admin-jobs-error");
   fail = false;
   await page.getByRole("button", { name: "Thử lại" }).click();
-  await expect(page.getByRole("heading", { name: "Không còn tin chờ duyệt" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Chưa có tin tuyển dụng" })).toBeVisible();
   await shoot(page, testInfo, "admin-jobs-empty");
+});
+
+test("admin jobs: create, edit, soft delete, then purge from the deleted filter", async ({ page }, testInfo) => {
+  await offlineBackend(page);
+  await signIn(page, "Admin");
+  await page.goto("/admin/jobs");
+  const rows = page.locator(".jp-queue-item");
+  await expect(rows.first()).toBeVisible();
+  await expect(page.locator(".jp-queue")).not.toContainText(/(Active|Pending|Deleted|active|pending)/);
+  await expectSoundLayout(page);
+
+  // Create: required fields are checked before anything is sent.
+  await page.getByRole("button", { name: "Tạo tin" }).click();
+  const form = page.locator(".jp-jobform-panel");
+  await form.getByRole("button", { name: "Đăng tin" }).click();
+  await expect(form.getByText("Nhập tiêu đề tin.")).toBeVisible();
+  await expect(form.getByText("Chọn công ty đăng tin.")).toBeVisible();
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "admin-jobs-create");
+  const title = `Tin thử quản trị ${testInfo.project.name}`;
+  await form.getByLabel(/^Tiêu đề tin/).fill(title);
+  await form.getByRole("combobox", { name: /Công ty/ }).fill("ng");
+  await form.getByRole("listbox", { name: "Công ty tìm thấy" }).getByRole("option").first().click();
+  await form.getByLabel(/^Địa điểm làm việc/).fill("Đà Nẵng");
+  await form.getByLabel("Từ", { exact: true }).fill("20000000");
+  await form.getByLabel("Đến", { exact: true }).fill("10000000");
+  await form.getByLabel(/^Mô tả công việc/).fill("Mô tả thử");
+  await form.getByRole("button", { name: "Đăng tin" }).click();
+  await expect(form.getByText("Lương tối thiểu không được lớn hơn lương tối đa.")).toBeVisible();
+  await form.getByLabel("Đến", { exact: true }).fill("30000000");
+  await form.getByRole("button", { name: "Đăng tin" }).click();
+  await expect(page.getByRole("status").filter({ hasText: `Đã đăng tin “${title}”` })).toBeVisible();
+
+  // Edit the new job: the form opens prefilled.
+  const row = rows.filter({ hasText: title });
+  await expect(row).toContainText("Đang tuyển");
+  await row.getByRole("button", { name: `Sửa tin ${title}` }).click();
+  await expect(row.getByLabel(/^Tiêu đề tin/)).toHaveValue(title);
+  await shoot(page, testInfo, "admin-jobs-edit");
+  await row.getByLabel(/^Tiêu đề tin/).fill(`${title} (đã sửa)`);
+  await row.getByRole("button", { name: "Lưu thay đổi" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Đã lưu thay đổi" })).toBeVisible();
+
+  // Soft delete: confirm first; the job leaves the default list.
+  const edited = rows.filter({ hasText: `${title} (đã sửa)` });
+  await edited.getByRole("button", { name: /^Xóa tin/ }).click();
+  await expect(edited.getByText("Xóa tin này?")).toBeVisible();
+  await edited.getByRole("button", { name: "Xác nhận xóa" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Đã xóa tin" })).toBeVisible();
+  await expect(page.locator(".jp-queue")).not.toContainText(`${title} (đã sửa)`);
+
+  // Purge from the deleted filter: only deleted jobs offer it, and it warns it cannot be undone.
+  await page.getByLabel("Trạng thái").selectOption("Deleted");
+  const gone = rows.filter({ hasText: `${title} (đã sửa)` });
+  await expect(gone).toContainText("Đã xóa");
+  await expect(gone.getByRole("button", { name: /^Sửa tin/ })).toHaveCount(0);
+  await gone.getByRole("button", { name: /^Xóa vĩnh viễn tin/ }).click();
+  await expect(gone.getByText("Thao tác này không thể hoàn tác.")).toBeVisible();
+  await expectSoundLayout(page);
+  await shoot(page, testInfo, "admin-jobs-purge");
+  await gone.getByRole("button", { name: "Xóa vĩnh viễn", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Đã xóa vĩnh viễn" })).toBeVisible();
+  await expect(rows.filter({ hasText: `${title} (đã sửa)` })).toHaveCount(0);
 });
 
 test("admin users: Vietnamese roles, filters, confirm before deactivating, admins untouched", async ({ page }, testInfo) => {
