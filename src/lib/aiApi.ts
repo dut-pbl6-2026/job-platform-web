@@ -1,4 +1,5 @@
 import { api } from "./api";
+import i18n from "../i18n";
 import type { ResumeScore, ScoreError } from "../types/resumeScore";
 
 export const SCORE_CV_MAX_BYTES = 5 * 1024 * 1024;
@@ -6,11 +7,11 @@ export const SCORE_CV_ACCEPT =
   ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 export function validateScoreCv(file: File | null): string | null {
-  if (!file) return "Hãy chọn file CV";
+  if (!file) return i18n.t("cv.missing");
   const n = file.name.toLowerCase();
-  if (n.endsWith(".doc")) return "Chưa hỗ trợ file .doc cũ — hãy lưu CV thành PDF hoặc DOCX";
-  if (!n.endsWith(".pdf") && !n.endsWith(".docx")) return "Chỉ nhận PDF hoặc DOCX";
-  if (file.size > SCORE_CV_MAX_BYTES) return "File tối đa 5 MB";
+  if (n.endsWith(".doc")) return i18n.t("cv.legacyDoc");
+  if (!n.endsWith(".pdf") && !n.endsWith(".docx")) return i18n.t("cv.allowedPdfDocx");
+  if (file.size > SCORE_CV_MAX_BYTES) return i18n.t("cv.tooLarge");
   return null;
 }
 

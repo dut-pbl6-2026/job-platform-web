@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -30,7 +31,8 @@ function parseStatus(raw: string | null): ApplicationStatus | "" {
 }
 
 export default function ApplicationHistoryPage() {
-  useDocumentTitle("Đơn ứng tuyển của tôi");
+  const { t } = useTranslation();
+  useDocumentTitle(t("applications.title"));
   const { user } = useAuth();
   const [sp, setSp] = useSearchParams();
   const status = parseStatus(sp.get("status"));
@@ -51,8 +53,8 @@ export default function ApplicationHistoryPage() {
         <TopBar />
         <main className="jp-page jp-page--narrow">
           <EmptyState
-            title="Trang này dành cho người tìm việc."
-            action={<ButtonLink to="/jobs">Xem bảng việc làm</ButtonLink>}
+            title={t("applications.candidateOnly")}
+            action={<ButtonLink to="/jobs">{t("jobs.detail.viewBoard")}</ButtonLink>}
           />
         </main>
       </>
@@ -76,17 +78,17 @@ export default function ApplicationHistoryPage() {
   }
 
   const data = query.data;
-  const failure = query.isError ? loadErrorMessage(query.error, "danh sách đơn ứng tuyển") : null;
+  const failure = query.isError ? loadErrorMessage(query.error, t("applications.loadWhat")) : null;
 
   return (
     <>
       <TopBar />
       <main className="jp-page">
-        <PageHead title="Đơn của tôi" lead="Theo dõi trạng thái từng lần ứng tuyển." />
+        <PageHead title={t("applications.heading")} lead={t("applications.lead")} />
 
-        <div className="jp-filter-row" role="group" aria-label="Lọc theo trạng thái">
+        <div className="jp-filter-row" role="group" aria-label={t("applications.filterGroup")}>
           <FilterChip pressed={!status} onClick={() => setFilter("")}>
-            Tất cả
+            {t("applications.all")}
           </FilterChip>
           {APPLICATION_STATUSES.map((s) => (
             <FilterChip key={s} pressed={status === s} onClick={() => setFilter(s)}>
@@ -100,7 +102,7 @@ export default function ApplicationHistoryPage() {
             tone="error"
             action={
               <Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>
-                {query.isFetching ? "Đang thử lại…" : "Thử lại"}
+                {query.isFetching ? t("jobs.retrying") : t("jobs.retry")}
               </Button>
             }
           >
@@ -108,38 +110,40 @@ export default function ApplicationHistoryPage() {
           </Alert>
         )}
 
-        {query.isPending && <SkeletonRows rows={5} label="Đang tải đơn ứng tuyển" />}
+        {query.isPending && <SkeletonRows rows={5} label={t("applications.loading")} />}
 
         {data && data.items.length === 0 && (
           <EmptyState
-            title={status ? `Không có đơn nào ở trạng thái “${STATUS_LABEL[status]}”` : "Chưa có đơn nào"}
+            title={
+              status ? t("applications.emptyFiltered", { status: STATUS_LABEL[status] }) : t("applications.emptyNone")
+            }
             action={
               status ? (
                 <Button variant="secondary" onClick={() => setFilter("")}>
-                  Xem tất cả đơn
+                  {t("applications.viewAll")}
                 </Button>
               ) : (
-                <ButtonLink to="/jobs">Xem bảng việc làm</ButtonLink>
+                <ButtonLink to="/jobs">{t("jobs.detail.viewBoard")}</ButtonLink>
               )
             }
           >
-            {!status && <p>Ứng tuyển một việc làm để theo dõi tại đây.</p>}
+            {!status && <p>{t("applications.applyHint")}</p>}
           </EmptyState>
         )}
 
         {data && data.items.length > 0 && (
           <>
             <p className="jp-count" aria-live="polite">
-              {data.total.toLocaleString("vi-VN")} đơn
+              {t("applications.count", { total: data.total.toLocaleString("vi-VN") })}
             </p>
             <div className="jp-apps">
               <div className="jp-apps-head" aria-hidden="true">
-                <span>Vị trí · Công ty</span>
-                <span>Nơi làm</span>
-                <span>Ngày nộp</span>
-                <span>Trạng thái</span>
+                <span>{t("applications.columnPosition")}</span>
+                <span>{t("applications.columnLocation")}</span>
+                <span>{t("applications.columnDate")}</span>
+                <span>{t("applications.columnStatus")}</span>
               </div>
-              <ol className="jp-apps-rows" aria-label="Đơn ứng tuyển">
+              <ol className="jp-apps-rows" aria-label={t("applications.listLabel")}>
                 {data.items.map((a) => (
                   <ApplicationRow key={a.id} app={a} />
                 ))}
@@ -154,13 +158,14 @@ export default function ApplicationHistoryPage() {
 }
 
 function ApplicationRow({ app }: { app: Application }) {
-  const company = app.companyName?.trim() || "Chưa cập nhật";
+  const { t } = useTranslation();
+  const company = app.companyName?.trim() || t("common.notProvided");
   return (
     <li className="jp-app-row">
       <div className="jp-row-main">
         <h3 className="jp-row-title">
           <Link to={`/applications/${app.id}`} className="jp-row-link">
-            {app.jobTitle || "Tin tuyển dụng"}
+            {app.jobTitle || t("applications.untitled")}
           </Link>
         </h3>
         <p className="jp-row-company" title={company}>
@@ -168,15 +173,15 @@ function ApplicationRow({ app }: { app: Application }) {
         </p>
       </div>
       <span className="jp-cell">
-        <span className="jp-sr">Nơi làm: </span>
+        <span className="jp-sr">{t("applications.srLocation")}</span>
         {locationLabel(app.location)}
       </span>
       <span className="jp-cell jp-cell--date">
-        <span className="jp-sr">Ngày nộp: </span>
-        {formatDate(app.createdAt) || "Chưa cập nhật"}
+        <span className="jp-sr">{t("applications.srDate")}</span>
+        {formatDate(app.createdAt) || t("common.notProvided")}
       </span>
       <span className="jp-cell jp-cell--status">
-        <span className="jp-sr">Trạng thái: </span>
+        <span className="jp-sr">{t("applications.srStatus")}</span>
         <ApplicationStatusMark status={app.status} />
       </span>
     </li>

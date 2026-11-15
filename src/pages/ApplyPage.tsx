@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -26,9 +27,10 @@ import { apiErrorMessage, httpStatus, loadErrorMessage } from "../lib/http";
 import { queryKeys } from "../lib/queryClient";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
+// Internal signal only: the page renders its own translated copy for this case, so the message is not shown.
 class JobNotFoundError extends Error {
   constructor() {
-    super("Việc làm không tồn tại hoặc đã bị gỡ.");
+    super("Job not found or removed.");
   }
 }
 
@@ -43,6 +45,7 @@ function fileSize(bytes: number): string {
 type SubmitError = { message: string; duplicate: boolean };
 
 export default function ApplyPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { user, isAuthenticated } = useAuth();
   const pickRef = useRef<HTMLInputElement>(null);
@@ -70,9 +73,9 @@ export default function ApplyPage() {
   });
   const job = jobQuery.data;
   const notFound = jobQuery.error instanceof JobNotFoundError;
-  const loadErr = !jobQuery.isError || notFound ? null : loadErrorMessage(jobQuery.error, "tin tuyển dụng");
+  const loadErr = !jobQuery.isError || notFound ? null : loadErrorMessage(jobQuery.error, t("apply.loadWhat"));
 
-  useDocumentTitle(job ? `Ứng tuyển · ${job.title}` : "Ứng tuyển");
+  useDocumentTitle(job ? t("apply.documentTitleWithJob", { title: job.title }) : t("apply.documentTitle"));
 
   // The success screen replaces the form: move focus to its heading so keyboard and screen-reader users land on it.
   useEffect(() => {
@@ -88,8 +91,8 @@ export default function ApplyPage() {
       <>
         <TopBar />
         <main className="jp-page jp-page--narrow">
-          <BackLink to={jobHref}>Về tin tuyển dụng</BackLink>
-          <Alert tone="error">Chỉ tài khoản ứng viên mới nộp hồ sơ được.</Alert>
+          <BackLink to={jobHref}>{t("apply.backToJobShort")}</BackLink>
+          <Alert tone="error">{t("apply.notCandidate")}</Alert>
         </main>
       </>
     );
@@ -100,8 +103,8 @@ export default function ApplyPage() {
       <>
         <TopBar />
         <main className="jp-page jp-apply">
-          <BackLink to={jobHref}>Quay lại tin tuyển dụng</BackLink>
-          <SkeletonBlock height={420} label="Đang tải tin tuyển dụng" />
+          <BackLink to={jobHref}>{t("apply.backToJob")}</BackLink>
+          <SkeletonBlock height={420} label={t("apply.loading")} />
         </main>
       </>
     );
@@ -113,8 +116,8 @@ export default function ApplyPage() {
         <TopBar />
         <main className="jp-page jp-page--narrow">
           <EmptyState
-            title="Việc làm không tồn tại hoặc đã bị gỡ."
-            action={<ButtonLink to="/jobs">Xem bảng việc làm</ButtonLink>}
+            title={t("jobs.detail.notFound")}
+            action={<ButtonLink to="/jobs">{t("jobs.detail.viewBoard")}</ButtonLink>}
           />
         </main>
       </>
@@ -126,16 +129,16 @@ export default function ApplyPage() {
       <>
         <TopBar />
         <main className="jp-page jp-page--narrow">
-          <BackLink to={jobHref}>Quay lại tin tuyển dụng</BackLink>
+          <BackLink to={jobHref}>{t("apply.backToJob")}</BackLink>
           <Alert
             tone="error"
             action={
               <Button variant="secondary" loading={jobQuery.isFetching} onClick={() => void jobQuery.refetch()}>
-                {jobQuery.isFetching ? "Đang thử lại…" : "Thử lại"}
+                {jobQuery.isFetching ? t("jobs.retrying") : t("jobs.retry")}
               </Button>
             }
           >
-            {loadErr ?? "Không tải được tin tuyển dụng."}
+            {loadErr ?? t("apply.loadFallback")}
           </Alert>
         </main>
       </>
@@ -177,9 +180,9 @@ export default function ApplyPage() {
       setSent({ fileName: file.name });
     } catch (ex: unknown) {
       if (httpStatus(ex) === 409) {
-        setSubmitErr({ message: "Bạn đã nộp hồ sơ cho tin này rồi.", duplicate: true });
+        setSubmitErr({ message: t("apply.duplicate"), duplicate: true });
       } else {
-        setSubmitErr({ message: apiErrorMessage(ex, "Gửi hồ sơ thất bại. Vui lòng thử lại."), duplicate: false });
+        setSubmitErr({ message: apiErrorMessage(ex, t("apply.submitFailed")), duplicate: false });
       }
     } finally {
       setSending(false);
@@ -194,27 +197,27 @@ export default function ApplyPage() {
           <Panel className="jp-apply-done">
             <Icon name="checkCircle" size={32} className="jp-apply-done-icon" />
             <h1 className="jp-h1" ref={doneRef} tabIndex={-1}>
-              Đã gửi hồ sơ
+              {t("apply.doneTitle")}
             </h1>
             <dl className="jp-apply-sent">
               <div>
-                <dt>Vị trí</dt>
+                <dt>{t("apply.position")}</dt>
                 <dd>{currentJob.title}</dd>
               </div>
               <div>
-                <dt>Công ty</dt>
+                <dt>{t("apply.company")}</dt>
                 <dd>{currentJob.company.name}</dd>
               </div>
               <div>
-                <dt>File CV đã gửi</dt>
+                <dt>{t("apply.cvSent")}</dt>
                 <dd>{sent.fileName}</dd>
               </div>
             </dl>
-            <p className="jp-muted">Nhà tuyển dụng sẽ xem CV của bạn. Theo dõi kết quả ở mục Đơn của tôi.</p>
+            <p className="jp-muted">{t("apply.doneNote")}</p>
             <div className="jp-apply-done-actions">
-              <ButtonLink to="/applications">Xem đơn của tôi</ButtonLink>
+              <ButtonLink to="/applications">{t("apply.viewMyApplications")}</ButtonLink>
               <ButtonLink variant="secondary" to="/jobs">
-                Tìm việc khác
+                {t("apply.findOthers")}
               </ButtonLink>
             </div>
           </Panel>
@@ -228,12 +231,12 @@ export default function ApplyPage() {
       <TopBar />
       <main className="jp-page jp-apply">
         <PageHead
-          back={<BackLink to={jobHref}>Quay lại tin tuyển dụng</BackLink>}
-          title="Gửi hồ sơ ứng tuyển"
-          lead="Chọn CV, viết thêm thư xin việc nếu muốn, rồi gửi."
+          back={<BackLink to={jobHref}>{t("apply.backToJob")}</BackLink>}
+          title={t("apply.pageTitle")}
+          lead={t("apply.lead")}
         />
 
-        <Board label="Tin bạn đang ứng tuyển" className="jp-apply-job">
+        <Board label={t("apply.jobBoardLabel")} className="jp-apply-job">
           <JobRow job={currentJob} static />
         </Board>
 
@@ -244,7 +247,7 @@ export default function ApplyPage() {
               action={
                 submitErr.duplicate ? (
                   <ButtonLink variant="secondary" to="/applications">
-                    Xem đơn đã nộp
+                    {t("apply.viewSubmitted")}
                   </ButtonLink>
                 ) : undefined
               }
@@ -259,7 +262,7 @@ export default function ApplyPage() {
                 1
               </span>
               <div className="jp-step-body">
-                <Field id="apply-cv" label="File CV" required hint="PDF, DOC hoặc DOCX, tối đa 5 MB." error={fileErr}>
+                <Field id="apply-cv" label={t("apply.cvLabel")} required hint={t("apply.cvHint")} error={fileErr}>
                   <button
                     ref={dropRef}
                     type="button"
@@ -277,15 +280,15 @@ export default function ApplyPage() {
                         <Icon name="file" size={24} />
                         <span className="jp-drop-text">
                           <strong>{file.name}</strong>
-                          <span>{fileSize(file.size)} · bấm để chọn file khác</span>
+                          <span>{t("apply.changeFile", { size: fileSize(file.size) })}</span>
                         </span>
                       </>
                     ) : (
                       <>
                         <Icon name="upload" size={24} />
                         <span className="jp-drop-text">
-                          <strong>Chọn file CV</strong>
-                          <span>hoặc kéo thả file vào đây</span>
+                          <strong>{t("apply.chooseCv")}</strong>
+                          <span>{t("apply.dropHint")}</span>
                         </span>
                       </>
                     )}
@@ -306,7 +309,7 @@ export default function ApplyPage() {
                 />
                 {file && (
                   <Button variant="ghost" size="sm" icon="trash" onClick={() => pick(null)}>
-                    Bỏ file này
+                    {t("apply.removeFile")}
                   </Button>
                 )}
               </div>
@@ -319,14 +322,17 @@ export default function ApplyPage() {
               <div className="jp-step-body">
                 <Field
                   id="apply-cover"
-                  label="Thư xin việc"
+                  label={t("apply.coverLabel")}
                   optional
-                  hint={`${cover.length.toLocaleString("vi-VN")}/${COVER_MAX.toLocaleString("vi-VN")} ký tự`}
+                  hint={t("apply.coverCounter", {
+                    length: cover.length.toLocaleString("vi-VN"),
+                    max: COVER_MAX.toLocaleString("vi-VN"),
+                  })}
                 >
                   <Textarea
                     rows={6}
                     maxLength={COVER_MAX}
-                    placeholder="Ví dụ: Tôi muốn ứng tuyển vì…"
+                    placeholder={t("apply.coverPlaceholder")}
                     value={cover}
                     onChange={(e) => setCover(e.target.value)}
                   />
@@ -339,9 +345,9 @@ export default function ApplyPage() {
                 3
               </span>
               <div className="jp-step-body">
-                <p className="jp-step-title">Gửi hồ sơ</p>
+                <p className="jp-step-title">{t("apply.submitStep")}</p>
                 <Button type="submit" size="lg" loading={sending} className="jp-apply-submit">
-                  {sending ? "Đang gửi…" : "Gửi hồ sơ"}
+                  {sending ? t("apply.submitting") : t("apply.submit")}
                 </Button>
               </div>
             </li>

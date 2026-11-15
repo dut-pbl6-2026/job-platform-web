@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -21,13 +22,15 @@ import { locationLabel } from "../lib/labels";
 import { queryKeys } from "../lib/queryClient";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
+// Internal signal only: the page renders its own translated copy for this case, so the message is not shown.
 class ApplicationNotFoundError extends Error {
   constructor() {
-    super("Không tìm thấy đơn ứng tuyển.");
+    super("Application not found.");
   }
 }
 
 export default function ApplicationDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { user } = useAuth();
   const [cvBusy, setCvBusy] = useState(false);
@@ -47,8 +50,10 @@ export default function ApplicationDetailPage() {
 
   const app = query.data;
   const notFound = query.error instanceof ApplicationNotFoundError;
-  const failure = !query.isError || notFound ? null : loadErrorMessage(query.error, "đơn ứng tuyển này");
-  useDocumentTitle(app ? `${app.jobTitle || "Đơn ứng tuyển"}` : "Chi tiết đơn ứng tuyển");
+  const failure = !query.isError || notFound ? null : loadErrorMessage(query.error, t("applications.detail.loadWhat"));
+  useDocumentTitle(
+    app ? `${app.jobTitle || t("applications.detail.fallbackTitle")}` : t("applications.detail.documentFallback"),
+  );
 
   async function openCv(cvUrl: string, fileName?: string | null) {
     setCvBusy(true);
@@ -56,7 +61,7 @@ export default function ApplicationDetailPage() {
     try {
       await downloadCv(cvUrl, fileName);
     } catch (e) {
-      setCvErr(apiErrorMessage(e, "Không tải được CV"));
+      setCvErr(apiErrorMessage(e, t("applications.detail.cvFailed")));
     } finally {
       setCvBusy(false);
     }
@@ -67,8 +72,8 @@ export default function ApplicationDetailPage() {
       <>
         <TopBar />
         <main className="jp-page">
-          <BackLink to="/applications">Đơn của tôi</BackLink>
-          <SkeletonBlock height={360} label="Đang tải đơn ứng tuyển" />
+          <BackLink to="/applications">{t("nav.myApplications")}</BackLink>
+          <SkeletonBlock height={360} label={t("applications.loading")} />
         </main>
       </>
     );
@@ -80,8 +85,8 @@ export default function ApplicationDetailPage() {
         <TopBar />
         <main className="jp-page jp-page--narrow">
           <EmptyState
-            title="Không tìm thấy đơn ứng tuyển."
-            action={<ButtonLink to="/applications">Về danh sách đơn</ButtonLink>}
+            title={t("applications.detail.notFound")}
+            action={<ButtonLink to="/applications">{t("applications.detail.backToList")}</ButtonLink>}
           />
         </main>
       </>
@@ -93,12 +98,12 @@ export default function ApplicationDetailPage() {
       <>
         <TopBar />
         <main className="jp-page jp-page--narrow">
-          <BackLink to="/applications">Đơn của tôi</BackLink>
+          <BackLink to="/applications">{t("nav.myApplications")}</BackLink>
           <Alert
             tone="error"
             action={
               <Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>
-                {query.isFetching ? "Đang thử lại…" : "Thử lại"}
+                {query.isFetching ? t("jobs.retrying") : t("jobs.retry")}
               </Button>
             }
           >
@@ -120,13 +125,13 @@ export default function ApplicationDetailPage() {
       <TopBar />
       <main className="jp-page">
         <PageHead
-          back={<BackLink to="/applications">Đơn của tôi</BackLink>}
-          title={app.jobTitle || "Đơn ứng tuyển"}
+          back={<BackLink to="/applications">{t("nav.myApplications")}</BackLink>}
+          title={app.jobTitle || t("applications.detail.fallbackTitle")}
           lead={[company, app.location ? locationLabel(app.location) : null].filter(Boolean).join(" · ") || undefined}
           actions={
             app.jobId ? (
               <ButtonLink to={`/jobs/${app.jobId}`} variant="secondary">
-                Xem việc làm
+                {t("applications.detail.viewJob")}
               </ButtonLink>
             ) : undefined
           }
@@ -135,13 +140,17 @@ export default function ApplicationDetailPage() {
         <div className="jp-detail-grid">
           <div className="jp-detail-main">
             <section className="jp-detail-section">
-              <h2 className="jp-h3">Thư xin việc</h2>
-              {letter ? <p className="jp-prose">{letter}</p> : <p className="jp-muted">Bạn không gửi thư xin việc.</p>}
+              <h2 className="jp-h3">{t("applications.detail.letter")}</h2>
+              {letter ? (
+                <p className="jp-prose">{letter}</p>
+              ) : (
+                <p className="jp-muted">{t("applications.detail.noLetter")}</p>
+              )}
             </section>
 
             {history.length > 0 && (
               <section className="jp-detail-section">
-                <h2 className="jp-h3">Lịch sử trạng thái</h2>
+                <h2 className="jp-h3">{t("applications.detail.history")}</h2>
                 <ol className="jp-history">
                   {history.map((h) => (
                     <li key={h.id} className="jp-history-row">
@@ -158,27 +167,27 @@ export default function ApplicationDetailPage() {
           </div>
 
           <div className="jp-detail-side">
-            <Panel title="Trạng thái" className="jp-detail-apply">
+            <Panel title={t("applications.detail.statusPanel")} className="jp-detail-apply">
               <p className="jp-app-status">
                 <ApplicationStatusMark status={app.status} />
               </p>
               <dl className="jp-detail-kv">
                 {submitted && (
                   <div>
-                    <dt>Nộp lúc</dt>
+                    <dt>{t("applications.detail.submittedAt")}</dt>
                     <dd>{submitted}</dd>
                   </div>
                 )}
                 {updated && updated !== submitted && (
                   <div>
-                    <dt>Cập nhật lúc</dt>
+                    <dt>{t("applications.detail.updatedAt")}</dt>
                     <dd>{updated}</dd>
                   </div>
                 )}
               </dl>
             </Panel>
 
-            <Panel title="CV đã gửi" className="jp-detail-company-panel">
+            <Panel title={t("applications.detail.cvPanel")} className="jp-detail-company-panel">
               {app.cvUrl ? (
                 <>
                   <Button
@@ -189,7 +198,11 @@ export default function ApplicationDetailPage() {
                     onClick={() => void openCv(app.cvUrl!, app.cvFileName)}
                     className="jp-cv-button"
                   >
-                    <span className="jp-cv-name">{cvBusy ? "Đang tải…" : app.cvFileName || "Tải CV"}</span>
+                    <span className="jp-cv-name">
+                      {cvBusy
+                        ? t("applications.detail.downloading")
+                        : app.cvFileName || t("applications.detail.downloadCv")}
+                    </span>
                   </Button>
                   {cvErr && (
                     <Alert tone="error" className="jp-cv-error">
@@ -198,7 +211,7 @@ export default function ApplicationDetailPage() {
                   )}
                 </>
               ) : (
-                <p className="jp-cv-plain">{app.cvFileName || "Đã gửi file CV"}</p>
+                <p className="jp-cv-plain">{app.cvFileName || t("applications.detail.cvFallback")}</p>
               )}
             </Panel>
           </div>
