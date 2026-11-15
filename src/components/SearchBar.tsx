@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Icon } from "./ui";
 import { LOCATION_SUGGESTIONS } from "../lib/searchFilters";
 
-/** Keyword + place + "Tìm việc". Submitting writes both to the URL; the page reads them back from there. */
+/** Keyword + place + submit. Submitting writes both to the URL; the page reads them back from there. */
 export function SearchBar({
   initialQ,
   initialLoc,
@@ -12,6 +13,7 @@ export function SearchBar({
   initialLoc?: string;
   onSearch: (q: string, loc: string) => void;
 }) {
+  const { t } = useTranslation();
   const [q, setQ] = useState(initialQ || "");
   const [loc, setLoc] = useState(initialLoc || "");
 
@@ -22,18 +24,18 @@ export function SearchBar({
     <form
       className="jp-search"
       role="search"
-      aria-label="Tìm việc làm"
+      aria-label={t("jobs.search.formLabel")}
       onSubmit={(e) => {
         e.preventDefault();
         onSearch(q.trim(), loc.trim());
       }}
     >
       <label className="jp-search-field">
-        <span className="jp-sr">Từ khóa</span>
+        <span className="jp-sr">{t("jobs.search.keyword")}</span>
         <Icon name="search" />
         <input
           type="search"
-          placeholder="Vị trí, kỹ năng, công ty…"
+          placeholder={t("jobs.search.keywordPlaceholder")}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoComplete="off"
@@ -41,10 +43,10 @@ export function SearchBar({
         />
       </label>
       <label className="jp-search-field jp-search-field--loc">
-        <span className="jp-sr">Địa điểm</span>
+        <span className="jp-sr">{t("jobs.search.place")}</span>
         <Icon name="pin" />
         <input
-          placeholder="Tất cả địa điểm"
+          placeholder={t("jobs.search.placePlaceholder")}
           value={loc}
           onChange={(e) => setLoc(e.target.value)}
           list="jp-location-suggestions"
@@ -57,7 +59,7 @@ export function SearchBar({
         </datalist>
       </label>
       <button className="jp-btn jp-btn--primary jp-btn--lg jp-search-go" type="submit">
-        Tìm việc
+        {t("jobs.search.submit")}
       </button>
     </form>
   );
