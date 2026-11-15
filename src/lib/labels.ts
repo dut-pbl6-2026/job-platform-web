@@ -3,7 +3,7 @@
  * copy: never print a raw enum, an ID or a status code (CLAUDE.md hard rules).
  *
  * Lookups ignore case, spaces, "-" and "_" because the same value arrives in several spellings
- * (job-svc "FullTime", normalizeJob "Full-time", search-svc snake_case).
+ * (job-svc and search-svc "FullTime", normalizeJob "Full-time").
  */
 
 function key(value: string | null | undefined): string {

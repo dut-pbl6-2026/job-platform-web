@@ -7,10 +7,9 @@ import { pickNum, pickStr, shouldUseMock, httpStatus } from "./http";
 import { categoryLabel } from "./labels";
 
 /**
- * Two backend shapes, each read in exactly one way:
- * - job-svc (JobDetailDto, and the lists built from it) is camelCase and flat (`companyName`, `categoryName`).
- * - search-svc returns camelCase, flat job fields. Only `currency` differs (job-svc calls it `salaryCurrency`);
-   `fromSearchDocument` maps that one key before `normalizeJob`.
+ * job-svc (JobDetailDto, and the lists built from it) and search-svc both return camelCase, flat job fields
+ * (`companyName`, `categoryName`), so `normalizeJob` reads them directly. The one exception is `currency`
+ * in search-svc, which `fromSearchDocument` maps to `salaryCurrency` before calling `normalizeJob`.
  */
 export function normalizeJob(raw: object): Job {
   const o = raw as Record<string, unknown>;
