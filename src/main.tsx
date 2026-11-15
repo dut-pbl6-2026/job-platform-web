@@ -11,6 +11,7 @@ import "./styles/apply.css";
 import "./styles/authform.css";
 import "./styles/account.css";
 import "./styles/admin.css";
+import "./styles/recruiter.css";
 import "./styles/chat.css";
 import "./styles/toast.css";
 import "./styles/footer.css";

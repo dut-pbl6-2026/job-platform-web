@@ -225,3 +225,36 @@ export async function downloadCv(cvUrl: string, fileName?: string | null): Promi
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
+
+/** One page of applications for a job. app-svc pages start at 1; `total` is the real count. */
+export type RecruiterApplicationPage = {
+  items: Application[];
+  total: number;
+  page: number;
+  size: number;
+  totalPages: number;
+};
+
+/**
+ * app-svc GET /api/applications/job/{jobId}: applications for one job, recruiter or admin only.
+ * Items are ApplicationSummaryDto (no candidate name). No mock fallback.
+ */
+export async function fetchApplicationsByJob(
+  jobId: string,
+  params: { page?: number; size?: number; status?: ApplicationStatus } = {},
+): Promise<RecruiterApplicationPage> {
+  const size = params.size ?? 20;
+  const { data } = await api.get(`/applications/job/${encodeURIComponent(jobId)}`, {
+    params: { page: params.page ?? 1, size, status: params.status },
+  });
+  const items = Array.isArray(data?.items) ? data.items.map(normalizeApplication) : [];
+  const total = Number(data?.total) || 0;
+  const pageSize = Number(data?.size) || size;
+  return {
+    items,
+    total,
+    page: Number(data?.page) || 1,
+    size: pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}

@@ -1,0 +1,41 @@
+/* Recruiter area: tiles, filter row and the mobile fold of the job table. Tokens come from tokens.css. */
+
+.jp-recruiter-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-6);
+}
+
+.jp-recruiter-tile {
+  display: grid;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+}
+
+.jp-recruiter-tile-label {
+  font-size: var(--fs-caption);
+  color: var(--c-muted);
+}
+
+.jp-recruiter-tile-value {
+  font-size: var(--fs-h2);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.jp-recruiter-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+@media (max-width: 640px) {
+  .jp-recruiter-tiles {
+    grid-template-columns: 1fr;
+  }
+}
