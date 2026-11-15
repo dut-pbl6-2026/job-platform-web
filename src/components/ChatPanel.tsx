@@ -1,11 +1,13 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Alert, Button, Textarea } from "./ui";
 import { useChat } from "../contexts/ChatContext";
 
-const STARTERS = ["Gợi ý việc làm React tại Hà Nội", "Cách viết CV cho vị trí junior", "Mẹo phỏng vấn backend"];
+const STARTER_KEYS = ["chat.starters.react", "chat.starters.cv", "chat.starters.interview"] as const;
 
 export function ChatPanel({ variant = "dock" }: { variant?: "dock" | "page" }) {
+  const { t } = useTranslation();
   const { messages, sending, notice, error, send, newSession, cancel } = useChat();
   const [draft, setDraft] = useState("");
   const scroller = useRef<HTMLDivElement>(null);
@@ -27,31 +29,29 @@ export function ChatPanel({ variant = "dock" }: { variant?: "dock" | "page" }) {
     <div className={`chat-panel chat-panel--${variant}`}>
       <header className="chat-head">
         <div>
-          <strong>Trợ lý việc làm</strong>
-          <p>Nhớ các tin nhắn gần nhất trong phiên</p>
+          <strong>{t("chat.title")}</strong>
+          <p>{t("chat.remember")}</p>
         </div>
         <div className="chat-head-actions">
           {sending && (
             <Button variant="secondary" onClick={cancel}>
-              Dừng
+              {t("chat.stop")}
             </Button>
           )}
           <Button variant="secondary" onClick={() => void newSession()}>
-            Phiên mới
+            {t("chat.newSession")}
           </Button>
         </div>
       </header>
 
-      <div className="chat-log" ref={scroller} role="log" aria-live="polite" aria-label="Cuộc trò chuyện">
+      <div className="chat-log" ref={scroller} role="log" aria-live="polite" aria-label={t("chat.logLabel")}>
         {messages.length === 0 && (
           <div className="chat-empty">
-            <p>
-              Hỏi về việc làm, CV hoặc phỏng vấn. Khi dịch vụ AI chưa sẵn sàng, gợi ý tạm được lấy từ danh sách tin.
-            </p>
+            <p>{t("chat.intro")}</p>
             <div className="chat-starters">
-              {STARTERS.map((s) => (
-                <Button key={s} variant="secondary" onClick={() => void send(s)}>
-                  {s}
+              {STARTER_KEYS.map((key) => (
+                <Button key={key} variant="secondary" onClick={() => void send(t(key))}>
+                  {t(key)}
                 </Button>
               ))}
             </div>
@@ -84,18 +84,18 @@ export function ChatPanel({ variant = "dock" }: { variant?: "dock" | "page" }) {
           {error}
         </Alert>
       )}
-      <p className="chat-disclaimer">Nội dung do AI tạo, hãy kiểm tra lại tin tuyển dụng.</p>
+      <p className="chat-disclaimer">{t("chat.disclaimer")}</p>
 
       <form className="chat-form" onSubmit={onSubmit}>
         <label className="jp-sr" htmlFor="chat-input">
-          Tin nhắn
+          {t("chat.inputLabel")}
         </label>
         <Textarea
           id="chat-input"
           rows={2}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Hỏi về việc làm, CV, lương…"
+          placeholder={t("chat.inputPlaceholder")}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -104,7 +104,7 @@ export function ChatPanel({ variant = "dock" }: { variant?: "dock" | "page" }) {
           }}
         />
         <Button type="submit" disabled={sending || !draft.trim()}>
-          Gửi
+          {t("chat.send")}
         </Button>
       </form>
     </div>

@@ -21,7 +21,7 @@ export function shouldUseMock(e: unknown, what: string): boolean {
 }
 
 /**
- * Vietnamese message for a failed GET, naming what could not be loaded ("danh sách việc làm") and what the
+ * Vietnamese message for a failed GET, naming what could not be loaded (the `what` phrase, e.g. the job list) and what the
  * failure was. The real cause stays visible (no mock, no silent fallback), just in the user's language.
  */
 export function loadErrorMessage(e: unknown, what: string): string {
@@ -82,7 +82,7 @@ const CLIENT_ERROR_TEXT: Record<number, string> = {
 };
 
 /**
- * Vietnamese text for a failed action (`fallback` names the action: "Không cập nhật được tin").
+ * Vietnamese text for a failed action (`fallback` names the action, e.g. "could not update the job").
  * - No response or 5xx: a generic message; a 5xx body may carry internals.
  * - 401, 403, 429: the Vietnamese text above.
  * - Other 4xx: `fallback`. Backend bodies (`message`, ProblemDetails `title`/`detail`) are English and

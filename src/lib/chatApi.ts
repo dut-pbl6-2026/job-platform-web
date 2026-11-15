@@ -1,4 +1,5 @@
 import { api, getAccessToken } from "./api";
+import i18n from "../i18n";
 import { API_BASE_URL } from "./config";
 import { unwrap, pickStr, shouldUseMock } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
@@ -9,7 +10,7 @@ import {
   CHAT_MAX_TOKENS,
   CHAT_RATE_PER_HOUR,
   CHAT_SESSION_TTL_MS,
-  CHAT_TRUNCATION_NOTICE,
+  chatTruncationNotice,
 } from "../types/chat";
 
 const STORE_KEY = "jp.mock.ai.chat";
@@ -45,7 +46,7 @@ function statusOf(e: unknown): number | undefined {
 export class ChatUnavailableError extends Error {
   readonly code = "feature_unavailable";
   constructor() {
-    super("Tính năng chat AI đang phát triển.");
+    super(i18n.t("chat.unavailable"));
   }
 }
 
@@ -154,27 +155,21 @@ function mockReply(message: string, jobs: ChatJobHint[]) {
   const lower = message.toLowerCase();
   const offTopic = /(hack|vũ khí|weapon|sex|nsfw)/i.test(lower);
   if (offTopic) {
-    return "Mình chỉ hỗ trợ câu hỏi về việc làm, CV và nghề nghiệp. Hãy hỏi về vị trí, kỹ năng hoặc mẹo phỏng vấn nhé.";
+    return i18n.t("chat.mock.offTopic");
   }
-  const lines = [
-    "Mình là trợ lý việc làm của Job Platform. Gợi ý dựa trên dữ liệu tin đăng (chế độ tạm khi AI-svc chưa sẵn sàng).",
-  ];
+  const lines = [i18n.t("chat.mock.intro")];
   if (jobs.length) {
-    lines.push("Một số tin phù hợp:");
-    for (const job of jobs) lines.push(`- ${job.title} tại ${job.company}`);
-    lines.push("Bạn có thể mở từng tin để xem mô tả và ứng tuyển.");
+    lines.push(i18n.t("chat.mock.matches"));
+    for (const job of jobs) lines.push(i18n.t("chat.mock.job", { title: job.title, company: job.company }));
+    lines.push(i18n.t("chat.mock.openJob"));
   } else if (/(cv|resume|hồ sơ)/i.test(lower)) {
-    lines.push(
-      "CV nên nêu kỹ năng đúng JD, số liệu cụ thể, và 3–5 dòng tóm tắt mục tiêu. Nêu stack, năm kinh nghiệm và thành quả đo được.",
-    );
+    lines.push(i18n.t("chat.mock.cv"));
   } else if (/(phỏng vấn|interview)/i.test(lower)) {
-    lines.push(
-      "Chuẩn bị STAR cho 3 dự án gần nhất, đọc JD để lấy từ khóa, và hỏi lại về team/oncall. Lương thảo luận sau khi hai bên hiểu scope.",
-    );
+    lines.push(i18n.t("chat.mock.interview"));
   } else {
-    lines.push("Bạn có thể hỏi theo kỹ năng (React, kế toán…), địa điểm, hoặc mức lương. Mình sẽ gợi ý tin và mẹo CV.");
+    lines.push(i18n.t("chat.mock.fallback"));
   }
-  lines.push("Nội dung do AI tạo, hãy kiểm tra lại tin tuyển dụng trước khi ứng tuyển.");
+  lines.push(i18n.t("chat.mock.disclaimer"));
   const text = lines.join("\n");
   return text.length > CHAT_MAX_OUTPUT_TOKENS * 4 ? text.slice(0, CHAT_MAX_OUTPUT_TOKENS * 4) : text;
 }
@@ -227,7 +222,7 @@ export async function createChatSession(userId: string): Promise<string> {
     return offlineSession(userId).id;
   }
   const id = pickStr(unwrap<Record<string, unknown>>(data), "sessionId", "session_id", "id");
-  if (!id) throw new Error("Không tạo được phiên chat. Vui lòng thử lại.");
+  if (!id) throw new Error(i18n.t("chat.sessionFailed"));
   return id;
 }
 
@@ -283,7 +278,7 @@ function consumeSseBlock(block: string, handlers: ChatStreamHandlers, acc: { ses
     return;
   }
   if (event === "truncated") {
-    handlers.onTruncated?.(data || CHAT_TRUNCATION_NOTICE);
+    handlers.onTruncated?.(data || chatTruncationNotice());
     return;
   }
   if (event === "done" || event === "end") {
@@ -382,7 +377,7 @@ export async function sendChatMessage(
   session.messages.push(userMsg);
   const trimmed = trimContext(session.messages);
   session.messages = trimmed.messages;
-  if (trimmed.truncated) handlers.onTruncated?.(CHAT_TRUNCATION_NOTICE);
+  if (trimmed.truncated) handlers.onTruncated?.(chatTruncationNotice());
   const jobs = matchJobs(message);
   if (jobs.length) handlers.onJobs?.(jobs);
   const reply = mockReply(message, jobs);
