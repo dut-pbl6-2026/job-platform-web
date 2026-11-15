@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCategories, fetchJobs, formatSalary } from "../lib/jobsApi";
@@ -29,7 +30,7 @@ import {
   toggleCsv,
 } from "../lib/searchFilters";
 import { queryKeys } from "../lib/queryClient";
-import { categoryLabel } from "../lib/labels";
+import { categoryLabel, employmentTypeLabel, experienceLevelLabel } from "../lib/labels";
 import { loadErrorMessage } from "../lib/http";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { RecommendedJobs } from "../components/RecommendedJobs";
@@ -48,7 +49,8 @@ function readLastJob(): string | null {
 type Patch = Record<string, string | undefined>;
 
 export default function JobListPage() {
-  useDocumentTitle("Việc làm");
+  const { t } = useTranslation();
+  useDocumentTitle(t("jobs.title"));
   const [sp, setSp] = useSearchParams();
   const params = parseSearchParams(sp);
   const [lastJobId, setLastJobId] = useState(readLastJob);
@@ -66,7 +68,7 @@ export default function JobListPage() {
 
   const data = jobsQuery.data;
   const items = data?.items ?? [];
-  const err = jobsQuery.isError ? loadErrorMessage(jobsQuery.error, "danh sách việc làm") : null;
+  const err = jobsQuery.isError ? loadErrorMessage(jobsQuery.error, t("jobs.listWhat")) : null;
   const categories = (catsQuery.data ?? []).filter((c) => c.id && c.name);
 
   useEffect(() => {
@@ -111,7 +113,7 @@ export default function JobListPage() {
     const name = categories.find((c) => c.id === params.category)?.name;
     chips.push({
       key: "cat",
-      label: name ? categoryLabel(name) : "Ngành nghề đã chọn",
+      label: name ? categoryLabel(name) : t("jobs.chip.category"),
       clear: { category: undefined },
     });
   }
@@ -126,14 +128,16 @@ export default function JobListPage() {
   splitCsv(params.experienceLevel).forEach((v) => {
     chips.push({
       key: `l-${v}`,
-      label: EXPERIENCE_OPTIONS.find((o) => o.value === v)?.label ?? "Cấp bậc đã chọn",
+      label: (EXPERIENCE_OPTIONS as readonly string[]).includes(v)
+        ? experienceLevelLabel(v)
+        : t("jobs.chip.experience"),
       clear: { experienceLevel: toggleCsv(params.experienceLevel, v) || undefined },
     });
   });
   splitCsv(params.employmentType).forEach((v) => {
     chips.push({
       key: `t-${v}`,
-      label: EMPLOYMENT_OPTIONS.find((o) => o.value === v)?.label ?? "Hình thức đã chọn",
+      label: (EMPLOYMENT_OPTIONS as readonly string[]).includes(v) ? employmentTypeLabel(v) : t("jobs.chip.employment"),
       clear: { employmentType: toggleCsv(params.employmentType, v) || undefined },
     });
   });
@@ -171,7 +175,7 @@ export default function JobListPage() {
         />
 
         <div className="jp-jobs-grid">
-          <aside className="jp-jobs-filters" aria-label="Bộ lọc">
+          <aside className="jp-jobs-filters" aria-label={t("jobs.drawerTitle")}>
             <AdvancedFilters params={params} facets={data?.facets} onChange={update} />
           </aside>
 
@@ -179,14 +183,16 @@ export default function JobListPage() {
             <div className="jp-boardhead">
               <div className="jp-boardhead-title">
                 <h1 id="jp-board-title" className="jp-h1">
-                  Bảng việc làm
+                  {t("jobs.boardTitle")}
                 </h1>
                 <p className="jp-boardhead-count" aria-live="polite">
-                  {data ? `${total.toLocaleString("vi-VN")} việc đang tuyển` : " "}
+                  {data ? t("jobs.countLabel", { total: total.toLocaleString("vi-VN") }) : " "}
                   {data && params.q && (
                     <>
                       {" "}
-                      cho “<strong>{params.q}</strong>”
+                      {t("jobs.forQueryBefore")}
+                      <strong>{params.q}</strong>
+                      {t("jobs.forQueryAfter")}
                     </>
                   )}
                 </p>
@@ -199,17 +205,18 @@ export default function JobListPage() {
                   aria-haspopup="dialog"
                   onClick={() => setDrawerOpen(true)}
                 >
-                  Bộ lọc{drawerCount ? ` (${drawerCount})` : ""}
+                  {t("jobs.filtersButton")}
+                  {drawerCount ? ` (${drawerCount})` : ""}
                 </Button>
                 <label className="jp-sort">
-                  <span>Sắp xếp</span>
+                  <span>{t("jobs.sortLabel")}</span>
                   <Select
                     value={params.sortBy || "relevance"}
                     onChange={(e) => update({ sort: e.target.value === "relevance" ? undefined : e.target.value })}
                   >
                     {SORT_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
-                        {o.label}
+                        {t(o.labelKey)}
                       </option>
                     ))}
                   </Select>
@@ -218,12 +225,12 @@ export default function JobListPage() {
             </div>
 
             {chips.length > 0 && (
-              <div className="jp-active-filters" role="group" aria-label="Bộ lọc đang bật">
+              <div className="jp-active-filters" role="group" aria-label={t("jobs.activeFiltersLabel")}>
                 {chips.map((chip) => (
                   <RemovableChip key={chip.key} label={chip.label} onRemove={() => update(chip.clear)} />
                 ))}
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Xóa bộ lọc
+                  {t("jobs.clearFilters")}
                 </Button>
               </div>
             )}
@@ -237,7 +244,7 @@ export default function JobListPage() {
                     loading={jobsQuery.isFetching}
                     onClick={() => void jobsQuery.refetch()}
                   >
-                    {jobsQuery.isFetching ? "Đang thử lại…" : "Thử lại"}
+                    {jobsQuery.isFetching ? t("jobs.retrying") : t("jobs.retry")}
                   </Button>
                 }
               >
@@ -247,7 +254,7 @@ export default function JobListPage() {
 
             {jobsQuery.isPending && (
               <div className="jp-board">
-                <SkeletonRows rows={8} label="Đang tải bảng việc làm" />
+                <SkeletonRows rows={8} label={t("jobs.loadingBoard")} />
               </div>
             )}
 
@@ -255,30 +262,28 @@ export default function JobListPage() {
               <div className="jp-board">
                 {filtered ? (
                   <EmptyState
-                    title="Không có việc khớp bộ lọc"
+                    title={t("jobs.emptyFilteredTitle")}
                     action={
                       <Button variant="secondary" onClick={clearFilters}>
-                        Xóa bộ lọc
+                        {t("jobs.clearFilters")}
                       </Button>
                     }
                   >
-                    Bỏ bớt bộ lọc đang bật ở trên, hoặc xóa hết để xem cả bảng.
+                    {t("jobs.emptyFilteredText")}
                   </EmptyState>
                 ) : params.q ? (
                   <EmptyState
-                    title={`Không có việc nào khớp “${params.q}”`}
+                    title={t("jobs.emptyQueryTitle", { q: params.q })}
                     action={
                       <Button variant="secondary" onClick={() => update({ q: undefined })}>
-                        Xóa từ khóa
+                        {t("jobs.clearQuery")}
                       </Button>
                     }
                   >
-                    Thử từ khóa ngắn hơn, hoặc tên kỹ năng thay vì tên vị trí.
+                    {t("jobs.emptyQueryText")}
                   </EmptyState>
                 ) : (
-                  <EmptyState title="Chưa có việc làm nào đang tuyển">
-                    Khi có tin mới được duyệt, bảng sẽ hiện ở đây.
-                  </EmptyState>
+                  <EmptyState title={t("jobs.emptyNoneTitle")}>{t("jobs.emptyNoneText")}</EmptyState>
                 )}
               </div>
             )}
@@ -293,7 +298,7 @@ export default function JobListPage() {
                 <Board
                   sort={params.sortBy}
                   onSalarySort={(next) => update({ sort: next })}
-                  label={`Trang ${data.page + 1} của bảng việc làm`}
+                  label={t("jobs.boardLabel", { page: data.page + 1 })}
                 >
                   {items.map((job) => (
                     <JobRow key={job.id} job={job} selected={job.id === lastJobId} onOpen={(j) => remember(j.id)} />
@@ -304,11 +309,11 @@ export default function JobListPage() {
                     page={data.page}
                     totalPages={data.totalPages}
                     onPage={goToPage}
-                    label="Trang của bảng việc làm"
+                    label={t("jobs.paginationLabel")}
                   />
                   {data.totalPages > 1 && (
                     <p className="jp-board-pageinfo">
-                      Trang {data.page + 1} / {data.totalPages}
+                      {t("jobs.pageInfo", { page: data.page + 1, total: data.totalPages })}
                     </p>
                   )}
                 </div>
@@ -331,12 +336,12 @@ export default function JobListPage() {
           <div className="jp-drawer-inner">
             <div className="jp-drawer-head">
               <h2 id="jp-drawer-title" className="jp-h2">
-                Bộ lọc
+                {t("jobs.drawerTitle")}
               </h2>
               <button
                 type="button"
                 className="jp-drawer-close"
-                aria-label="Đóng bộ lọc"
+                aria-label={t("jobs.closeFilters")}
                 onClick={() => setDrawerOpen(false)}
               >
                 <Icon name="x" size={22} />
@@ -347,10 +352,10 @@ export default function JobListPage() {
             </div>
             <div className="jp-drawer-foot">
               <Button variant="secondary" disabled={!filtered} onClick={clearFilters}>
-                Xóa bộ lọc
+                {t("jobs.clearFilters")}
               </Button>
               <Button onClick={() => setDrawerOpen(false)}>
-                {data ? `Xem ${total.toLocaleString("vi-VN")} việc` : "Xem kết quả"}
+                {data ? t("jobs.viewResults", { total: total.toLocaleString("vi-VN") }) : t("jobs.viewResultsDefault")}
               </Button>
             </div>
           </div>

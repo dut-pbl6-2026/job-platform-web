@@ -1,38 +1,32 @@
 import type { JobSearchParams } from "../types/job";
-import { employmentTypeLabel, experienceLevelLabel } from "./labels";
 
 export const JOB_PAGE_SIZE = 9;
 
 // Only values job-svc accepts (api-conventions §6). Freelance / Junior are an open decision there.
-export const EMPLOYMENT_OPTIONS = (["FullTime", "PartTime", "Contract", "Internship"] as const).map((value) => ({
-  value,
-  label: employmentTypeLabel(value),
-}));
+// These are API values; their display labels come from labels.ts at render time.
+export const EMPLOYMENT_OPTIONS = ["FullTime", "PartTime", "Contract", "Internship"] as const;
 
-export const EXPERIENCE_OPTIONS = (["Entry", "Mid", "Senior", "Lead"] as const).map((value) => ({
-  value,
-  label: experienceLevelLabel(value),
-}));
+export const EXPERIENCE_OPTIONS = ["Entry", "Mid", "Senior", "Lead"] as const;
 
 export const SORT_OPTIONS = [
-  { value: "relevance", label: "Liên quan" },
-  { value: "created_at_desc", label: "Mới nhất" },
-  { value: "salary_desc", label: "Lương cao → thấp" },
-  { value: "salary_asc", label: "Lương thấp → cao" },
+  { value: "relevance", labelKey: "jobs.sort.relevance" },
+  { value: "created_at_desc", labelKey: "jobs.sort.newest" },
+  { value: "salary_desc", labelKey: "jobs.sort.salaryDesc" },
+  { value: "salary_asc", labelKey: "jobs.sort.salaryAsc" },
 ] as const;
 
 export const SALARY_BANDS_VND = [
-  { label: "Dưới 5 triệu", min: 0, max: 5_000_000 },
-  { label: "5–10 triệu", min: 5_000_000, max: 10_000_000 },
-  { label: "10–20 triệu", min: 10_000_000, max: 20_000_000 },
-  { label: "Trên 20 triệu", min: 20_000_000, max: undefined },
+  { labelKey: "jobs.filters.bands.under5m", min: 0, max: 5_000_000 },
+  { labelKey: "jobs.filters.bands.from5to10m", min: 5_000_000, max: 10_000_000 },
+  { labelKey: "jobs.filters.bands.from10to20m", min: 10_000_000, max: 20_000_000 },
+  { labelKey: "jobs.filters.bands.over20m", min: 20_000_000, max: undefined },
 ] as const;
 
 export const SALARY_BANDS_USD = [
-  { label: "Dưới $500", min: 0, max: 500 },
-  { label: "$500–$1.000", min: 500, max: 1_000 },
-  { label: "$1.000–$2.000", min: 1_000, max: 2_000 },
-  { label: "Trên $2.000", min: 2_000, max: undefined },
+  { labelKey: "jobs.filters.bands.underUsd500", min: 0, max: 500 },
+  { labelKey: "jobs.filters.bands.usd500to1000", min: 500, max: 1_000 },
+  { labelKey: "jobs.filters.bands.usd1000to2000", min: 1_000, max: 2_000 },
+  { labelKey: "jobs.filters.bands.overUsd2000", min: 2_000, max: undefined },
 ] as const;
 
 /** Suggestions under the place field; the visitor can still type any place. */
@@ -106,7 +100,7 @@ export function parseSearchParams(sp: URLSearchParams): JobSearchParams {
   };
 }
 
-/** `q` belongs to the search bar and survives "Xóa bộ lọc", so it is not a filter here. */
+/** `q` belongs to the search bar and survives "clear filters", so it is not a filter here. */
 export function hasActiveFilters(params: JobSearchParams) {
   return Boolean(
     params.location ||

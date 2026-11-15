@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Board, Button, JobRow, SkeletonRows } from "./ui";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,14 +8,15 @@ import { isUser } from "../lib/roles";
 import { loadErrorMessage } from "../lib/http";
 
 /**
- * "Việc làm gợi ý cho bạn" for signed-in Users only (PBL6-65). Recruiters and Admins never request it:
+ * The "recommended jobs for you" section, for signed-in Users only (PBL6-65). Recruiters and Admins never request it:
  * the query is disabled for them, so the gateway's User policy is not hit. An empty result hides the
  * section, as on mobile. A failed call shows the error with a retry.
  */
 export function RecommendedJobs() {
+  const { t } = useTranslation();
   const { isAuthenticated, user } = useAuth();
   const enabled = isAuthenticated && isUser(user?.role);
-  // "Làm mới gợi ý" asks the backend to bypass its per-user cache for this load only.
+  // The refresh button asks the backend to bypass its per-user cache for this load only.
   const [refresh, setRefresh] = useState(false);
   const query = useQuery({
     queryKey: ["jobs", "recommended", user?.id ?? "", refresh],
@@ -31,9 +33,9 @@ export function RecommendedJobs() {
       <div className="jp-reco-head">
         <div>
           <h2 id="jp-reco-title" className="jp-reco-title">
-            Việc làm gợi ý cho bạn
+            {t("jobs.reco.title")}
           </h2>
-          <p className="jp-reco-lead">Cá nhân hóa theo hồ sơ và kỹ năng của bạn</p>
+          <p className="jp-reco-lead">{t("jobs.reco.lead")}</p>
         </div>
         <Button
           variant="ghost"
@@ -44,27 +46,27 @@ export function RecommendedJobs() {
             if (refresh) void query.refetch();
           }}
         >
-          Làm mới gợi ý
+          {t("jobs.reco.refresh")}
         </Button>
       </div>
 
-      {query.isPending && <SkeletonRows rows={3} label="Đang tải việc làm gợi ý" />}
+      {query.isPending && <SkeletonRows rows={3} label={t("jobs.reco.loading")} />}
 
       {query.isError && (
         <Alert
           tone="error"
           action={
             <Button variant="secondary" onClick={() => void query.refetch()}>
-              Thử lại
+              {t("jobs.retry")}
             </Button>
           }
         >
-          {loadErrorMessage(query.error, "việc làm gợi ý")}
+          {loadErrorMessage(query.error, t("jobs.reco.loadWhat"))}
         </Alert>
       )}
 
       {query.isSuccess && query.data.length > 0 && (
-        <Board label="Việc làm gợi ý">
+        <Board label={t("jobs.reco.title")}>
           {query.data.map(({ job, reason }) => (
             <JobRow key={job.id} job={job} note={reason || undefined} />
           ))}

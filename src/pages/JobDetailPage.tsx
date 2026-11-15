@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchJobById } from "../lib/jobsApi";
@@ -24,18 +25,20 @@ import { loadErrorMessage } from "../lib/http";
 import { categoryLabel, jobStatusLabel } from "../lib/labels";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
+// Internal signal only: the page renders its own translated copy for this case, so the message is not shown.
 class JobNotFoundError extends Error {
   constructor() {
-    super("Việc làm không tồn tại hoặc đã bị gỡ.");
+    super("Job not found or removed.");
   }
 }
 
-/** The three reading sections of a job. A section with no text is folded into one "Chưa cập nhật" line. */
+/** The three reading sections of a job. A section with no text is folded into one "not updated" line. */
 function sectionText(value: string | null | undefined): string | null {
   return value?.trim() ? value : null;
 }
 
 export default function JobDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { user, isAuthenticated } = useAuth();
   const jobQuery = useQuery({
@@ -53,17 +56,17 @@ export default function JobDetailPage() {
   const job = jobQuery.data;
   const loading = jobQuery.isPending;
   const notFound = jobQuery.error instanceof JobNotFoundError;
-  const err = !jobQuery.isError || notFound ? null : loadErrorMessage(jobQuery.error, "việc làm này");
+  const err = !jobQuery.isError || notFound ? null : loadErrorMessage(jobQuery.error, t("jobs.detail.loadWhat"));
   // Title needs the loaded job; it must stay above the early returns below (rules of hooks).
-  useDocumentTitle(job ? `${job.title} · ${job.company.name}` : "Việc làm");
+  useDocumentTitle(job ? `${job.title} · ${job.company.name}` : t("jobs.title"));
 
   if (loading) {
     return (
       <>
         <TopBar />
         <main className="jp-page">
-          <BackLink to="/jobs">Quay lại bảng việc làm</BackLink>
-          <SkeletonBlock height={440} label="Đang tải việc làm" />
+          <BackLink to="/jobs">{t("jobs.detail.backToBoard")}</BackLink>
+          <SkeletonBlock height={440} label={t("jobs.detail.loading")} />
         </main>
       </>
     );
@@ -75,8 +78,8 @@ export default function JobDetailPage() {
         <TopBar />
         <main className="jp-page jp-page--narrow">
           <EmptyState
-            title="Việc làm không tồn tại hoặc đã bị gỡ."
-            action={<ButtonLink to="/jobs">Xem bảng việc làm</ButtonLink>}
+            title={t("jobs.detail.notFound")}
+            action={<ButtonLink to="/jobs">{t("jobs.detail.viewBoard")}</ButtonLink>}
           />
         </main>
       </>
@@ -88,12 +91,12 @@ export default function JobDetailPage() {
       <>
         <TopBar />
         <main className="jp-page jp-page--narrow">
-          <BackLink to="/jobs">Quay lại bảng việc làm</BackLink>
+          <BackLink to="/jobs">{t("jobs.detail.backToBoard")}</BackLink>
           <Alert
             tone="error"
             action={
               <Button variant="secondary" loading={jobQuery.isFetching} onClick={() => void jobQuery.refetch()}>
-                {jobQuery.isFetching ? "Đang thử lại…" : "Thử lại"}
+                {jobQuery.isFetching ? t("jobs.retrying") : t("jobs.retry")}
               </Button>
             }
           >
@@ -110,68 +113,72 @@ export default function JobDetailPage() {
   const canApply = isAuthenticated && isUser(user?.role);
   const updated = new Date(job.updatedAt);
   const sections = [
-    { title: "Mô tả công việc", text: sectionText(job.description) },
-    { title: "Yêu cầu", text: sectionText(job.requirements) },
-    { title: "Quyền lợi", text: sectionText(job.benefits) },
+    { title: t("jobs.detail.sectionDescription"), text: sectionText(job.description) },
+    { title: t("jobs.detail.sectionRequirements"), text: sectionText(job.requirements) },
+    { title: t("jobs.detail.sectionBenefits"), text: sectionText(job.benefits) },
   ];
   const filled = sections.filter((s) => s.text);
   const empty = sections.filter((s) => !s.text).map((s) => s.title);
   const companyFacts: [string, string][] = [
-    ["Ngành", job.company.industry?.trim() ?? ""],
-    ["Địa chỉ", job.company.address?.trim() ?? ""],
+    [t("jobs.detail.industry"), job.company.industry?.trim() ?? ""],
+    [t("jobs.detail.address"), job.company.address?.trim() ?? ""],
   ];
 
   return (
     <>
       <TopBar />
       <main className="jp-page jp-detail">
-        <BackLink to="/jobs">Quay lại bảng việc làm</BackLink>
+        <BackLink to="/jobs">{t("jobs.detail.backToBoard")}</BackLink>
 
         <header className="jp-detail-head">
           <h1 className="jp-h1">{job.title}</h1>
           <p className="jp-detail-company">
             <span>{job.company.name}</span>
-            {job.company.verified && <StatusMark tone="success">Đã xác minh</StatusMark>}
+            {job.company.verified && <StatusMark tone="success">{t("jobs.detail.verified")}</StatusMark>}
           </p>
         </header>
 
         {job.status !== "active" && (
           <Alert tone="warning" className="jp-detail-status">
-            Tin này {jobStatusLabel(job.status).toLowerCase()}.
+            {t("jobs.detail.statusNote", { status: jobStatusLabel(job.status).toLowerCase() })}
           </Alert>
         )}
 
         <FactStrip job={job} />
 
         <div className="jp-detail-grid">
-          <article className="jp-panel jp-detail-main" aria-label="Nội dung tin tuyển dụng">
+          <article className="jp-panel jp-detail-main" aria-label={t("jobs.detail.contentLabel")}>
             {filled.map((s) => (
               <section key={s.title} className="jp-detail-section">
                 <h2 className="jp-h3">{s.title}</h2>
                 <p className="jp-prose">{s.text}</p>
               </section>
             ))}
-            {empty.length > 0 && <p className="jp-detail-empty jp-muted">Chưa cập nhật: {empty.join(", ")}.</p>}
+            {empty.length > 0 && (
+              <p className="jp-detail-empty jp-muted">{t("jobs.detail.notUpdated", { fields: empty.join(", ") })}</p>
+            )}
             <p className="jp-detail-meta jp-muted">
               {[
-                `Danh mục: ${categoryLabel(job.category?.name)}`,
-                Number.isNaN(updated.getTime()) ? null : `Cập nhật: ${updated.toLocaleDateString("vi-VN")}`,
-                `${job.viewCount} lượt xem`,
+                t("jobs.detail.category", { name: categoryLabel(job.category?.name) }),
+                Number.isNaN(updated.getTime())
+                  ? null
+                  : t("jobs.detail.updated", { date: updated.toLocaleDateString("vi-VN") }),
+                t("jobs.detail.views", { views: job.viewCount }),
               ]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
           </article>
 
-          <aside className="jp-detail-side" aria-label="Ứng tuyển và thông tin công ty">
-            <Panel title="Ứng tuyển" className="jp-detail-apply">
+          <aside className="jp-detail-side" aria-label={t("jobs.detail.sideLabel")}>
+            <Panel title={t("jobs.detail.applyPanel")} className="jp-detail-apply">
               {canApply && (
                 <div className="jp-detail-actions">
                   <ButtonLink size="lg" block to={`/jobs/${job.id}/apply`}>
-                    Ứng tuyển ngay
+                    {t("jobs.detail.applyNow")}
                   </ButtonLink>
                   <ButtonLink variant="secondary" block to={`/resume-score?jobId=${job.id}`}>
-                    Kiểm tra độ phù hợp CV
+                    {t("jobs.detail.checkFit")}
                     <DevTag />
                   </ButtonLink>
                 </div>
@@ -179,27 +186,27 @@ export default function JobDetailPage() {
               {!isAuthenticated && (
                 <div className="jp-detail-actions">
                   <ButtonLink size="lg" block to={loginUrl(`/jobs/${job.id}/apply`)}>
-                    Đăng nhập để ứng tuyển
+                    {t("jobs.detail.loginToApply")}
                   </ButtonLink>
-                  <p className="jp-detail-note jp-muted">Đăng nhập xong, bạn vào thẳng trang nộp hồ sơ cho tin này.</p>
+                  <p className="jp-detail-note jp-muted">{t("jobs.detail.loginNote")}</p>
                 </div>
               )}
               {isAuthenticated && !canApply && (
                 <p className="jp-detail-note jp-detail-note--reason">
                   <Icon name="info" size={16} />
                   {isRecruiter(user?.role)
-                    ? "Tài khoản nhà tuyển dụng không nộp hồ sơ được. Hãy đăng nhập bằng tài khoản ứng viên."
+                    ? t("jobs.detail.recruiterCannotApply")
                     : isAdmin(user?.role)
-                      ? "Tài khoản quản trị không nộp hồ sơ được. Hãy đăng nhập bằng tài khoản ứng viên."
-                      : "Tài khoản này không nộp hồ sơ được."}
+                      ? t("jobs.detail.adminCannotApply")
+                      : t("jobs.detail.otherCannotApply")}
                 </p>
               )}
             </Panel>
 
-            <Panel title="Công ty" className="jp-detail-company-panel">
+            <Panel title={t("jobs.detail.companyPanel")} className="jp-detail-company-panel">
               <dl className="jp-detail-kv">
                 <div>
-                  <dt>Tên công ty</dt>
+                  <dt>{t("jobs.detail.companyName")}</dt>
                   <dd>{job.company.name}</dd>
                 </div>
                 {companyFacts.map(([term, value]) =>
@@ -212,7 +219,7 @@ export default function JobDetailPage() {
                 )}
                 {website && (
                   <div>
-                    <dt>Website</dt>
+                    <dt>{t("jobs.detail.website")}</dt>
                     <dd>
                       <a className="jp-link" href={website} target="_blank" rel="noopener noreferrer">
                         {job.company.website}

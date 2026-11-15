@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { JobSearchParams, SearchFacets } from "../types/job";
 import {
   EMPLOYMENT_OPTIONS,
@@ -19,7 +20,7 @@ type Props = {
 
 /**
  * Buckets arrive in whatever spelling the source uses ("Mid", "Middle", "Full-time", "FullTime"), so
- * they are matched through the one Vietnamese label each spelling maps to.
+ * they are matched through the one display label each spelling maps to.
  */
 function facetCount(facets: SearchFacets | undefined, key: "experienceLevel" | "employmentType", value: string) {
   const label = key === "experienceLevel" ? experienceLevelLabel : employmentTypeLabel;
@@ -29,7 +30,7 @@ function facetCount(facets: SearchFacets | undefined, key: "experienceLevel" | "
   return hits.length ? hits.reduce((sum, item) => sum + item.count, 0) : undefined;
 }
 
-/** VND amounts are typed in millions ("15" = 15.000.000 đ); USD as is. The URL always holds the raw amount. */
+/** VND amounts are typed in millions ("15" = 15,000,000 VND); USD as is. The URL always holds the raw amount. */
 function SalaryInput({
   label,
   value,
@@ -100,6 +101,7 @@ function Radio({
  * above the board. Every change goes straight to the URL (`onChange`), the single source of truth.
  */
 export function AdvancedFilters({ params, facets, onChange }: Props) {
+  const { t } = useTranslation();
   const uid = useId();
   const [skillQ, setSkillQ] = useState("");
   const selectedTypes = splitCsv(params.employmentType);
@@ -121,8 +123,8 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
   return (
     <div className="jp-filters">
       <fieldset className="jp-filter-group">
-        <legend className="jp-filter-title">Mức lương</legend>
-        <div className="jp-filter-currency" role="group" aria-label="Đơn vị tiền">
+        <legend className="jp-filter-title">{t("jobs.filters.salaryGroup")}</legend>
+        <div className="jp-filter-currency" role="group" aria-label={t("jobs.filters.currencyGroup")}>
           {(["VND", "USD"] as const).map((c) => (
             <FilterChip
               key={c}
@@ -139,15 +141,15 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
         <Radio
           name={`${uid}-salary`}
           checked={noSalary}
-          label="Tất cả mức lương"
+          label={t("jobs.filters.allSalaries")}
           onSelect={() => onChange({ minSalary: undefined, maxSalary: undefined })}
         />
         {bands.map((band) => (
           <Radio
-            key={band.label}
+            key={band.labelKey}
             name={`${uid}-salary`}
             checked={bandMatch === band}
-            label={band.label}
+            label={t(band.labelKey)}
             onSelect={() =>
               onChange({ minSalary: String(band.min), maxSalary: band.max != null ? String(band.max) : undefined })
             }
@@ -155,13 +157,13 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
         ))}
         <div className="jp-filter-salary">
           <SalaryInput
-            label={currency === "VND" ? "Từ (triệu)" : "Từ (USD)"}
+            label={currency === "VND" ? t("jobs.filters.fromMillion") : t("jobs.filters.fromUsd")}
             value={params.minSalary}
             currency={currency}
             onCommit={(raw) => onChange({ minSalary: raw })}
           />
           <SalaryInput
-            label={currency === "VND" ? "Đến (triệu)" : "Đến (USD)"}
+            label={currency === "VND" ? t("jobs.filters.toMillion") : t("jobs.filters.toUsd")}
             value={params.maxSalary}
             currency={currency}
             onCommit={(raw) => onChange({ maxSalary: raw })}
@@ -170,41 +172,41 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
       </fieldset>
 
       <fieldset className="jp-filter-group">
-        <legend className="jp-filter-title">Cấp bậc</legend>
-        {EXPERIENCE_OPTIONS.map((item) => (
+        <legend className="jp-filter-title">{t("jobs.filters.levelGroup")}</legend>
+        {EXPERIENCE_OPTIONS.map((value) => (
           <Checkbox
-            key={item.value}
-            label={item.label}
-            count={facetCount(facets, "experienceLevel", item.value)}
-            checked={selectedLevels.includes(item.value)}
-            onChange={() => onChange({ experienceLevel: toggleCsv(params.experienceLevel, item.value) || undefined })}
+            key={value}
+            label={experienceLevelLabel(value)}
+            count={facetCount(facets, "experienceLevel", value)}
+            checked={selectedLevels.includes(value)}
+            onChange={() => onChange({ experienceLevel: toggleCsv(params.experienceLevel, value) || undefined })}
           />
         ))}
       </fieldset>
 
       <fieldset className="jp-filter-group">
-        <legend className="jp-filter-title">Hình thức</legend>
-        {EMPLOYMENT_OPTIONS.map((item) => (
+        <legend className="jp-filter-title">{t("jobs.filters.typeGroup")}</legend>
+        {EMPLOYMENT_OPTIONS.map((value) => (
           <Checkbox
-            key={item.value}
-            label={item.label}
-            count={facetCount(facets, "employmentType", item.value)}
-            checked={selectedTypes.includes(item.value)}
-            onChange={() => onChange({ employmentType: toggleCsv(params.employmentType, item.value) || undefined })}
+            key={value}
+            label={employmentTypeLabel(value)}
+            count={facetCount(facets, "employmentType", value)}
+            checked={selectedTypes.includes(value)}
+            onChange={() => onChange({ employmentType: toggleCsv(params.employmentType, value) || undefined })}
           />
         ))}
       </fieldset>
 
       <fieldset className="jp-filter-group">
-        <legend className="jp-filter-title">Kỹ năng</legend>
+        <legend className="jp-filter-title">{t("jobs.filters.skillsGroup")}</legend>
         <label className="jp-sr" htmlFor={`${uid}-skill`}>
-          Thêm kỹ năng
+          {t("jobs.filters.addSkill")}
         </label>
         <div className="jp-filter-skill">
           <input
             id={`${uid}-skill`}
             className="jp-input"
-            placeholder="Gõ kỹ năng rồi Enter"
+            placeholder={t("jobs.filters.skillPlaceholder")}
             value={skillQ}
             onChange={(e) => setSkillQ(e.target.value)}
             onKeyDown={(e) => {
@@ -216,7 +218,7 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
           <button
             type="button"
             className="jp-filter-skill-add"
-            aria-label="Thêm kỹ năng"
+            aria-label={t("jobs.filters.addSkill")}
             disabled={!skillQ.trim()}
             onClick={() => addSkill(skillQ)}
           >
@@ -236,7 +238,7 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
         )}
         {selectedSkills.length > 1 && (
           <Checkbox
-            label="Có đủ tất cả kỹ năng đã chọn"
+            label={t("jobs.filters.matchAllSkills")}
             checked={params.skillOp === "and"}
             onChange={(e) => onChange({ skillOp: e.target.checked ? "and" : undefined })}
           />
