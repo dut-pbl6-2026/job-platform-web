@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import type { Job } from "../types/job";
 import type { IncomingNotification, ToastInput } from "../types/notification";
 
@@ -31,8 +32,8 @@ export function parseNotificationEnvelope(
       notification: {
         id: msg.code != null ? String(msg.code) : "ws-error",
         type: "error",
-        title: "Thông báo",
-        body: msg.message != null ? String(msg.message) : "Không nhận được thông báo",
+        title: i18n.t("notification.title"),
+        body: msg.message != null ? String(msg.message) : i18n.t("notification.noContent"),
       },
     };
   }
@@ -65,9 +66,9 @@ export function parseNotificationEnvelope(
 }
 
 function jobHeadline(jobTitle: string | undefined, company: string | undefined, fallback?: string) {
-  if (jobTitle && company) return `Việc làm mới: ${jobTitle} tại ${company}`;
-  if (jobTitle) return `Việc làm mới: ${jobTitle}`;
-  return fallback?.trim() || "Có việc làm mới";
+  if (jobTitle && company) return i18n.t("notification.jobHeadlineWithCompany", { title: jobTitle, company });
+  if (jobTitle) return i18n.t("notification.jobHeadline", { title: jobTitle });
+  return fallback?.trim() || i18n.t("notification.newJobFallback");
 }
 
 export function toToastInput(notification: IncomingNotification): ToastInput | null {
@@ -101,7 +102,7 @@ export function toToastInput(notification: IncomingNotification): ToastInput | n
     id: notification.id,
     dedupeKey: notification.id,
     kind: event === "error" ? "error" : "info",
-    title: notification.title ?? "Thông báo",
+    title: notification.title ?? i18n.t("notification.title"),
     body: notification.body,
     href: event.startsWith("application") ? (applicationHref ?? jobHref) : (jobHref ?? applicationHref),
   };

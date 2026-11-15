@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import i18n from "../i18n";
 import { jobToastPollMs, TOAST_DISMISS_MS, TOAST_STACK_LIMIT } from "../lib/config";
 import { fetchJobs } from "../lib/jobsApi";
 import { queryKeys } from "../lib/queryClient";
@@ -136,7 +137,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               .sort()
               .join(",")}`,
             kind: "job",
-            title: `Có thêm ${fresh.length - 3} việc làm mới`,
+            title: i18n.t("toast.moreJobs", { more: fresh.length - 3 }),
             href: "/jobs",
           });
         }
