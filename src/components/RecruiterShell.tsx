@@ -27,10 +27,11 @@ export function RecruiterRoute({ children }: { children: ReactNode }) {
 }
 
 /** The recruiter frame: the shared shell bar, a second bar with the recruiter sections, then the page. */
-export function RecruiterShell({ title, lead, actions, children }: {
+export function RecruiterShell({ title, lead, actions, back, children }: {
   title: string;
   lead?: string;
   actions?: ReactNode;
+  back?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -46,7 +47,7 @@ export function RecruiterShell({ title, lead, actions, children }: {
         </div>
       </nav>
       <main className="jp-page">
-        <PageHead title={title} lead={lead} actions={actions} />
+        <PageHead title={title} lead={lead} actions={actions} back={back} />
         {children}
       </main>
     </>
