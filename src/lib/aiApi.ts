@@ -15,19 +15,19 @@ export function validateScoreCv(file: File | null): string | null {
   return null;
 }
 
-/** Vietnamese, user-facing text for each error code of the AI service (SPEC section 7). */
-const ERROR_TEXT: Record<string, string> = {
-  cv_no_text: "Không đọc được chữ trong CV. Hãy tải lên file rõ nét hơn hoặc bản PDF/DOCX gốc.",
-  cv_encrypted: "CV đang đặt mật khẩu. Hãy gỡ mật khẩu rồi tải lại.",
-  cv_unreadable: "File CV bị hỏng hoặc không mở được.",
-  unsupported_media_type: "Chỉ nhận PDF hoặc DOCX.",
-  file_too_large: "File tối đa 5 MB.",
-  job_not_found: "Không tìm thấy việc làm này.",
-  rate_limited: "Bạn thử quá nhiều lần. Vui lòng đợi một phút rồi thử lại.",
-  busy: "Hệ thống đang bận. Hãy thử lại sau ít giây.",
-  job_service_unavailable: "Dịch vụ việc làm tạm thời không phản hồi. Thử lại sau nhé.",
-  unauthorized: "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.",
-};
+/** Translation key for each error code of the AI service (SPEC section 7). */
+const SCORE_ERROR_KEYS = {
+  cv_no_text: "cv.scoreError.cvNoText",
+  cv_encrypted: "cv.scoreError.cvEncrypted",
+  cv_unreadable: "cv.scoreError.cvUnreadable",
+  unsupported_media_type: "cv.scoreError.unsupportedMediaType",
+  file_too_large: "cv.scoreError.fileTooLarge",
+  job_not_found: "cv.scoreError.jobNotFound",
+  rate_limited: "cv.scoreError.rateLimited",
+  busy: "cv.scoreError.busy",
+  job_service_unavailable: "cv.scoreError.jobServiceUnavailable",
+  unauthorized: "cv.scoreError.unauthorized",
+} as const;
 
 export function toScoreError(ex: unknown): ScoreError {
   const ax = ex as { response?: { status?: number; data?: { code?: string; detail?: string } }; code?: string };
@@ -35,7 +35,10 @@ export function toScoreError(ex: unknown): ScoreError {
     ax.response?.data?.code ??
     (ax.response?.status === 401 ? "unauthorized" : ax.code === "ECONNABORTED" ? "busy" : "network");
   // Unknown codes get the generic text: the backend `detail` is English and not meant for users.
-  return { code, message: ERROR_TEXT[code] ?? "Không chấm điểm được CV. Vui lòng thử lại." };
+  const key = (Object.keys(SCORE_ERROR_KEYS) as string[]).includes(code)
+    ? SCORE_ERROR_KEYS[code as keyof typeof SCORE_ERROR_KEYS]
+    : "cv.scoreError.generic";
+  return { code, message: i18n.t(key) };
 }
 
 export async function scoreResume(jobId: string, cvFile: File): Promise<ResumeScore> {

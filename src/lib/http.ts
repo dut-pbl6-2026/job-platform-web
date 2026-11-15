@@ -1,4 +1,5 @@
 import { isAxiosError } from "axios";
+import i18n from "../i18n";
 import { MOCKS_ENABLED } from "./config";
 
 export function httpStatus(e: unknown): number | undefined {
@@ -21,23 +22,20 @@ export function shouldUseMock(e: unknown, what: string): boolean {
 }
 
 /**
- * Vietnamese message for a failed GET, naming what could not be loaded (the `what` phrase, e.g. the job list) and what the
+ * User-facing message for a failed GET, naming what could not be loaded (the `what` phrase, e.g. the job list) and what the
  * failure was. The real cause stays visible (no mock, no silent fallback), just in the user's language.
  */
 export function loadErrorMessage(e: unknown, what: string): string {
   const status = httpStatus(e);
-  if (isAxiosError(e) && !e.response) {
-    return `Không kết nối được máy chủ nên chưa tải được ${what}. Kiểm tra mạng rồi thử lại.`;
-  }
-  if (status && status >= 500)
-    return `Máy chủ đang gặp sự cố (lỗi ${status}) nên chưa tải được ${what}. Vui lòng thử lại sau.`;
-  if (status === 401 || status === 403) return `Bạn không có quyền xem ${what}. Hãy đăng nhập lại.`;
-  if (status === 404) return `Không tìm thấy ${what}.`;
-  if (status) return `Không tải được ${what} (lỗi ${status}).`;
+  if (isAxiosError(e) && !e.response) return i18n.t("httpError.loadNoConnection", { what });
+  if (status && status >= 500) return i18n.t("httpError.loadServerError", { what, status });
+  if (status === 401 || status === 403) return i18n.t("httpError.loadForbidden", { what });
+  if (status === 404) return i18n.t("httpError.loadNotFound", { what });
+  if (status) return i18n.t("httpError.loadStatus", { what, status });
   // Not an HTTP failure: most likely a bug or a contract change (e.g. normalizeJob throwing on a new
   // shape). React Query does not log query errors, so log it for whoever opens the console.
   console.error("[load]", what, e);
-  return `Đã xảy ra lỗi khi tải ${what}.`;
+  return i18n.t("httpError.loadUnknown", { what });
 }
 
 /** Unwrap common API envelopes used across services. */
@@ -74,29 +72,25 @@ export function pickNum(obj: Record<string, unknown>, ...keys: string[]): number
   return undefined;
 }
 
-/** Vietnamese text for the 4xx statuses that mean the same thing on every screen. */
-const CLIENT_ERROR_TEXT: Record<number, string> = {
-  401: "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.",
-  403: "Bạn không có quyền thực hiện thao tác này.",
-  429: "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau.",
-};
-
 /**
- * Vietnamese text for a failed action (`fallback` names the action, e.g. "could not update the job").
+ * User-facing text for a failed action (`fallback` names the action, e.g. "could not update the job").
  * - No response or 5xx: a generic message; a 5xx body may carry internals.
- * - 401, 403, 429: the Vietnamese text above.
+ * - 401, 403, 429: the shared texts in `httpError`.
  * - Other 4xx: `fallback`. Backend bodies (`message`, ProblemDetails `title`/`detail`) are English and
  *   are never shown: the status says what happened, the caller's fallback says what failed.
  * - Never axios's own English text ("Network Error", "Request failed with status code 403").
- * - Errors this client throws on purpose keep their (Vietnamese) message; JS runtime errors are bugs,
+ * - Errors this client throws on purpose keep their (translated) message; JS runtime errors are bugs,
  *   so they are logged and replaced by `fallback`.
  */
 export function apiErrorMessage(e: unknown, fallback: string): string {
   if (isAxiosError(e)) {
-    if (!e.response) return "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";
+    if (!e.response) return i18n.t("httpError.noConnection");
     const status = e.response.status;
-    if (status >= 500) return `Máy chủ đang gặp sự cố (lỗi ${status}). Vui lòng thử lại sau.`;
-    return CLIENT_ERROR_TEXT[status] ?? fallback;
+    if (status >= 500) return i18n.t("httpError.serverError", { status });
+    if (status === 401) return i18n.t("httpError.unauthorized");
+    if (status === 403) return i18n.t("httpError.forbidden");
+    if (status === 429) return i18n.t("httpError.tooManyRequests");
+    return fallback;
   }
   if (e instanceof TypeError || e instanceof SyntaxError || e instanceof RangeError || e instanceof ReferenceError) {
     console.error("[api]", fallback, e);

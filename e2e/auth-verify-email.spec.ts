@@ -27,7 +27,7 @@ test.describe("registration and email verification", () => {
     await page.getByRole("button", { name: "Đăng ký ứng viên" }).click();
 
     await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByText("Check your email to verify your account.")).toBeVisible();
+    await expect(page.getByText("Kiểm tra email để xác minh tài khoản của bạn.")).toBeVisible();
     expect(registerBody).toMatchObject({ email: "an@e2e.local", role: "User" });
     // No tokens and no user id from the 202 response: nothing is stored and nothing is logged in.
     const stored = await page.evaluate(() => ({
@@ -47,8 +47,8 @@ test.describe("registration and email verification", () => {
     });
     await page.goto("/verify-email?token=valid-token-e2e");
 
-    await expect(page.getByText("Your email has been verified.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "log in" })).toHaveAttribute("href", "/login");
+    await expect(page.getByText("Email của bạn đã được xác minh.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "đăng nhập", exact: true })).toHaveAttribute("href", "/login");
     expect(bodies).toEqual([{ token: "valid-token-e2e" }]);
   });
 
@@ -61,10 +61,10 @@ test.describe("registration and email verification", () => {
     });
     await page.goto("/verify-email?token=once-e2e");
 
-    await expect(page.getByText("Your email has been verified.")).toBeVisible();
+    await expect(page.getByText("Email của bạn đã được xác minh.")).toBeVisible();
     await page.waitForTimeout(300);
     expect(calls).toBe(1);
-    await expect(page.getByText("This verification link is invalid")).toHaveCount(0);
+    await expect(page.getByText("Liên kết xác minh này không hợp lệ")).toHaveCount(0);
   });
 
   test("verify-email with an invalid, expired or used token (400) shows a message and a link back to login", async ({
@@ -76,11 +76,9 @@ test.describe("registration and email verification", () => {
     );
     await page.goto("/verify-email?token=expired-e2e");
 
-    await expect(
-      page.getByText("This verification link is invalid, has expired or has already been used."),
-    ).toBeVisible();
-    await expect(page.getByText("Your email has been verified.")).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Back to login" }).first()).toHaveAttribute("href", "/login");
+    await expect(page.getByText("Liên kết xác minh này không hợp lệ, đã hết hạn hoặc đã được sử dụng.")).toBeVisible();
+    await expect(page.getByText("Email của bạn đã được xác minh.")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Quay lại đăng nhập" }).first()).toHaveAttribute("href", "/login");
   });
 
   test("verify-email without a token shows the invalid-link message and sends nothing", async ({ page }) => {
@@ -92,7 +90,7 @@ test.describe("registration and email verification", () => {
     });
     await page.goto("/verify-email");
 
-    await expect(page.getByText("This verification link is invalid")).toBeVisible();
+    await expect(page.getByText("Liên kết xác minh này không hợp lệ")).toBeVisible();
     expect(calls).toBe(0);
   });
 
@@ -105,7 +103,7 @@ test.describe("registration and email verification", () => {
     await page.locator("#login-pwd").fill("wrong-password");
     await page.getByRole("button", { name: "Đăng nhập" }).click();
 
-    await expect(page.getByRole("alert")).toHaveText("Check your credentials or verify your email");
+    await expect(page.getByRole("alert")).toHaveText("Kiểm tra lại thông tin đăng nhập hoặc xác minh email của bạn.");
     expect(await page.evaluate(() => localStorage.getItem("accessToken"))).toBeNull();
   });
 });

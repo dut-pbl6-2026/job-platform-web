@@ -13,9 +13,6 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 type FieldErrors = Partial<Record<"inviteCode" | "fullName" | "email" | "pwd" | "confirm", string>>;
 
-/** Shown on the login page after registering; the account cannot log in until the email is verified. */
-const VERIFY_NOTICE = "Check your email to verify your account.";
-
 // Role values are the API contract; only `labelKey` is display copy.
 const ROLE_OPTIONS = [
   { value: "User", labelKey: "auth.role.candidate" },
@@ -105,7 +102,7 @@ export default function RegisterPage() {
         ...(isRecruiter ? { inviteCode: normalizeInviteCode(inviteCode) } : {}),
       });
       // 202: the account exists but is not verified yet. Send the user to login with the notice.
-      nav(`/login${query}`, { replace: true, state: { notice: VERIFY_NOTICE, email: email.trim() } });
+      nav(`/login${query}`, { replace: true, state: { notice: t("auth.register.verifyNotice"), email: email.trim() } });
     } catch (ex: unknown) {
       const inviteErr = isRecruiter ? inviteErrorFrom(ex) : null;
       if (inviteErr?.onField) {

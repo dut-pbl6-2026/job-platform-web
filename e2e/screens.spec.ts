@@ -200,7 +200,7 @@ test("login: wrong password", async ({ page }, testInfo) => {
   await page.getByLabel(/^Mật khẩu/).fill("sai-mat-khau");
   await page.getByRole("button", { name: "Đăng nhập", exact: true }).last().click();
   await expect(
-    page.getByRole("alert").filter({ hasText: "Check your credentials or verify your email" }),
+    page.getByRole("alert").filter({ hasText: "Kiểm tra lại thông tin đăng nhập hoặc xác minh email của bạn." }),
   ).toBeVisible();
   await shoot(page, testInfo, "login-wrong-password");
 });

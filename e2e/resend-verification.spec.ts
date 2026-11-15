@@ -21,7 +21,7 @@ async function registerAndWaitForNotice(page: Page) {
   await page.locator("#reg-pwd").fill("Passw0rd!e2e");
   await page.locator("#reg-confirm").fill("Passw0rd!e2e");
   await page.getByRole("button", { name: "Đăng ký ứng viên" }).click();
-  await expect(page.getByText("Check your email to verify your account.")).toBeVisible();
+  await expect(page.getByText("Kiểm tra email để xác minh tài khoản của bạn.")).toBeVisible();
 }
 
 test.describe("resend verification email", () => {
@@ -85,7 +85,7 @@ test.describe("resend verification email", () => {
     });
     await page.goto("/verify-email?token=expired-resend-e2e");
 
-    await expect(page.getByText("This verification link is invalid")).toBeVisible();
+    await expect(page.getByText("Liên kết xác minh này không hợp lệ")).toBeVisible();
     await page.getByLabel("Email").fill("an@e2e.local");
     await page.getByRole("button", { name: RESEND_BUTTON }).click();
 
