@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
   const [expired, setExpired] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const redirectTimer = useRef<number>();
+  const redirectTimer = useRef<number | undefined>(undefined);
 
   // Leaving the page before the redirect fires must not navigate afterwards.
   useEffect(() => () => window.clearTimeout(redirectTimer.current), []);
