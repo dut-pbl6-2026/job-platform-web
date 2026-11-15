@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Alert, AuthLayout, Button, Checkbox, Field, Input, PasswordInput } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
@@ -12,7 +13,8 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 const LOGIN_FAILED = "Check your credentials or verify your email";
 
 export default function LoginPage() {
-  useDocumentTitle("Đăng nhập");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.login.title"));
   const { login } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
@@ -35,7 +37,7 @@ export default function LoginPage() {
     const fe: typeof fieldErr = {};
     const e1 = validateEmail(email);
     if (e1) fe.email = e1;
-    if (!pwd) fe.pwd = "Hãy nhập mật khẩu";
+    if (!pwd) fe.pwd = t("auth.login.passwordRequired");
     setFieldErr(fe);
     if (fe.email || fe.pwd) {
       document.getElementById(fe.email ? "login-email" : "login-pwd")?.focus();
@@ -48,7 +50,7 @@ export default function LoginPage() {
       nav(target, { replace: true });
     } catch (ex: unknown) {
       // auth-svc answers 401 for a wrong password and for an unverified account alike, so the message names both.
-      setErr(httpStatus(ex) === 401 ? LOGIN_FAILED : apiErrorMessage(ex, "Đăng nhập thất bại. Vui lòng thử lại."));
+      setErr(httpStatus(ex) === 401 ? LOGIN_FAILED : apiErrorMessage(ex, t("auth.login.failed")));
     } finally {
       setLoading(false);
     }
@@ -56,24 +58,24 @@ export default function LoginPage() {
 
   return (
     <AuthLayout
-      title="Đăng nhập"
-      lead="Đăng nhập để ứng tuyển và theo dõi đơn của bạn."
+      title={t("auth.login.title")}
+      lead={t("auth.login.lead")}
       footer={
         <>
-          Chưa có tài khoản?{" "}
+          {t("auth.login.noAccount")}{" "}
           <Link className="jp-link" to={`/register${query}`}>
-            Tạo tài khoản
+            {t("auth.login.createAccount")}
           </Link>
         </>
       }
     >
       {typeof notice === "string" && <Alert tone="success">{notice}</Alert>}
       {typeof notice === "string" && registeredEmail && <ResendVerification email={registeredEmail} />}
-      {target !== DEFAULT_AFTER_AUTH && <Alert tone="info">Đăng nhập xong, bạn quay lại trang đang xem.</Alert>}
+      {target !== DEFAULT_AFTER_AUTH && <Alert tone="info">{t("auth.login.afterLoginNotice")}</Alert>}
       {err && <Alert tone="error">{err}</Alert>}
 
       <form className="jp-form" onSubmit={onSubmit} noValidate>
-        <Field id="login-email" label="Email" error={fieldErr.email}>
+        <Field id="login-email" label={t("auth.login.emailLabel")} error={fieldErr.email}>
           <Input
             type="email"
             inputMode="email"
@@ -83,23 +85,23 @@ export default function LoginPage() {
           />
         </Field>
 
-        <Field id="login-pwd" label="Mật khẩu" error={fieldErr.pwd}>
+        <Field id="login-pwd" label={t("auth.login.passwordLabel")} error={fieldErr.pwd}>
           <PasswordInput autoComplete="current-password" value={pwd} onChange={(e) => setPwd(e.target.value)} />
         </Field>
 
         <div className="jp-form-row">
           <Checkbox
-            label="Ghi nhớ tôi (30 ngày)"
+            label={t("auth.login.remember")}
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
           />
           <Link className="jp-link" to="/forgot-password">
-            Quên mật khẩu?
+            {t("auth.login.forgot")}
           </Link>
         </div>
 
         <Button type="submit" size="lg" block loading={loading}>
-          {loading ? "Đang đăng nhập…" : "Đăng nhập"}
+          {loading ? t("auth.login.submitting") : t("auth.login.submit")}
         </Button>
       </form>
     </AuthLayout>

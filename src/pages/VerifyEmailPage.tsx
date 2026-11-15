@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { Alert, AuthLayout } from "../components/ui";
 import { ResendVerification } from "../components/ResendVerification";
@@ -13,6 +14,7 @@ const INVALID_LINK = "This verification link is invalid, has expired or has alre
 /** Landing page of the link in the verification email: POST /api/auth/verify-email with the token from the URL. */
 export default function VerifyEmailPage() {
   useDocumentTitle("Verify email");
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const token = params.get("token")?.trim() ?? "";
   const [result, setResult] = useState<Result>(token ? { kind: "pending" } : { kind: "invalid" });
@@ -27,9 +29,9 @@ export default function VerifyEmailPage() {
       .then(() => setResult({ kind: "success" }))
       .catch((ex: unknown) => {
         if (httpStatus(ex) === 400) setResult({ kind: "invalid" });
-        else setResult({ kind: "error", message: apiErrorMessage(ex, "Xác thực thất bại. Vui lòng thử lại.") });
+        else setResult({ kind: "error", message: apiErrorMessage(ex, t("auth.verify.failed")) });
       });
-  }, [token]);
+  }, [token, t]);
 
   return (
     <AuthLayout

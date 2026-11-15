@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert, AuthLayout, Button, Field, Icon, Input, PasswordInput, PasswordRules, cx } from "../components/ui";
 import { CompanyPicker } from "../components/CompanyPicker";
+import i18n from "../i18n";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail, validateFullName, validatePassword } from "../lib/validation";
 import { toApiRole } from "../lib/roles";
@@ -13,24 +15,31 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 type FieldErrors = Partial<Record<"company" | "fullName" | "email" | "pwd" | "confirm", string>>;
 
-const NEED_COMPANY = "Hãy chọn công ty bạn tuyển dụng cho.";
-const COMPANY_GONE = "Công ty không còn tồn tại, hãy chọn lại.";
 /** Shown on the login page after registering; the account cannot log in until the email is verified. */
 const VERIFY_NOTICE = "Check your email to verify your account.";
+
+// Role values are the API contract; only `labelKey` is display copy.
+const ROLE_OPTIONS = [
+  { value: "User", labelKey: "auth.role.candidate" },
+  { value: "Recruiter", labelKey: "auth.role.recruiter" },
+] as const;
 
 /** auth-svc answers 422 for an unknown company and 400 (errors.CompanyId) for a missing one. */
 function companyErrorFrom(e: unknown): string | null {
   const status = httpStatus(e);
-  if (status === 422) return COMPANY_GONE;
+  if (status === 422) return i18n.t("auth.register.companyGone");
   if (status === 400) {
     const errors = (e as { response?: { data?: { errors?: Record<string, unknown> } } })?.response?.data?.errors;
-    if (errors && Object.keys(errors).some((k) => k.toLowerCase() === "companyid")) return NEED_COMPANY;
+    if (errors && Object.keys(errors).some((k) => k.toLowerCase() === "companyid")) {
+      return i18n.t("auth.register.needCompany");
+    }
   }
   return null;
 }
 
 export default function RegisterPage() {
-  useDocumentTitle("Đăng ký");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.register.title"));
   const { register } = useAuth();
   const nav = useNavigate();
   const { target, query } = useAuthRedirect();
@@ -51,14 +60,14 @@ export default function RegisterPage() {
     e.preventDefault();
     setErr(null);
     const fe: FieldErrors = {};
-    if (isRecruiter && !company) fe.company = NEED_COMPANY;
+    if (isRecruiter && !company) fe.company = t("auth.register.needCompany");
     const v1 = validateFullName(fullName);
     if (v1) fe.fullName = v1;
     const v2 = validateEmail(email);
     if (v2) fe.email = v2;
     const v3 = validatePassword(pwd);
     if (v3) fe.pwd = v3;
-    if (pwd !== confirm) fe.confirm = "Xác nhận mật khẩu không khớp";
+    if (pwd !== confirm) fe.confirm = t("auth.confirmMismatch");
     setFieldErr(fe);
     const order: [keyof FieldErrors, string][] = [
       ["company", "reg-company"],
@@ -90,9 +99,9 @@ export default function RegisterPage() {
         setFieldErr({ company: companyErr });
         if (httpStatus(ex) === 422) setCompany(null);
       } else if (httpStatus(ex) === 409) {
-        setErr("Email này đã được đăng ký.");
+        setErr(t("auth.register.emailTaken"));
       } else {
-        setErr(apiErrorMessage(ex, "Đăng ký thất bại. Vui lòng thử lại."));
+        setErr(apiErrorMessage(ex, t("auth.register.failed")));
       }
     } finally {
       setLoading(false);
@@ -101,28 +110,25 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout
-      title="Tạo tài khoản"
-      lead="Chọn vai trò rồi điền thông tin của bạn."
+      title={t("auth.register.title")}
+      lead={t("auth.register.lead")}
       footer={
         <>
-          Đã có tài khoản?{" "}
+          {t("auth.register.haveAccount")}{" "}
           <Link className="jp-link" to={`/login${query}`}>
-            Đăng nhập
+            {t("auth.register.loginLink")}
           </Link>
         </>
       }
     >
-      {target !== DEFAULT_AFTER_AUTH && <Alert tone="info">Tạo tài khoản xong, bạn quay lại trang đang xem.</Alert>}
+      {target !== DEFAULT_AFTER_AUTH && <Alert tone="info">{t("auth.register.afterAuthNotice")}</Alert>}
       {err && <Alert tone="error">{err}</Alert>}
 
       <form className="jp-form" onSubmit={onSubmit} noValidate>
         <fieldset className="jp-seg-field">
-          <legend className="jp-label">Bạn là</legend>
+          <legend className="jp-label">{t("auth.role.prompt")}</legend>
           <div className="jp-seg">
-            {[
-              ["User", "Ứng viên"],
-              ["Recruiter", "Nhà tuyển dụng"],
-            ].map(([value, text]) => (
+            {ROLE_OPTIONS.map(({ value, labelKey }) => (
               <button
                 key={value}
                 type="button"
@@ -131,7 +137,7 @@ export default function RegisterPage() {
                 onClick={() => setRole(value)}
               >
                 {role === value && <Icon name="check" size={16} />}
-                {text}
+                {t(labelKey)}
               </button>
             ))}
           </div>
@@ -140,18 +146,18 @@ export default function RegisterPage() {
         {isRecruiter && (
           <CompanyPicker
             id="reg-company"
-            label="Công ty bạn tuyển dụng cho"
+            label={t("auth.register.company")}
             value={company}
             onChange={setCompany}
             error={fieldErr.company}
           />
         )}
 
-        <Field id="reg-name" label="Họ và tên" required error={fieldErr.fullName}>
+        <Field id="reg-name" label={t("auth.register.fullName")} required error={fieldErr.fullName}>
           <Input autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
         </Field>
 
-        <Field id="reg-email" label="Email" required error={fieldErr.email}>
+        <Field id="reg-email" label={t("auth.register.emailLabel")} required error={fieldErr.email}>
           <Input
             type="email"
             inputMode="email"
@@ -161,16 +167,26 @@ export default function RegisterPage() {
           />
         </Field>
 
-        <Field id="reg-pwd" label="Mật khẩu" required hint={<PasswordRules value={pwd} />} error={fieldErr.pwd}>
+        <Field
+          id="reg-pwd"
+          label={t("auth.register.passwordLabel")}
+          required
+          hint={<PasswordRules value={pwd} />}
+          error={fieldErr.pwd}
+        >
           <PasswordInput autoComplete="new-password" value={pwd} onChange={(e) => setPwd(e.target.value)} />
         </Field>
 
-        <Field id="reg-confirm" label="Nhập lại mật khẩu" required error={fieldErr.confirm}>
+        <Field id="reg-confirm" label={t("auth.register.confirmPasswordLabel")} required error={fieldErr.confirm}>
           <PasswordInput autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
         </Field>
 
         <Button type="submit" size="lg" block loading={loading}>
-          {loading ? "Đang tạo tài khoản…" : isRecruiter ? "Đăng ký nhà tuyển dụng" : "Đăng ký ứng viên"}
+          {loading
+            ? t("auth.register.submitting")
+            : isRecruiter
+              ? t("auth.register.submitRecruiter")
+              : t("auth.register.submitCandidate")}
         </Button>
       </form>
     </AuthLayout>

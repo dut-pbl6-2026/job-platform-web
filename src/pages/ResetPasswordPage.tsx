@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Alert, AuthLayout, Button, Field, Input, PasswordInput, PasswordRules } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
@@ -9,7 +10,8 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 type FieldErrors = { token?: string; pwd?: string; confirm?: string };
 
 export default function ResetPasswordPage() {
-  useDocumentTitle("Đặt lại mật khẩu");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.reset.title"));
   const { resetPassword } = useAuth();
   const nav = useNavigate();
   const [params] = useSearchParams();
@@ -33,10 +35,10 @@ export default function ResetPasswordPage() {
     setExpired(false);
     setMsg(null);
     const fe: FieldErrors = {};
-    if (!token.trim()) fe.token = "Hãy dán mã đặt lại từ email";
+    if (!token.trim()) fe.token = t("auth.reset.tokenRequired");
     const v = validatePassword(pwd);
     if (v) fe.pwd = v;
-    if (pwd !== confirm) fe.confirm = "Xác nhận mật khẩu không khớp";
+    if (pwd !== confirm) fe.confirm = t("auth.confirmMismatch");
     setFieldErr(fe);
     const firstBad = fe.token ? "reset-token" : fe.pwd ? "reset-pwd" : fe.confirm ? "reset-confirm" : null;
     if (firstBad) {
@@ -46,14 +48,14 @@ export default function ResetPasswordPage() {
     setLoading(true);
     try {
       await resetPassword(token.trim(), pwd);
-      setMsg("Đặt lại mật khẩu thành công. Vui lòng đăng nhập.");
+      setMsg(t("auth.reset.success"));
       redirectTimer.current = window.setTimeout(() => nav("/login"), 1200);
     } catch (ex: unknown) {
       if (httpStatus(ex) === 401) {
         setExpired(true);
-        setErr("Mã đặt lại không hợp lệ hoặc đã hết hạn.");
+        setErr(t("auth.reset.invalidToken"));
       } else {
-        setErr(apiErrorMessage(ex, "Đặt lại thất bại. Vui lòng thử lại."));
+        setErr(apiErrorMessage(ex, t("auth.reset.failed")));
       }
     } finally {
       setLoading(false);
@@ -62,11 +64,11 @@ export default function ResetPasswordPage() {
 
   return (
     <AuthLayout
-      title="Đặt lại mật khẩu"
-      lead="Mã đặt lại dùng được một lần và có hiệu lực 15 phút."
+      title={t("auth.reset.title")}
+      lead={t("auth.reset.lead")}
       footer={
         <Link className="jp-link" to="/login">
-          Quay lại đăng nhập
+          {t("auth.reset.backToLogin")}
         </Link>
       }
     >
@@ -76,7 +78,7 @@ export default function ResetPasswordPage() {
           action={
             expired ? (
               <Link className="jp-link" to="/forgot-password">
-                Nhận liên kết mới
+                {t("auth.reset.getNewLink")}
               </Link>
             ) : undefined
           }
@@ -89,24 +91,30 @@ export default function ResetPasswordPage() {
       <form className="jp-form" onSubmit={onSubmit} noValidate>
         <Field
           id="reset-token"
-          label="Mã đặt lại"
+          label={t("auth.reset.tokenLabel")}
           required
-          hint={prefilled ? "Đã điền từ liên kết trong email." : "Dán mã trong email đặt lại mật khẩu."}
+          hint={prefilled ? t("auth.reset.tokenPrefilled") : t("auth.reset.tokenHint")}
           error={fieldErr.token}
         >
           <Input autoComplete="off" spellCheck={false} value={token} onChange={(e) => setToken(e.target.value)} />
         </Field>
 
-        <Field id="reset-pwd" label="Mật khẩu mới" required hint={<PasswordRules value={pwd} />} error={fieldErr.pwd}>
+        <Field
+          id="reset-pwd"
+          label={t("auth.reset.newPasswordLabel")}
+          required
+          hint={<PasswordRules value={pwd} />}
+          error={fieldErr.pwd}
+        >
           <PasswordInput autoComplete="new-password" value={pwd} onChange={(e) => setPwd(e.target.value)} />
         </Field>
 
-        <Field id="reset-confirm" label="Nhập lại mật khẩu mới" required error={fieldErr.confirm}>
+        <Field id="reset-confirm" label={t("auth.reset.confirmNewPasswordLabel")} required error={fieldErr.confirm}>
           <PasswordInput autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
         </Field>
 
         <Button type="submit" size="lg" block loading={loading} disabled={!!msg}>
-          {loading ? "Đang xử lý…" : "Đặt lại mật khẩu"}
+          {loading ? t("auth.reset.submitting") : t("auth.reset.submit")}
         </Button>
       </form>
     </AuthLayout>

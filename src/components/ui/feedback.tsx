@@ -112,7 +112,7 @@ export function StatusMark({ tone, children }: { tone: StatusTone; children: Rea
   );
 }
 
-/** "New" (Mới): a red square plus the word, for jobs posted in the last 24 hours. */
+/** "New" marker: a red square plus the word, for jobs posted in the last 24 hours. */
 export function NewMark() {
   const { t } = useTranslation();
   return <span className="jp-new">{t("common.new")}</span>;

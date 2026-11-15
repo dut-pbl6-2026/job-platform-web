@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Alert, Button, Field, Input } from "./ui";
 import { resendVerification } from "../lib/api";
 import { apiErrorMessage, httpStatus } from "../lib/http";
 import { validateEmail } from "../lib/validation";
 
 const COOLDOWN_MS = 60_000;
-/** The server answers 202 for every address, so the message says "if", never "sent". */
-const SENT_NOTICE = "Nếu email này đang chờ xác minh, một liên kết mới đã được gửi.";
-const RATE_LIMITED = "Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau.";
-const SEND_FAILED = "Chưa gửi được email xác minh. Vui lòng thử lại.";
 
 type Notice = { tone: "success" | "error"; text: string };
 
@@ -17,6 +14,7 @@ type Notice = { tone: "success" | "error"; text: string };
  * otherwise the component asks for it. The button is disabled for 60 seconds after a successful send.
  */
 export function ResendVerification({ email }: { email?: string }) {
+  const { t } = useTranslation();
   const [address, setAddress] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -27,9 +25,9 @@ export function ResendVerification({ email }: { email?: string }) {
   useEffect(() => {
     if (cooldownEnd === null) return;
     const id = window.setInterval(() => {
-      const t = Date.now();
-      setNow(t);
-      if (t >= cooldownEnd) window.clearInterval(id);
+      const tick = Date.now();
+      setNow(tick);
+      if (tick >= cooldownEnd) window.clearInterval(id);
     }, 1000);
     return () => window.clearInterval(id);
   }, [cooldownEnd]);
@@ -48,14 +46,15 @@ export function ResendVerification({ email }: { email?: string }) {
     setSending(true);
     try {
       await resendVerification(target);
-      const t = Date.now();
-      setNow(t);
-      setCooldownEnd(t + COOLDOWN_MS);
-      setNotice({ tone: "success", text: SENT_NOTICE });
+      const sentAt = Date.now();
+      setNow(sentAt);
+      setCooldownEnd(sentAt + COOLDOWN_MS);
+      // The server answers 202 for every address, so the message says "if", never "sent".
+      setNotice({ tone: "success", text: t("auth.resend.sent") });
     } catch (ex: unknown) {
       setNotice({
         tone: "error",
-        text: httpStatus(ex) === 429 ? RATE_LIMITED : apiErrorMessage(ex, SEND_FAILED),
+        text: httpStatus(ex) === 429 ? t("auth.resend.rateLimited") : apiErrorMessage(ex, t("auth.resend.sendFailed")),
       });
     } finally {
       setSending(false);
@@ -67,7 +66,7 @@ export function ResendVerification({ email }: { email?: string }) {
   return (
     <div className="jp-resend">
       {!email && (
-        <Field id="resend-email" label="Email" error={fieldError ?? undefined}>
+        <Field id="resend-email" label={t("auth.register.emailLabel")} error={fieldError ?? undefined}>
           <Input
             type="email"
             inputMode="email"
@@ -78,7 +77,7 @@ export function ResendVerification({ email }: { email?: string }) {
         </Field>
       )}
       <Button type="button" variant="secondary" block loading={sending} disabled={cooling} onClick={onSend}>
-        {cooling ? `Gửi lại sau ${secondsLeft} giây` : "Gửi lại email xác minh"}
+        {cooling ? t("auth.resend.countdown", { seconds: secondsLeft }) : t("auth.resend.send")}
       </Button>
       {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
     </div>

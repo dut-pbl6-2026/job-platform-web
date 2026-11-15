@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Alert, AuthLayout, Button, Field, Input } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,7 +8,8 @@ import { apiErrorMessage, httpStatus } from "../lib/http";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ForgotPasswordPage() {
-  useDocumentTitle("Quên mật khẩu");
+  const { t } = useTranslation();
+  useDocumentTitle(t("auth.forgot.title"));
   const { forgotPassword } = useAuth();
   const [email, setEmail] = useState("");
   const [emailErr, setEmailErr] = useState<string | null>(null);
@@ -28,13 +30,9 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     try {
       await forgotPassword(email.trim());
-      setMsg("Nếu email tồn tại, liên kết đặt lại đã được gửi.");
+      setMsg(t("auth.forgot.sent"));
     } catch (ex: unknown) {
-      setErr(
-        httpStatus(ex) === 429
-          ? "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau 1 giờ."
-          : apiErrorMessage(ex, "Gửi yêu cầu thất bại. Vui lòng thử lại."),
-      );
+      setErr(httpStatus(ex) === 429 ? t("auth.forgot.rateLimited") : apiErrorMessage(ex, t("auth.forgot.failed")));
     } finally {
       setLoading(false);
     }
@@ -42,11 +40,11 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthLayout
-      title="Quên mật khẩu"
-      lead="Nhập email để nhận liên kết đặt lại mật khẩu. Liên kết có hiệu lực 15 phút."
+      title={t("auth.forgot.title")}
+      lead={t("auth.forgot.lead")}
       footer={
         <Link className="jp-link" to="/login">
-          Quay lại đăng nhập
+          {t("auth.forgot.backToLogin")}
         </Link>
       }
     >
@@ -54,7 +52,7 @@ export default function ForgotPasswordPage() {
       {msg && <Alert tone="success">{msg}</Alert>}
 
       <form className="jp-form" onSubmit={onSubmit} noValidate>
-        <Field id="forgot-email" label="Email" error={emailErr}>
+        <Field id="forgot-email" label={t("auth.register.emailLabel")} error={emailErr}>
           <Input
             type="email"
             inputMode="email"
@@ -65,7 +63,7 @@ export default function ForgotPasswordPage() {
           />
         </Field>
         <Button type="submit" size="lg" block loading={loading}>
-          {loading ? "Đang gửi…" : "Gửi liên kết đặt lại"}
+          {loading ? t("auth.forgot.submitting") : t("auth.forgot.submit")}
         </Button>
       </form>
     </AuthLayout>
