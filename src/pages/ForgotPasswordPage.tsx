@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Alert, AuthLayout, Button, Field, Input } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail } from "../lib/validation";
-import { apiErrorMessage } from "../lib/http";
+import { apiErrorMessage, httpStatus } from "../lib/http";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ForgotPasswordPage() {
@@ -30,7 +30,11 @@ export default function ForgotPasswordPage() {
       const m = await forgotPassword(email.trim());
       setMsg(m || "Nếu email tồn tại, liên kết đặt lại đã được gửi.");
     } catch (ex: unknown) {
-      setErr(apiErrorMessage(ex, "Gửi yêu cầu thất bại. Vui lòng thử lại."));
+      setErr(
+        httpStatus(ex) === 429
+          ? "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau 1 giờ."
+          : apiErrorMessage(ex, "Gửi yêu cầu thất bại. Vui lòng thử lại."),
+      );
     } finally {
       setLoading(false);
     }
