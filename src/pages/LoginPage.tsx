@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Alert, AuthLayout, Button, Checkbox, Field, Input, PasswordInput } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
+import { ResendVerification } from "../components/ResendVerification";
 import { validateEmail } from "../lib/validation";
 import { apiErrorMessage, httpStatus } from "../lib/http";
 import { DEFAULT_AFTER_AUTH } from "../lib/redirect";
@@ -16,7 +17,10 @@ export default function LoginPage() {
   const nav = useNavigate();
   const location = useLocation();
   // Set by RegisterPage: the account was created and must be verified before it can log in.
-  const notice = (location.state as { notice?: unknown } | null)?.notice;
+  const state = location.state as { notice?: unknown; email?: unknown } | null;
+  const notice = state?.notice;
+  // The address the account was registered with, so the user can ask for a new verification link.
+  const registeredEmail = typeof state?.email === "string" ? state.email : undefined;
   const { target, query } = useAuthRedirect();
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
@@ -64,6 +68,7 @@ export default function LoginPage() {
       }
     >
       {typeof notice === "string" && <Alert tone="success">{notice}</Alert>}
+      {typeof notice === "string" && registeredEmail && <ResendVerification email={registeredEmail} />}
       {target !== DEFAULT_AFTER_AUTH && <Alert tone="info">Đăng nhập xong, bạn quay lại trang đang xem.</Alert>}
       {err && <Alert tone="error">{err}</Alert>}
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Alert, AuthLayout } from "../components/ui";
+import { ResendVerification } from "../components/ResendVerification";
 import { verifyEmail } from "../lib/api";
 import { apiErrorMessage, httpStatus } from "../lib/http";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
@@ -57,6 +58,7 @@ export default function VerifyEmailPage() {
           </Link>
         </Alert>
       )}
+      {result.kind === "invalid" && <ResendVerification />}
       {result.kind === "error" && <Alert tone="error">{result.message}</Alert>}
     </AuthLayout>
   );

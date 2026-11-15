@@ -83,7 +83,7 @@ export default function RegisterPage() {
         ...(isRecruiter && company ? { companyId: company.id } : {}),
       });
       // 202: the account exists but is not verified yet. Send the user to login with the notice.
-      nav(`/login${query}`, { replace: true, state: { notice: VERIFY_NOTICE } });
+      nav(`/login${query}`, { replace: true, state: { notice: VERIFY_NOTICE, email: email.trim() } });
     } catch (ex: unknown) {
       const companyErr = isRecruiter ? companyErrorFrom(ex) : null;
       if (companyErr) {

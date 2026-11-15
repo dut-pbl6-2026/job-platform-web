@@ -166,6 +166,10 @@ export async function verifyEmail(token: string) {
   const { data } = await api.post("/auth/verify-email", { token });
   return data as { message: string };
 }
+/** Always 202 for any address, so the body is not read. 429 when the IP is rate limited. */
+export async function resendVerification(email: string) {
+  await api.post("/auth/resend-verification", { email });
+}
 export async function login(payload: { email: string; password: string; rememberMe?: boolean }) {
   const { data } = await api.post("/auth/login", payload);
   return data as {
