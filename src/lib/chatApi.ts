@@ -210,24 +210,31 @@ function parseHistory(raw: unknown): ChatMessage[] {
     .filter((m) => m.content);
 }
 
+/** Local stand-in for the session endpoints, used only when mocks are on and ai-svc is down. */
+function offlineSession(userId: string, sessionId?: string | null) {
+  const store = loadStore();
+  const session = sessionOf(store, userId, sessionId);
+  saveStore(store);
+  return session;
+}
+
 export async function createChatSession(userId: string): Promise<string> {
+  let data: unknown;
   try {
-    const { data } = await api.post("/ai/session");
-    const body = unwrap<Record<string, unknown>>(data);
-    const id = pickStr(body, "sessionId", "session_id", "id");
-    if (id) return id;
+    ({ data } = await api.post("/ai/session"));
   } catch (e) {
     if (!isOffline(e)) throw e;
+    return offlineSession(userId).id;
   }
-  const store = loadStore();
-  const session = sessionOf(store, userId);
-  saveStore(store);
-  return session.id;
+  const id = pickStr(unwrap<Record<string, unknown>>(data), "sessionId", "session_id", "id");
+  if (!id) throw new Error("Không tạo được phiên chat. Vui lòng thử lại.");
+  return id;
 }
 
 export async function deleteChatSession(userId: string, sessionId: string): Promise<void> {
   try {
     await api.delete(`/ai/session/${encodeURIComponent(sessionId)}`);
+    return;
   } catch (e) {
     if (!isOffline(e)) throw e;
   }
@@ -237,15 +244,14 @@ export async function deleteChatSession(userId: string, sessionId: string): Prom
 }
 
 export async function fetchChatHistory(userId: string, sessionId: string): Promise<ChatMessage[]> {
+  let data: unknown;
   try {
-    const { data } = await api.get(`/ai/session/${encodeURIComponent(sessionId)}/history`);
-    const items = parseHistory(data);
-    if (items.length) return items;
+    ({ data } = await api.get(`/ai/session/${encodeURIComponent(sessionId)}/history`));
   } catch (e) {
     if (!isOffline(e)) throw e;
+    return offlineSession(userId, sessionId).messages;
   }
-  const store = loadStore();
-  return sessionOf(store, userId, sessionId).messages;
+  return parseHistory(data);
 }
 
 function consumeSseBlock(block: string, handlers: ChatStreamHandlers, acc: { sessionId?: string }) {

@@ -45,8 +45,8 @@ export default function ResetPasswordPage() {
     }
     setLoading(true);
     try {
-      const m = await resetPassword(token.trim(), pwd);
-      setMsg(m || "Đặt lại mật khẩu thành công. Vui lòng đăng nhập.");
+      await resetPassword(token.trim(), pwd);
+      setMsg("Đặt lại mật khẩu thành công. Vui lòng đăng nhập.");
       redirectTimer.current = window.setTimeout(() => nav("/login"), 1200);
     } catch (ex: unknown) {
       if (httpStatus(ex) === 401) {

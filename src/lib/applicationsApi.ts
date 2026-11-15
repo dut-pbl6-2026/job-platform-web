@@ -181,7 +181,7 @@ export async function fetchMyApplications(params: {
     });
     const raw = (data ?? {}) as Record<string, unknown>;
     const itemsRaw = (Array.isArray(raw.items) ? raw.items : Array.isArray(data) ? data : []) as unknown[];
-    const items = itemsRaw.map(normalizeApplication).map(enrichFromJobs);
+    const items = itemsRaw.map(normalizeApplication);
     const s = pickNum(raw, "size") ?? size;
     const total = pickNum(raw, "total") ?? items.length;
     const totalPages = pickNum(raw, "totalPages") ?? (Math.ceil(total / s) || 1);
@@ -197,7 +197,7 @@ export async function fetchMyApplications(params: {
 export async function fetchApplicationById(id: string, userId: string): Promise<Application | null> {
   try {
     const { data } = await api.get(`/applications/${id}`);
-    return enrichFromJobs(normalizeApplication(unwrap(data)));
+    return normalizeApplication(unwrap(data));
   } catch (e) {
     if (httpStatus(e) === 404) return null;
     if (!shouldUseMock(e, "GET /applications/{id}")) throw e;

@@ -11,6 +11,8 @@ const PORT = 5179;
  */
 export default defineConfig({
   testDir: "e2e",
+  // Runs against a server without mocks: see playwright.no-mocks.config.ts.
+  testIgnore: "**/mock-gating.spec.ts",
   outputDir: "test-results",
   fullyParallel: true,
   reporter: "list",

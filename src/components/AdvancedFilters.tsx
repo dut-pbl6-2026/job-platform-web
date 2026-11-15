@@ -1,9 +1,5 @@
 import { useEffect, useId, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import type { JobSearchParams, SearchFacets } from "../types/job";
-import { fetchSkills } from "../lib/jobsApi";
-import { queryKeys } from "../lib/queryClient";
-import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import {
   EMPLOYMENT_OPTIONS,
   EXPERIENCE_OPTIONS,
@@ -106,7 +102,6 @@ function Radio({
 export function AdvancedFilters({ params, facets, onChange }: Props) {
   const uid = useId();
   const [skillQ, setSkillQ] = useState("");
-  const debouncedSkillQ = useDebouncedValue(skillQ.trim(), 250);
   const selectedTypes = splitCsv(params.employmentType);
   const selectedLevels = splitCsv(params.experienceLevel);
   const selectedSkills = splitCsv(params.skills);
@@ -114,12 +109,6 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
   const bands = currency === "USD" ? SALARY_BANDS_USD : SALARY_BANDS_VND;
   const noSalary = params.minSalary == null && params.maxSalary == null;
   const bandMatch = bands.find((band) => params.minSalary === band.min && params.maxSalary === band.max);
-
-  const skillsQuery = useQuery({
-    queryKey: queryKeys.skills(debouncedSkillQ),
-    queryFn: () => fetchSkills(debouncedSkillQ),
-  });
-  const suggestions = (skillsQuery.data ?? []).filter((s) => !selectedSkills.includes(s.name)).slice(0, 8);
 
   function addSkill(name: string) {
     const typed = name.trim();
@@ -242,15 +231,6 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
                 label={skill}
                 onRemove={() => onChange({ skills: toggleCsv(params.skills, skill) || undefined })}
               />
-            ))}
-          </div>
-        )}
-        {suggestions.length > 0 && (
-          <div className="jp-filter-chips" role="group" aria-label="Gợi ý kỹ năng">
-            {suggestions.map((skill) => (
-              <FilterChip key={skill.id} pressed={false} onClick={() => addSkill(skill.name)}>
-                {skill.name}
-              </FilterChip>
             ))}
           </div>
         )}

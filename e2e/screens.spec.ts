@@ -938,12 +938,12 @@ test("admin users: a failed change keeps the old state and says why", async ({ p
   const lan = page.locator(".jp-table--users tbody tr").filter({ hasText: "lan@example.com" });
   await expect(lan).toBeVisible();
   // A 4xx is shown, never replaced by mock success.
-  await page.route(/\/api\/admin\/users\/.*\/deactivate$/, (route) =>
-    route.fulfill({ status: 409, json: { message: "Không thể vô hiệu hóa tài khoản này." } }),
-  );
+  await page.route(/\/api\/admin\/users\/.*\/deactivate$/, (route) => route.fulfill({ status: 409, json: { message: "Cannot deactivate this account." } }));
   await lan.getByRole("button", { name: "Vô hiệu hóa lan@example.com" }).click();
   await lan.getByRole("button", { name: "Xác nhận" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "Không thể vô hiệu hóa tài khoản này." })).toBeVisible();
+  // The backend text is English and is not shown: the page names the action instead.
+  await expect(page.getByRole("alert").filter({ hasText: "Chưa cập nhật được tài khoản. Vui lòng thử lại." })).toBeVisible();
+  await expect(page.getByText("Cannot deactivate", { exact: false })).toHaveCount(0);
   await expect(lan).toContainText("Đang hoạt động");
   await shoot(page, testInfo, "admin-users-error");
 });
