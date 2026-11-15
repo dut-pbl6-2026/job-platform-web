@@ -123,7 +123,13 @@ export default function ApplicationDetailPage() {
           back={<BackLink to="/applications">Đơn của tôi</BackLink>}
           title={app.jobTitle || "Đơn ứng tuyển"}
           lead={[company, app.location ? locationLabel(app.location) : null].filter(Boolean).join(" · ") || undefined}
-          actions={app.jobId ? <ButtonLink to={`/jobs/${app.jobId}`} variant="secondary">Xem việc làm</ButtonLink> : undefined}
+          actions={
+            app.jobId ? (
+              <ButtonLink to={`/jobs/${app.jobId}`} variant="secondary">
+                Xem việc làm
+              </ButtonLink>
+            ) : undefined
+          }
         />
 
         <div className="jp-detail-grid">
@@ -140,7 +146,9 @@ export default function ApplicationDetailPage() {
                   {history.map((h) => (
                     <li key={h.id} className="jp-history-row">
                       <span className="jp-history-time">{formatDateTime(h.changedAt)}</span>
-                      <span className="jp-history-status"><ApplicationStatusMark status={h.status} /></span>
+                      <span className="jp-history-status">
+                        <ApplicationStatusMark status={h.status} />
+                      </span>
                       {h.note && <span className="jp-history-note">{h.note}</span>}
                     </li>
                   ))}
@@ -151,7 +159,9 @@ export default function ApplicationDetailPage() {
 
           <div className="jp-detail-side">
             <Panel title="Trạng thái" className="jp-detail-apply">
-              <p className="jp-app-status"><ApplicationStatusMark status={app.status} /></p>
+              <p className="jp-app-status">
+                <ApplicationStatusMark status={app.status} />
+              </p>
               <dl className="jp-detail-kv">
                 {submitted && (
                   <div>
@@ -181,7 +191,11 @@ export default function ApplicationDetailPage() {
                   >
                     <span className="jp-cv-name">{cvBusy ? "Đang tải…" : app.cvFileName || "Tải CV"}</span>
                   </Button>
-                  {cvErr && <Alert tone="error" className="jp-cv-error">{cvErr}</Alert>}
+                  {cvErr && (
+                    <Alert tone="error" className="jp-cv-error">
+                      {cvErr}
+                    </Alert>
+                  )}
                 </>
               ) : (
                 <p className="jp-cv-plain">{app.cvFileName || "Đã gửi file CV"}</p>

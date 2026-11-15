@@ -22,8 +22,19 @@ import type { ResumeScore, ScoreBand, ScoreError } from "../types/resumeScore";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import "../styles/resumeScore.css";
 
-const BAND_TEXT: Record<ScoreBand, string> = { Strong: "Rất phù hợp", Good: "Phù hợp", Partial: "Phù hợp một phần", Weak: "Chưa phù hợp" };
-const LEVEL_TEXT: Record<string, string> = { none: "Không yêu cầu / chưa rõ", diploma: "Cao đẳng", bachelor: "Đại học", master: "Thạc sĩ", phd: "Tiến sĩ" };
+const BAND_TEXT: Record<ScoreBand, string> = {
+  Strong: "Rất phù hợp",
+  Good: "Phù hợp",
+  Partial: "Phù hợp một phần",
+  Weak: "Chưa phù hợp",
+};
+const LEVEL_TEXT: Record<string, string> = {
+  none: "Không yêu cầu / chưa rõ",
+  diploma: "Cao đẳng",
+  bachelor: "Đại học",
+  master: "Thạc sĩ",
+  phd: "Tiến sĩ",
+};
 const WARNING_TEXT: [RegExp, string][] = [
   [/^hidden_text_removed/, "Phát hiện và đã bỏ qua văn bản ẩn trong file."],
   [/^pages_truncated/, "CV dài, chỉ 5 trang đầu được chấm."],
@@ -48,9 +59,19 @@ function ScoreRing({ value, band }: { value: number; band: ScoreBand }) {
     <div className={`rs-ring rs-${band.toLowerCase()}`} role="img" aria-label={`Điểm phù hợp ${value} trên 100`}>
       <svg viewBox="0 0 120 120" width="148" height="148" aria-hidden>
         <circle cx="60" cy="60" r={r} className="rs-ring-bg" />
-        <circle cx="60" cy="60" r={r} className="rs-ring-fg" strokeDasharray={`${(c * value) / 100} ${c}`} transform="rotate(-90 60 60)" />
+        <circle
+          cx="60"
+          cy="60"
+          r={r}
+          className="rs-ring-fg"
+          strokeDasharray={`${(c * value) / 100} ${c}`}
+          transform="rotate(-90 60 60)"
+        />
       </svg>
-      <div className="rs-ring-label"><strong>{value}</strong><span>/100</span></div>
+      <div className="rs-ring-label">
+        <strong>{value}</strong>
+        <span>/100</span>
+      </div>
     </div>
   );
 }
@@ -58,20 +79,39 @@ function ScoreRing({ value, band }: { value: number; band: ScoreBand }) {
 function Bar({ label, value, note }: { label: string; value: number | null; note?: string }) {
   return (
     <div className="rs-bar">
-      <div className="rs-bar-head"><span>{label}</span><strong>{value === null ? "—" : `${value}`}</strong></div>
-      <div className="rs-bar-track" aria-hidden><div className="rs-bar-fill" style={{ width: `${value ?? 0}%` }} /></div>
+      <div className="rs-bar-head">
+        <span>{label}</span>
+        <strong>{value === null ? "—" : `${value}`}</strong>
+      </div>
+      <div className="rs-bar-track" aria-hidden>
+        <div className="rs-bar-fill" style={{ width: `${value ?? 0}%` }} />
+      </div>
       {note && <div className="jp-muted rs-note">{note}</div>}
     </div>
   );
 }
 
-function Chips({ title, items, tone, evidence }: { title: string; items: string[]; tone?: "ok" | "miss" | "neg"; evidence?: Record<string, string> }) {
+function Chips({
+  title,
+  items,
+  tone,
+  evidence,
+}: {
+  title: string;
+  items: string[];
+  tone?: "ok" | "miss" | "neg";
+  evidence?: Record<string, string>;
+}) {
   if (items.length === 0) return null;
   return (
     <>
       <h3 className="rs-sub">{title}</h3>
       <ul className="rs-chips">
-        {items.map((s) => <li key={s} className={cx("rs-chip", tone && `rs-${tone}`)} title={evidence?.[s]}>{s}</li>)}
+        {items.map((s) => (
+          <li key={s} className={cx("rs-chip", tone && `rs-${tone}`)} title={evidence?.[s]}>
+            {s}
+          </li>
+        ))}
       </ul>
     </>
   );
@@ -85,12 +125,28 @@ function Result({ r }: { r: ResumeScore }) {
         <ScoreRing value={r.overall_score} band={r.band} />
         <div>
           <div className={`rs-band rs-${r.band.toLowerCase()}`}>{BAND_TEXT[r.band]}</div>
-          <p className="jp-muted">Điểm mang tính tham khảo, được tính bằng mô hình chạy nội bộ (không gửi CV cho dịch vụ AI bên ngoài). Nhà tuyển dụng vẫn là người quyết định.</p>
-          <p className="jp-muted">{r.meta.parser === "ocr" ? "CV dạng ảnh, đọc bằng OCR" : r.meta.parser === "docx" ? "CV dạng DOCX" : "CV có lớp chữ"} • {(r.meta.elapsed_ms / 1000).toFixed(1)} giây{r.meta.cached ? " • kết quả đã lưu tạm" : ""}</p>
+          <p className="jp-muted">
+            Điểm mang tính tham khảo, được tính bằng mô hình chạy nội bộ (không gửi CV cho dịch vụ AI bên ngoài). Nhà
+            tuyển dụng vẫn là người quyết định.
+          </p>
+          <p className="jp-muted">
+            {r.meta.parser === "ocr"
+              ? "CV dạng ảnh, đọc bằng OCR"
+              : r.meta.parser === "docx"
+                ? "CV dạng DOCX"
+                : "CV có lớp chữ"}{" "}
+            • {(r.meta.elapsed_ms / 1000).toFixed(1)} giây{r.meta.cached ? " • kết quả đã lưu tạm" : ""}
+          </p>
         </div>
       </Panel>
 
-      {r.warnings.length > 0 && <Alert tone="warning">{r.warnings.map((w) => <p key={w}>{warningText(w)}</p>)}</Alert>}
+      {r.warnings.length > 0 && (
+        <Alert tone="warning">
+          {r.warnings.map((w) => (
+            <p key={w}>{warningText(w)}</p>
+          ))}
+        </Alert>
+      )}
 
       <div className="rs-grid">
         <Panel title="Kỹ năng">
@@ -112,17 +168,29 @@ function Result({ r }: { r: ResumeScore }) {
         </Panel>
 
         <Panel title="Kinh nghiệm">
-          <Bar label="Mức đáp ứng" value={b.experience.score} note={`CV thể hiện ≈ ${b.experience.cv_years} năm${b.experience.required_years ? ` • yêu cầu ≈ ${b.experience.required_years} năm` : " • tin không nêu số năm"}`} />
+          <Bar
+            label="Mức đáp ứng"
+            value={b.experience.score}
+            note={`CV thể hiện ≈ ${b.experience.cv_years} năm${b.experience.required_years ? ` • yêu cầu ≈ ${b.experience.required_years} năm` : " • tin không nêu số năm"}`}
+          />
         </Panel>
 
         <Panel title="Học vấn">
-          <Bar label="Mức đáp ứng" value={b.education.score} note={`CV: ${LEVEL_TEXT[b.education.cv_level] ?? b.education.cv_level} • yêu cầu: ${LEVEL_TEXT[b.education.required_level] ?? b.education.required_level}`} />
+          <Bar
+            label="Mức đáp ứng"
+            value={b.education.score}
+            note={`CV: ${LEVEL_TEXT[b.education.cv_level] ?? b.education.cv_level} • yêu cầu: ${LEVEL_TEXT[b.education.required_level] ?? b.education.required_level}`}
+          />
         </Panel>
       </div>
 
       {r.suggestions.length > 0 && (
         <Panel title="Gợi ý cải thiện CV">
-          <ul className="rs-suggest">{r.suggestions.map((s) => <li key={s}>{s}</li>)}</ul>
+          <ul className="rs-suggest">
+            {r.suggestions.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ul>
         </Panel>
       )}
     </div>
@@ -149,14 +217,24 @@ export default function ResumeScorePage() {
     setJobErr(null);
     if (!jobId) {
       fetchJobs({ page: 0, size: 20 })
-        .then((p) => { if (alive) setOptions(p.items); })
-        .catch(() => { if (alive) setOptions([]); });
+        .then((p) => {
+          if (alive) setOptions(p.items);
+        })
+        .catch(() => {
+          if (alive) setOptions([]);
+        });
     } else {
       fetchJobById(jobId)
-        .then((j) => { if (alive) (j ? setJob(j) : setJobErr("Không tìm thấy việc làm")); })
-        .catch(() => { if (alive) setJobErr("Không tải được việc làm"); });
+        .then((j) => {
+          if (alive) j ? setJob(j) : setJobErr("Không tìm thấy việc làm");
+        })
+        .catch(() => {
+          if (alive) setJobErr("Không tải được việc làm");
+        });
     }
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [jobId]);
 
   function onPick(f: File | null) {
@@ -188,8 +266,18 @@ export default function ResumeScorePage() {
       <TopBar />
       <main className="jp-page rs-page">
         <PageHead
-          back={jobId ? <BackLink to={`/jobs/${jobId}`}>Quay lại việc làm</BackLink> : <BackLink to="/jobs">Bảng việc làm</BackLink>}
-          title={<>Kiểm tra độ phù hợp CV <DevTag /></>}
+          back={
+            jobId ? (
+              <BackLink to={`/jobs/${jobId}`}>Quay lại việc làm</BackLink>
+            ) : (
+              <BackLink to="/jobs">Bảng việc làm</BackLink>
+            )
+          }
+          title={
+            <>
+              Kiểm tra độ phù hợp CV <DevTag />
+            </>
+          }
           lead="Tải CV lên để xem điểm phù hợp với một việc làm, kèm lý do và gợi ý cải thiện. Hỗ trợ PDF (cả bản scan) và DOCX."
         />
 
@@ -198,7 +286,11 @@ export default function ResumeScorePage() {
             <Field id="rs-job" label="Chọn việc làm">
               <Select value="" onChange={(e) => e.target.value && setParams({ jobId: e.target.value })}>
                 <option value="">— Chọn một việc làm —</option>
-                {options.map((j) => <option key={j.id} value={j.id}>{j.title} — {companyOf(j)}</option>)}
+                {options.map((j) => (
+                  <option key={j.id} value={j.id}>
+                    {j.title} — {companyOf(j)}
+                  </option>
+                ))}
               </Select>
             </Field>
           </Panel>
@@ -210,7 +302,9 @@ export default function ResumeScorePage() {
             <Board label="Việc làm được chấm" className="jp-apply-job">
               <JobRow job={job} static />
             </Board>
-            <Button variant="secondary" onClick={() => setParams({})}>Đổi việc làm</Button>
+            <Button variant="secondary" onClick={() => setParams({})}>
+              Đổi việc làm
+            </Button>
           </div>
         )}
 
@@ -256,7 +350,11 @@ export default function ResumeScorePage() {
           </form>
         )}
 
-        {error && <Alert tone="error" className="rs-err">{error.message}</Alert>}
+        {error && (
+          <Alert tone="error" className="rs-err">
+            {error.message}
+          </Alert>
+        )}
         {result && <Result r={result} />}
       </main>
     </>

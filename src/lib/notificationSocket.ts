@@ -28,7 +28,10 @@ function isServerPing(data: string) {
  * does not cover the page in error toasts.
  * `getToken` is read on every attempt: access tokens expire after 60m and are rotated by the refresh interceptor.
  */
-export function connectNotificationSocket(getToken: () => string | null, onMessage: (data: string) => void): () => void {
+export function connectNotificationSocket(
+  getToken: () => string | null,
+  onMessage: (data: string) => void,
+): () => void {
   // No backend socket yet: the job poll in ToastContext is the only source (see NOTIFICATION_WS_ENABLED).
   if (!NOTIFICATION_WS_ENABLED) return () => {};
   let socket: WebSocket | null = null;

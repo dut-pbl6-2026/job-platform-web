@@ -64,10 +64,23 @@ export default function ResetPasswordPage() {
     <AuthLayout
       title="Đặt lại mật khẩu"
       lead="Mã đặt lại dùng được một lần và có hiệu lực 15 phút."
-      footer={<Link className="jp-link" to="/login">Quay lại đăng nhập</Link>}
+      footer={
+        <Link className="jp-link" to="/login">
+          Quay lại đăng nhập
+        </Link>
+      }
     >
       {err && (
-        <Alert tone="error" action={expired ? <Link className="jp-link" to="/forgot-password">Nhận liên kết mới</Link> : undefined}>
+        <Alert
+          tone="error"
+          action={
+            expired ? (
+              <Link className="jp-link" to="/forgot-password">
+                Nhận liên kết mới
+              </Link>
+            ) : undefined
+          }
+        >
           {err}
         </Alert>
       )}

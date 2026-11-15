@@ -94,7 +94,12 @@ export default function ProfilePage() {
 
 /* Personal information --------------------------------------------------------------------------- */
 
-function InfoPanel({ profile, userId, fallbackName, onSaved }: {
+function InfoPanel({
+  profile,
+  userId,
+  fallbackName,
+  onSaved,
+}: {
   profile: Profile;
   userId: string;
   fallbackName: string;
@@ -126,7 +131,8 @@ function InfoPanel({ profile, userId, fallbackName, onSaved }: {
     setEditing(true);
   }
 
-  const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value });
+  const set = (key: keyof typeof form) => (e: { target: { value: string } }) =>
+    setForm({ ...form, [key]: e.target.value });
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -161,9 +167,19 @@ function InfoPanel({ profile, userId, fallbackName, onSaved }: {
   return (
     <Panel
       title="Thông tin cá nhân"
-      actions={!editing ? <Button variant="secondary" icon="pencil" onClick={startEdit}>Sửa thông tin</Button> : undefined}
+      actions={
+        !editing ? (
+          <Button variant="secondary" icon="pencil" onClick={startEdit}>
+            Sửa thông tin
+          </Button>
+        ) : undefined
+      }
     >
-      {saved && !editing && <Alert tone="success" className="jp-panel-alert">Đã lưu hồ sơ.</Alert>}
+      {saved && !editing && (
+        <Alert tone="success" className="jp-panel-alert">
+          Đã lưu hồ sơ.
+        </Alert>
+      )}
 
       {!editing ? (
         <>
@@ -177,12 +193,20 @@ function InfoPanel({ profile, userId, fallbackName, onSaved }: {
           </dl>
           <div className="jp-kv-summary">
             <h3 className="jp-label">Giới thiệu ngắn</h3>
-            {profile.summary?.trim() ? <p className="jp-prose">{profile.summary}</p> : <p className="jp-muted">{MISSING}</p>}
+            {profile.summary?.trim() ? (
+              <p className="jp-prose">{profile.summary}</p>
+            ) : (
+              <p className="jp-muted">{MISSING}</p>
+            )}
           </div>
         </>
       ) : (
         <form className="jp-form-grid" onSubmit={save} noValidate>
-          {serverErr && <Alert tone="error" className="jp-field--wide">{serverErr}</Alert>}
+          {serverErr && (
+            <Alert tone="error" className="jp-field--wide">
+              {serverErr}
+            </Alert>
+          )}
           <Field id="profile-name" label="Họ tên" required error={errors.fullName}>
             <Input value={form.fullName} maxLength={128} autoComplete="name" onChange={set("fullName")} />
           </Field>
@@ -202,8 +226,12 @@ function InfoPanel({ profile, userId, fallbackName, onSaved }: {
             <Textarea rows={4} value={form.summary} onChange={set("summary")} />
           </Field>
           <div className="jp-form-actions jp-field--wide">
-            <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>Hủy</Button>
-            <Button type="submit" loading={saving}>{saving ? "Đang lưu…" : "Lưu hồ sơ"}</Button>
+            <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
+              Hủy
+            </Button>
+            <Button type="submit" loading={saving}>
+              {saving ? "Đang lưu…" : "Lưu hồ sơ"}
+            </Button>
           </div>
         </form>
       )}
@@ -234,7 +262,16 @@ function useSectionAction(onChange: () => Promise<void>) {
   return { busy, err, setErr, run };
 }
 
-function Section({ title, open, onToggle, empty, err, form, children, className }: {
+function Section({
+  title,
+  open,
+  onToggle,
+  empty,
+  err,
+  form,
+  children,
+  className,
+}: {
   title: string;
   open: boolean;
   onToggle: () => void;
@@ -262,7 +299,11 @@ function Section({ title, open, onToggle, empty, err, form, children, className 
         </Button>
       }
     >
-      {err && <Alert tone="error" className="jp-panel-alert">{err}</Alert>}
+      {err && (
+        <Alert tone="error" className="jp-panel-alert">
+          {err}
+        </Alert>
+      )}
       {empty ? <p className="jp-muted">{empty}</p> : children}
       <div id={formId}>{open && form}</div>
     </Panel>
@@ -309,7 +350,11 @@ function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skil
     <Section
       title="Kỹ năng"
       open={open}
-      onToggle={() => { setOpen((v) => !v); setErrors({}); setErr(null); }}
+      onToggle={() => {
+        setOpen((v) => !v);
+        setErrors({});
+        setErr(null);
+      }}
       empty={skills.length === 0 ? "Chưa có kỹ năng nào." : null}
       err={err}
       form={
@@ -319,13 +364,26 @@ function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skil
           </Field>
           <Field id="skill-level" label="Mức thành thạo" hint="5/5 là thành thạo nhất.">
             <Select value={level} onChange={(e) => setLevel(e.target.value)}>
-              {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}/5</option>)}
+              {[1, 2, 3, 4, 5].map((n) => (
+                <option key={n} value={n}>
+                  {n}/5
+                </option>
+              ))}
             </Select>
           </Field>
           <Field id="skill-years" label="Số năm kinh nghiệm" required error={errors.years}>
-            <Input type="number" inputMode="numeric" min={0} max={40} value={years} onChange={(e) => setYears(e.target.value)} />
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={40}
+              value={years}
+              onChange={(e) => setYears(e.target.value)}
+            />
           </Field>
-          <Button type="submit" loading={busy === "add"}>{busy === "add" ? "Đang lưu…" : "Lưu kỹ năng"}</Button>
+          <Button type="submit" loading={busy === "add"}>
+            {busy === "add" ? "Đang lưu…" : "Lưu kỹ năng"}
+          </Button>
         </form>
       }
     >
@@ -334,13 +392,17 @@ function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skil
           <li key={s.id} className="jp-item">
             <div className="jp-item-main">
               <strong className="jp-item-title">{s.name}</strong>
-              <span className="jp-item-meta">Mức {s.proficiency}/5 · {s.yearsOfExperience} năm</span>
+              <span className="jp-item-meta">
+                Mức {s.proficiency}/5 · {s.yearsOfExperience} năm
+              </span>
             </div>
             <Button
               variant="ghost"
               aria-label={`Xóa kỹ năng ${s.name}`}
               loading={busy === s.id}
-              onClick={() => void run(s.id, "Chưa xóa được kỹ năng. Vui lòng thử lại.", () => deleteSkill(userId, s.id))}
+              onClick={() =>
+                void run(s.id, "Chưa xóa được kỹ năng. Vui lòng thử lại.", () => deleteSkill(userId, s.id))
+              }
             >
               Xóa
             </Button>
@@ -355,13 +417,22 @@ function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skil
 
 const EMPTY_EXP = { company: "", title: "", startDate: "", endDate: "", isCurrent: false, description: "" };
 
-function ExperiencePanel({ userId, items, onChange }: { userId: string; items: WorkExperience[]; onChange: () => Promise<void> }) {
+function ExperiencePanel({
+  userId,
+  items,
+  onChange,
+}: {
+  userId: string;
+  items: WorkExperience[];
+  onChange: () => Promise<void>;
+}) {
   const [open, setOpen] = useState(false);
   const [f, setF] = useState(EMPTY_EXP);
   const [errors, setErrors] = useState<Errors>({});
   const { busy, err, setErr, run } = useSectionAction(onChange);
-  const text = (key: "company" | "title" | "startDate" | "endDate" | "description") => (e: { target: { value: string } }) =>
-    setF({ ...f, [key]: e.target.value });
+  const text =
+    (key: "company" | "title" | "startDate" | "endDate" | "description") => (e: { target: { value: string } }) =>
+      setF({ ...f, [key]: e.target.value });
 
   async function add(e: FormEvent) {
     e.preventDefault();
@@ -372,7 +443,12 @@ function ExperiencePanel({ userId, items, onChange }: { userId: string; items: W
     setErrors(next);
     if (Object.keys(next).length) return;
     const ok = await run("add", "Chưa thêm được kinh nghiệm. Vui lòng thử lại.", () =>
-      addExperience(userId, { ...f, company: f.company.trim(), title: f.title.trim(), endDate: f.isCurrent ? null : f.endDate }),
+      addExperience(userId, {
+        ...f,
+        company: f.company.trim(),
+        title: f.title.trim(),
+        endDate: f.isCurrent ? null : f.endDate,
+      }),
     );
     if (ok) {
       setF(EMPTY_EXP);
@@ -384,7 +460,11 @@ function ExperiencePanel({ userId, items, onChange }: { userId: string; items: W
     <Section
       title="Kinh nghiệm làm việc"
       open={open}
-      onToggle={() => { setOpen((v) => !v); setErrors({}); setErr(null); }}
+      onToggle={() => {
+        setOpen((v) => !v);
+        setErrors({});
+        setErr(null);
+      }}
       empty={items.length === 0 ? "Chưa có kinh nghiệm nào." : null}
       err={err}
       form={
@@ -404,13 +484,19 @@ function ExperiencePanel({ userId, items, onChange }: { userId: string; items: W
             </Field>
           )}
           <div className="jp-field--wide">
-            <Checkbox label="Đang làm việc ở đây" checked={f.isCurrent} onChange={(e) => setF({ ...f, isCurrent: e.target.checked })} />
+            <Checkbox
+              label="Đang làm việc ở đây"
+              checked={f.isCurrent}
+              onChange={(e) => setF({ ...f, isCurrent: e.target.checked })}
+            />
           </div>
           <Field id="exp-desc" label="Mô tả ngắn" optional className="jp-field--wide">
             <Textarea rows={3} value={f.description} onChange={text("description")} />
           </Field>
           <div className="jp-form-actions jp-field--wide">
-            <Button type="submit" loading={busy === "add"}>{busy === "add" ? "Đang lưu…" : "Lưu kinh nghiệm"}</Button>
+            <Button type="submit" loading={busy === "add"}>
+              {busy === "add" ? "Đang lưu…" : "Lưu kinh nghiệm"}
+            </Button>
           </div>
         </form>
       }
@@ -428,7 +514,9 @@ function ExperiencePanel({ userId, items, onChange }: { userId: string; items: W
               variant="ghost"
               aria-label={`Xóa kinh nghiệm ${x.title}`}
               loading={busy === x.id}
-              onClick={() => void run(x.id, "Chưa xóa được kinh nghiệm. Vui lòng thử lại.", () => deleteExperience(userId, x.id))}
+              onClick={() =>
+                void run(x.id, "Chưa xóa được kinh nghiệm. Vui lòng thử lại.", () => deleteExperience(userId, x.id))
+              }
             >
               Xóa
             </Button>
@@ -443,12 +531,21 @@ function ExperiencePanel({ userId, items, onChange }: { userId: string; items: W
 
 const EMPTY_EDU = { institution: "", degree: "", field: "", startDate: "", endDate: "", grade: "" };
 
-function EducationPanel({ userId, items, onChange }: { userId: string; items: Education[]; onChange: () => Promise<void> }) {
+function EducationPanel({
+  userId,
+  items,
+  onChange,
+}: {
+  userId: string;
+  items: Education[];
+  onChange: () => Promise<void>;
+}) {
   const [open, setOpen] = useState(false);
   const [f, setF] = useState(EMPTY_EDU);
   const [errors, setErrors] = useState<Errors>({});
   const { busy, err, setErr, run } = useSectionAction(onChange);
-  const text = (key: keyof typeof EMPTY_EDU) => (e: { target: { value: string } }) => setF({ ...f, [key]: e.target.value });
+  const text = (key: keyof typeof EMPTY_EDU) => (e: { target: { value: string } }) =>
+    setF({ ...f, [key]: e.target.value });
 
   async function add(e: FormEvent) {
     e.preventDefault();
@@ -472,7 +569,11 @@ function EducationPanel({ userId, items, onChange }: { userId: string; items: Ed
     <Section
       title="Học vấn"
       open={open}
-      onToggle={() => { setOpen((v) => !v); setErrors({}); setErr(null); }}
+      onToggle={() => {
+        setOpen((v) => !v);
+        setErrors({});
+        setErr(null);
+      }}
       empty={items.length === 0 ? "Chưa có học vấn nào." : null}
       err={err}
       form={
@@ -496,7 +597,9 @@ function EducationPanel({ userId, items, onChange }: { userId: string; items: Ed
             <Input value={f.grade} onChange={text("grade")} />
           </Field>
           <div className="jp-form-actions jp-field--wide">
-            <Button type="submit" loading={busy === "add"}>{busy === "add" ? "Đang lưu…" : "Lưu học vấn"}</Button>
+            <Button type="submit" loading={busy === "add"}>
+              {busy === "add" ? "Đang lưu…" : "Lưu học vấn"}
+            </Button>
           </div>
         </form>
       }
@@ -505,7 +608,9 @@ function EducationPanel({ userId, items, onChange }: { userId: string; items: Ed
         {items.map((x) => (
           <li key={x.id} className="jp-item">
             <div className="jp-item-main">
-              <strong className="jp-item-title">{x.degree} · {x.field}</strong>
+              <strong className="jp-item-title">
+                {x.degree} · {x.field}
+              </strong>
               <span className="jp-item-sub">{x.institution}</span>
               <span className="jp-item-meta">
                 {[range(x.startDate, x.endDate), x.grade ? `Điểm ${x.grade}` : ""].filter(Boolean).join(" · ")}
@@ -515,7 +620,9 @@ function EducationPanel({ userId, items, onChange }: { userId: string; items: Ed
               variant="ghost"
               aria-label={`Xóa học vấn ${x.institution}`}
               loading={busy === x.id}
-              onClick={() => void run(x.id, "Chưa xóa được học vấn. Vui lòng thử lại.", () => deleteEducation(userId, x.id))}
+              onClick={() =>
+                void run(x.id, "Chưa xóa được học vấn. Vui lòng thử lại.", () => deleteEducation(userId, x.id))
+              }
             >
               Xóa
             </Button>

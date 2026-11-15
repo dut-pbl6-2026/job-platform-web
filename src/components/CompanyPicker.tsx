@@ -13,7 +13,13 @@ const DEBOUNCE_MS = 300;
  * job-svc; ↑/↓ move, Enter picks, Esc closes. Once picked, the field becomes the company's
  * name with a "Đổi" button.
  */
-export function CompanyPicker({ id, label, value, onChange, error }: {
+export function CompanyPicker({
+  id,
+  label,
+  value,
+  onChange,
+  error,
+}: {
   id: string;
   label: string;
   value: CompanyOption | null;
@@ -84,12 +90,16 @@ export function CompanyPicker({ id, label, value, onChange, error }: {
   if (value) {
     return (
       <div className="jp-field">
-        <span className="jp-label" id={`${id}-label`}>{label}</span>
+        <span className="jp-label" id={`${id}-label`}>
+          {label}
+        </span>
         <div className="jp-company-picked" role="group" aria-labelledby={`${id}-label`}>
           <Icon name="checkCircle" size={20} />
           <div className="jp-company-picked-text">
             <strong>{value.name}</strong>
-            {(value.industry || value.address) && <span>{[value.industry, value.address].filter(Boolean).join(" · ")}</span>}
+            {(value.industry || value.address) && (
+              <span>{[value.industry, value.address].filter(Boolean).join(" · ")}</span>
+            )}
           </div>
           <Button
             variant="secondary"
@@ -112,54 +122,61 @@ export function CompanyPicker({ id, label, value, onChange, error }: {
     <div className="jp-field jp-company">
       <label className="jp-label" htmlFor={id}>
         {label}
-        <span className="jp-req" aria-hidden="true"> *</span>
+        <span className="jp-req" aria-hidden="true">
+          {" "}
+          *
+        </span>
       </label>
       <div className="jp-company-box">
-      <input
-        ref={inputRef}
-        id={id}
-        className="jp-input"
-        role="combobox"
-        aria-expanded={hasList}
-        aria-controls={listId}
-        aria-autocomplete="list"
-        aria-activedescendant={hasList && active >= 0 ? `${listId}-${active}` : undefined}
-        aria-describedby={[`${id}-hint`, errorId].filter(Boolean).join(" ")}
-        aria-invalid={error ? true : undefined}
-        aria-required="true"
-        autoComplete="off"
-        spellCheck={false}
-        placeholder="Gõ tên công ty"
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-          setOpen(true);
-          setActive(-1);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-        onKeyDown={onKeyDown}
-      />
-      <ul id={listId} role="listbox" aria-label="Công ty tìm thấy" className="jp-company-list" hidden={!hasList}>
-        {options.map((company, i) => (
-          <li
-            key={company.id}
-            id={`${listId}-${i}`}
-            role="option"
-            aria-selected={i === active}
-            className={cx("jp-company-option", i === active && "is-active")}
-            // Keep focus in the input: a blur here would close the list before the click lands.
-            onMouseDown={(e) => e.preventDefault()}
-            onMouseEnter={() => setActive(i)}
-            onClick={() => pick(company)}
-          >
-            <strong>{company.name}</strong>
-            {(company.industry || company.address) && <span>{[company.industry, company.address].filter(Boolean).join(" · ")}</span>}
-          </li>
-        ))}
-      </ul>
+        <input
+          ref={inputRef}
+          id={id}
+          className="jp-input"
+          role="combobox"
+          aria-expanded={hasList}
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={hasList && active >= 0 ? `${listId}-${active}` : undefined}
+          aria-describedby={[`${id}-hint`, errorId].filter(Boolean).join(" ")}
+          aria-invalid={error ? true : undefined}
+          aria-required="true"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Gõ tên công ty"
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            setOpen(true);
+            setActive(-1);
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setOpen(false)}
+          onKeyDown={onKeyDown}
+        />
+        <ul id={listId} role="listbox" aria-label="Công ty tìm thấy" className="jp-company-list" hidden={!hasList}>
+          {options.map((company, i) => (
+            <li
+              key={company.id}
+              id={`${listId}-${i}`}
+              role="option"
+              aria-selected={i === active}
+              className={cx("jp-company-option", i === active && "is-active")}
+              // Keep focus in the input: a blur here would close the list before the click lands.
+              onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={() => setActive(i)}
+              onClick={() => pick(company)}
+            >
+              <strong>{company.name}</strong>
+              {(company.industry || company.address) && (
+                <span>{[company.industry, company.address].filter(Boolean).join(" · ")}</span>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
-      <p id={`${id}-hint`} className="jp-hint">Gõ ít nhất {MIN_CHARS} ký tự, rồi chọn công ty trong danh sách.</p>
+      <p id={`${id}-hint`} className="jp-hint">
+        Gõ ít nhất {MIN_CHARS} ký tự, rồi chọn công ty trong danh sách.
+      </p>
 
       {/* Always mounted, so screen readers announce the text when it changes. */}
       <div className={showStatus ? "jp-company-status" : undefined} role="status">
@@ -172,7 +189,12 @@ export function CompanyPicker({ id, label, value, onChange, error }: {
           ) : search.isError ? (
             <>
               <span>{loadErrorMessage(search.error, "danh sách công ty")}</span>
-              <Button variant="secondary" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={() => void search.refetch()}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => void search.refetch()}
+              >
                 Thử lại
               </Button>
             </>

@@ -35,9 +35,7 @@ export const JOB_CATEGORIES = [
 
 export type JobCategoryName = (typeof JOB_CATEGORIES)[number]["name"];
 
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  JOB_CATEGORIES.map((c) => [key(c.name), c.label]),
-);
+const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(JOB_CATEGORIES.map((c) => [key(c.name), c.label]));
 
 /** Label for a backend category name. A name this client does not know is shown as the backend sent it. */
 export function categoryLabel(name: string | null | undefined): string {

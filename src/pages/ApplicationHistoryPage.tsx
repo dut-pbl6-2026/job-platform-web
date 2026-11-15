@@ -85,7 +85,9 @@ export default function ApplicationHistoryPage() {
         <PageHead title="Đơn của tôi" lead="Theo dõi trạng thái từng lần ứng tuyển." />
 
         <div className="jp-filter-row" role="group" aria-label="Lọc theo trạng thái">
-          <FilterChip pressed={!status} onClick={() => setFilter("")}>Tất cả</FilterChip>
+          <FilterChip pressed={!status} onClick={() => setFilter("")}>
+            Tất cả
+          </FilterChip>
           {APPLICATION_STATUSES.map((s) => (
             <FilterChip key={s} pressed={status === s} onClick={() => setFilter(s)}>
               {STATUS_LABEL[s]}
@@ -113,7 +115,9 @@ export default function ApplicationHistoryPage() {
             title={status ? `Không có đơn nào ở trạng thái “${STATUS_LABEL[status]}”` : "Chưa có đơn nào"}
             action={
               status ? (
-                <Button variant="secondary" onClick={() => setFilter("")}>Xem tất cả đơn</Button>
+                <Button variant="secondary" onClick={() => setFilter("")}>
+                  Xem tất cả đơn
+                </Button>
               ) : (
                 <ButtonLink to="/jobs">Xem bảng việc làm</ButtonLink>
               )
@@ -125,7 +129,9 @@ export default function ApplicationHistoryPage() {
 
         {data && data.items.length > 0 && (
           <>
-            <p className="jp-count" aria-live="polite">{data.total.toLocaleString("vi-VN")} đơn</p>
+            <p className="jp-count" aria-live="polite">
+              {data.total.toLocaleString("vi-VN")} đơn
+            </p>
             <div className="jp-apps">
               <div className="jp-apps-head" aria-hidden="true">
                 <span>Vị trí · Công ty</span>
@@ -134,7 +140,9 @@ export default function ApplicationHistoryPage() {
                 <span>Trạng thái</span>
               </div>
               <ol className="jp-apps-rows" aria-label="Đơn ứng tuyển">
-                {data.items.map((a) => <ApplicationRow key={a.id} app={a} />)}
+                {data.items.map((a) => (
+                  <ApplicationRow key={a.id} app={a} />
+                ))}
               </ol>
             </div>
             <Pagination page={page} totalPages={data.totalPages} onPage={setPage} />
@@ -151,9 +159,13 @@ function ApplicationRow({ app }: { app: Application }) {
     <li className="jp-app-row">
       <div className="jp-row-main">
         <h3 className="jp-row-title">
-          <Link to={`/applications/${app.id}`} className="jp-row-link">{app.jobTitle || "Tin tuyển dụng"}</Link>
+          <Link to={`/applications/${app.id}`} className="jp-row-link">
+            {app.jobTitle || "Tin tuyển dụng"}
+          </Link>
         </h3>
-        <p className="jp-row-company" title={company}>{company}</p>
+        <p className="jp-row-company" title={company}>
+          {company}
+        </p>
       </div>
       <span className="jp-cell">
         <span className="jp-sr">Nơi làm: </span>

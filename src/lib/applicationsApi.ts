@@ -6,7 +6,8 @@ import { APPLICATION_STATUSES } from "../types/application";
 
 const STORE_KEY = "jp.mock.applications";
 export const CV_MAX_BYTES = 5 * 1024 * 1024;
-export const CV_ACCEPT = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+export const CV_ACCEPT =
+  ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 function isAllowedCv(file: File): boolean {
   const name = file.name.toLowerCase();
@@ -59,7 +60,9 @@ function normalizeHistory(raw: unknown): StatusHistoryEntry | null {
 export function normalizeApplication(raw: unknown): Application {
   const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const job = (o.job && typeof o.job === "object" ? o.job : null) as Record<string, unknown> | null;
-  const company = (job?.company && typeof job.company === "object" ? job.company : o.company) as Record<string, unknown> | undefined;
+  const company = (job?.company && typeof job.company === "object" ? job.company : o.company) as
+    | Record<string, unknown>
+    | undefined;
   const histRaw = o.statusHistory ?? o.status_history;
   const statusHistory = Array.isArray(histRaw)
     ? histRaw.map(normalizeHistory).filter((x): x is StatusHistoryEntry => !!x)
@@ -78,7 +81,8 @@ export function normalizeApplication(raw: unknown): Application {
     recruiterNotes: pickStr(o, "recruiterNotes", "recruiter_notes") ?? null,
     score: pickNum(o, "score") ?? null,
     createdAt: pickStr(o, "createdAt", "created_at") || new Date().toISOString(),
-    updatedAt: pickStr(o, "updatedAt", "updated_at") || pickStr(o, "createdAt", "created_at") || new Date().toISOString(),
+    updatedAt:
+      pickStr(o, "updatedAt", "updated_at") || pickStr(o, "createdAt", "created_at") || new Date().toISOString(),
     statusHistory,
   };
 }
@@ -102,7 +106,12 @@ function enrichFromJobs(app: Application): Application {
   if (app.jobTitle && app.companyName) return app;
   const job = MOCK_JOBS.find((j) => j.id === app.jobId);
   if (!job) return app;
-  return { ...app, jobTitle: app.jobTitle || job.title, companyName: app.companyName || job.company.name, location: app.location || job.location };
+  return {
+    ...app,
+    jobTitle: app.jobTitle || job.title,
+    companyName: app.companyName || job.company.name,
+    location: app.location || job.location,
+  };
 }
 
 export async function submitApplication(payload: {
@@ -126,7 +135,9 @@ export async function submitApplication(payload: {
     if (!shouldUseMock(e, "POST /applications")) throw e;
     const existing = loadStore();
     if (existing.some((a) => a.applicantId === payload.applicantId && a.jobId === payload.jobId)) {
-      const err = Object.assign(new Error("Đã ứng tuyển tin này"), { response: { status: 409, data: { message: "Bạn đã ứng tuyển tin này rồi" } } });
+      const err = Object.assign(new Error("Đã ứng tuyển tin này"), {
+        response: { status: 409, data: { message: "Bạn đã ứng tuyển tin này rồi" } },
+      });
       throw err;
     }
     const now = new Date().toISOString();
@@ -144,7 +155,9 @@ export async function submitApplication(payload: {
       status: "pending",
       createdAt: now,
       updatedAt: now,
-      statusHistory: [{ id: crypto.randomUUID(), applicationId: "", status: "pending", note: "Đã gửi hồ sơ", changedAt: now }],
+      statusHistory: [
+        { id: crypto.randomUUID(), applicationId: "", status: "pending", note: "Đã gửi hồ sơ", changedAt: now },
+      ],
     };
     app.statusHistory![0].applicationId = app.id;
     saveStore([app, ...existing]);
@@ -153,12 +166,19 @@ export async function submitApplication(payload: {
   }
 }
 
-export async function fetchMyApplications(params: { status?: string; page?: number; size?: number; userId: string }): Promise<PaginatedApplications> {
+export async function fetchMyApplications(params: {
+  status?: string;
+  page?: number;
+  size?: number;
+  userId: string;
+}): Promise<PaginatedApplications> {
   const page = params.page ?? 0;
   const size = params.size ?? 10;
   try {
     // app-svc pages from 1 and returns { items, total, page (1-based), size } without totalPages.
-    const { data } = await api.get("/applications/me", { params: { status: params.status || undefined, page: toOneBased(page), size } });
+    const { data } = await api.get("/applications/me", {
+      params: { status: params.status || undefined, page: toOneBased(page), size },
+    });
     const raw = (data ?? {}) as Record<string, unknown>;
     const itemsRaw = (Array.isArray(raw.items) ? raw.items : Array.isArray(data) ? data : []) as unknown[];
     const items = itemsRaw.map(normalizeApplication).map(enrichFromJobs);

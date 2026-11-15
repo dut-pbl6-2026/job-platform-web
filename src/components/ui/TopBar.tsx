@@ -22,14 +22,16 @@ export function TopBar() {
   // A route change closes the mobile menu.
   useEffect(() => setOpen(false), [pathname]);
 
-  const items: Item[] = [
-    { to: "/jobs", label: "Việc làm", match: (p) => p === "/jobs" || p.startsWith("/jobs/") },
-  ];
+  const items: Item[] = [{ to: "/jobs", label: "Việc làm", match: (p) => p === "/jobs" || p.startsWith("/jobs/") }];
   if (!isAuthenticated || isUser(user?.role)) {
     items.push({ to: isAuthenticated ? "/profile" : "/register", label: "Tạo CV", match: (p) => p === "/profile" });
   }
   if (isAuthenticated && isRecruiter(user?.role)) {
-    items.push({ to: "/recruiter", label: "Tuyển dụng", match: (p) => p === "/recruiter" || p.startsWith("/recruiter/") });
+    items.push({
+      to: "/recruiter",
+      label: "Tuyển dụng",
+      match: (p) => p === "/recruiter" || p.startsWith("/recruiter/"),
+    });
   }
   if (isAuthenticated && isUser(user?.role)) {
     items.push({ to: "/applications", label: "Đơn của tôi", match: (p) => p.startsWith("/applications") });
@@ -71,13 +73,21 @@ export function TopBar() {
         <div className="jp-shell-actions">
           {!isAuthenticated ? (
             <>
-              <Link className="jp-shell-btn jp-shell-btn--line" to="/register">Đăng ký</Link>
-              <Link className="jp-shell-btn jp-shell-btn--fill" to="/login">Đăng nhập</Link>
+              <Link className="jp-shell-btn jp-shell-btn--line" to="/register">
+                Đăng ký
+              </Link>
+              <Link className="jp-shell-btn jp-shell-btn--fill" to="/login">
+                Đăng nhập
+              </Link>
             </>
           ) : (
             <>
-              <span className="jp-shell-user" title={user?.email}>{user?.fullName}</span>
-              <button type="button" className="jp-shell-btn jp-shell-btn--line" onClick={signOut}>Đăng xuất</button>
+              <span className="jp-shell-user" title={user?.email}>
+                {user?.fullName}
+              </span>
+              <button type="button" className="jp-shell-btn jp-shell-btn--line" onClick={signOut}>
+                Đăng xuất
+              </button>
             </>
           )}
         </div>

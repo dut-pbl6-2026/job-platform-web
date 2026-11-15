@@ -4,12 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { RecruiterShell } from "../components/RecruiterShell";
 import { Alert, BackLink, Button, EmptyState, FilterChip, Pagination, SkeletonRows } from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import {
-  downloadCv,
-  fetchApplicationsByJob,
-  fetchStatusFlow,
-  updateApplicationStatus,
-} from "../lib/applicationsApi";
+import { downloadCv, fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus } from "../lib/applicationsApi";
 import { formatDate } from "../lib/dates";
 import { httpStatus, loadErrorMessage, apiErrorMessage } from "../lib/http";
 import { fetchJobById } from "../lib/jobsApi";
@@ -36,8 +31,17 @@ export default function RecruiterApplicationsPage() {
   useDocumentTitle("Nhà tuyển dụng: Hồ sơ ứng viên");
   const [cvError, setCvError] = useState<string | null>(null);
 
-  const job = useQuery({ queryKey: queryKeys.job(jobId), queryFn: () => fetchJobById(jobId), enabled: !!jobId, staleTime: 60_000 });
-  const flow = useQuery({ queryKey: ["applications", "status-flow"], queryFn: fetchStatusFlow, staleTime: 10 * 60_000 });
+  const job = useQuery({
+    queryKey: queryKeys.job(jobId),
+    queryFn: () => fetchJobById(jobId),
+    enabled: !!jobId,
+    staleTime: 60_000,
+  });
+  const flow = useQuery({
+    queryKey: ["applications", "status-flow"],
+    queryFn: fetchStatusFlow,
+    staleTime: 10 * 60_000,
+  });
   const list = useQuery({
     queryKey: ["recruiter", "applications", jobId, status, page],
     queryFn: () => fetchApplicationsByJob(jobId, { page, size: PAGE_SIZE, status: status || undefined }),
@@ -84,9 +88,13 @@ export default function RecruiterApplicationsPage() {
       back={<BackLink to="/recruiter/jobs">Tin tuyển dụng</BackLink>}
     >
       <div className="jp-recruiter-filters" role="group" aria-label="Lọc theo trạng thái hồ sơ">
-        <FilterChip pressed={status === ""} onClick={() => patch({ status: "" })}>Tất cả</FilterChip>
+        <FilterChip pressed={status === ""} onClick={() => patch({ status: "" })}>
+          Tất cả
+        </FilterChip>
         {APPLICATION_STATUSES.map((s) => (
-          <FilterChip key={s} pressed={status === s} onClick={() => patch({ status: s })}>{STATUS_LABEL[s]}</FilterChip>
+          <FilterChip key={s} pressed={status === s} onClick={() => patch({ status: s })}>
+            {STATUS_LABEL[s]}
+          </FilterChip>
         ))}
       </div>
 
@@ -152,12 +160,22 @@ export default function RecruiterApplicationsPage() {
                           if (value) update.mutate({ id: app.id, next: value });
                         }}
                       >
-                        <label className="jp-sr-only" htmlFor={`next-${app.id}`}>Cập nhật trạng thái</label>
+                        <label className="jp-sr-only" htmlFor={`next-${app.id}`}>
+                          Cập nhật trạng thái
+                        </label>
                         <select id={`next-${app.id}`} name="next" className="jp-input" defaultValue="" required>
-                          <option value="" disabled>Chọn trạng thái mới</option>
-                          {next.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+                          <option value="" disabled>
+                            Chọn trạng thái mới
+                          </option>
+                          {next.map((s) => (
+                            <option key={s} value={s}>
+                              {STATUS_LABEL[s]}
+                            </option>
+                          ))}
                         </select>
-                        <Button type="submit" loading={update.isPending && update.variables?.id === app.id}>Cập nhật</Button>
+                        <Button type="submit" loading={update.isPending && update.variables?.id === app.id}>
+                          Cập nhật
+                        </Button>
                       </form>
                     ) : (
                       <span className="jp-muted">Đã kết thúc quy trình</span>

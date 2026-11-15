@@ -18,7 +18,13 @@ async function signIn(page: Page, role: Role) {
   // Registered after offlineBackend, so it takes precedence for this URL.
   await page.route("**/api/auth/me", (route) =>
     route.fulfill({
-      json: { id: `e2e-${role}`, email: `${role.toLowerCase()}@e2e.local`, fullName: "Người dùng thử", role, isActive: true },
+      json: {
+        id: `e2e-${role}`,
+        email: `${role.toLowerCase()}@e2e.local`,
+        fullName: "Người dùng thử",
+        role,
+        isActive: true,
+      },
     }),
   );
 }
@@ -34,7 +40,10 @@ async function shoot(page: Page, testInfo: TestInfo, name: string) {
 const GUEST_SCREENS: [name: string, path: string][] = [
   ["jobs", "/jobs"],
   ["jobs-empty", "/jobs?q=zzzzqqq"],
-  ["jobs-filtered", "/jobs?experienceLevel=Mid&employmentType=FullTime&minSalary=5000000&maxSalary=10000000&sort=salary_desc"],
+  [
+    "jobs-filtered",
+    "/jobs?experienceLevel=Mid&employmentType=FullTime&minSalary=5000000&maxSalary=10000000&sort=salary_desc",
+  ],
   ["job-detail", "/jobs/seed-1"],
   ["job-not-found", "/jobs/khong-ton-tai"],
   ["login", "/login"],
@@ -82,14 +91,18 @@ async function openApply(page: Page) {
 
 test("apply: file of the wrong type", async ({ page }, testInfo) => {
   await openApply(page);
-  await page.locator('input[type="file"]').setInputFiles({ name: "anh.png", mimeType: "image/png", buffer: Buffer.from("png") });
+  await page
+    .locator('input[type="file"]')
+    .setInputFiles({ name: "anh.png", mimeType: "image/png", buffer: Buffer.from("png") });
   await expect(page.getByText("Chỉ nhận PDF, DOC hoặc DOCX")).toBeVisible();
   await shoot(page, testInfo, "apply-wrong-type");
 });
 
 test("apply: file over 5 MB", async ({ page }, testInfo) => {
   await openApply(page);
-  await page.locator('input[type="file"]').setInputFiles({ name: "cv-lon.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(5 * 1024 * 1024 + 1) });
+  await page
+    .locator('input[type="file"]')
+    .setInputFiles({ name: "cv-lon.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(5 * 1024 * 1024 + 1) });
   await expect(page.getByText("File tối đa 5 MB")).toBeVisible();
   await shoot(page, testInfo, "apply-too-large");
 });
@@ -127,15 +140,21 @@ test("apply: success, then 409 on the same job", async ({ page }, testInfo) => {
  */
 async function expectSoundLayout(page: Page) {
   await page.evaluate(() => document.fonts.ready);
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
   expect(overflow, "horizontal overflow in px").toBeLessThanOrEqual(0);
   const small = await page.evaluate(() => {
-    const sel = 'main button, main input:not([type="checkbox"]):not([type="radio"]):not([hidden]), main select, main textarea, main a.jp-btn, main [role="combobox"]';
+    const sel =
+      'main button, main input:not([type="checkbox"]):not([type="radio"]):not([hidden]), main select, main textarea, main a.jp-btn, main [role="combobox"]';
     return [...document.querySelectorAll<HTMLElement>(sel)]
       .filter((el) => el.getClientRects().length > 0)
       .map((el) => ({ el, r: el.getBoundingClientRect() }))
       .filter(({ r }) => r.height < 43.5 || r.width < 43.5)
-      .map(({ el, r }) => `${el.tagName.toLowerCase()}.${el.className} ${Math.round(r.width)}x${Math.round(r.height)} "${(el.textContent || el.getAttribute("aria-label") || "").trim().slice(0, 30)}"`);
+      .map(
+        ({ el, r }) =>
+          `${el.tagName.toLowerCase()}.${el.className} ${Math.round(r.width)}x${Math.round(r.height)} "${(el.textContent || el.getAttribute("aria-label") || "").trim().slice(0, 30)}"`,
+      );
   });
   expect(small, "controls under 44px").toEqual([]);
 }
@@ -173,12 +192,16 @@ test("login: empty submit names the problem next to each field", async ({ page }
 
 test("login: wrong password", async ({ page }, testInfo) => {
   await offlineBackend(page);
-  await page.route("**/api/auth/login", (route) => route.fulfill({ status: 401, json: { message: "Invalid credentials" } }));
+  await page.route("**/api/auth/login", (route) =>
+    route.fulfill({ status: 401, json: { message: "Invalid credentials" } }),
+  );
   await page.goto("/login");
   await page.getByLabel("Email").fill("a@e2e.local");
   await page.getByLabel(/^Mật khẩu/).fill("sai-mat-khau");
   await page.getByRole("button", { name: "Đăng nhập", exact: true }).last().click();
-  await expect(page.getByRole("alert").filter({ hasText: "Check your credentials or verify your email" })).toBeVisible();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Check your credentials or verify your email" }),
+  ).toBeVisible();
   await shoot(page, testInfo, "login-wrong-password");
 });
 
@@ -205,7 +228,10 @@ test("register: empty submit, role switch has aria-pressed", async ({ page }, te
   await offlineBackend(page);
   await page.goto("/register");
   await expect(page.getByRole("button", { name: "Ứng viên", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Nhà tuyển dụng", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByRole("button", { name: "Nhà tuyển dụng", exact: true })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
   await page.getByRole("button", { name: "Đăng ký ứng viên" }).click();
   await expect(page.getByText("Họ tên là bắt buộc")).toBeVisible();
   await expect(page.getByLabel("Họ và tên")).toBeFocused();
@@ -264,7 +290,9 @@ test("register as recruiter: no company found, and a failed search can be retrie
 
 test("register as recruiter: auth-svc 422 asks to choose the company again", async ({ page }) => {
   await offlineBackend(page);
-  await page.route("**/api/auth/register", (route) => route.fulfill({ status: 422, json: { detail: "Invalid companyId" } }));
+  await page.route("**/api/auth/register", (route) =>
+    route.fulfill({ status: 422, json: { detail: "Invalid companyId" } }),
+  );
   await page.goto("/register");
   await page.getByRole("button", { name: "Nhà tuyển dụng", exact: true }).click();
   const box = page.getByRole("combobox", { name: /Công ty bạn tuyển dụng cho/ });
@@ -284,7 +312,9 @@ test("register as recruiter: auth-svc 422 asks to choose the company again", asy
 
 test("forgot password: success message", async ({ page }, testInfo) => {
   await offlineBackend(page);
-  await page.route("**/api/auth/forgot-password", (route) => route.fulfill({ status: 200, json: { message: "Nếu email tồn tại, liên kết đặt lại đã được gửi" } }));
+  await page.route("**/api/auth/forgot-password", (route) =>
+    route.fulfill({ status: 200, json: { message: "Nếu email tồn tại, liên kết đặt lại đã được gửi" } }),
+  );
   await page.goto("/forgot-password");
   await page.getByLabel("Email").fill("a@e2e.local");
   await page.getByRole("button", { name: "Gửi liên kết đặt lại" }).click();
@@ -295,7 +325,15 @@ test("forgot password: success message", async ({ page }, testInfo) => {
 test("forgot password: rate limit shows Vietnamese copy, not the backend text", async ({ page }) => {
   await offlineBackend(page);
   await page.route("**/api/auth/forgot-password", (route) =>
-    route.fulfill({ status: 429, json: { status: 429, title: "Too Many Requests", detail: "Forgot password request limit exceeded. Please try again later." } }));
+    route.fulfill({
+      status: 429,
+      json: {
+        status: 429,
+        title: "Too Many Requests",
+        detail: "Forgot password request limit exceeded. Please try again later.",
+      },
+    }),
+  );
   await page.goto("/forgot-password");
   await page.getByLabel("Email").fill("a@e2e.local");
   await page.getByRole("button", { name: "Gửi liên kết đặt lại" }).click();
@@ -306,7 +344,9 @@ test("forgot password: rate limit shows Vietnamese copy, not the backend text", 
 
 test("reset password: expired token offers a new link", async ({ page }, testInfo) => {
   await offlineBackend(page);
-  await page.route("**/api/auth/reset-password", (route) => route.fulfill({ status: 401, json: { message: "Invalid token" } }));
+  await page.route("**/api/auth/reset-password", (route) =>
+    route.fulfill({ status: 401, json: { message: "Invalid token" } }),
+  );
   await page.goto("/reset-password?token=het-han");
   await page.getByLabel(/^Mật khẩu mới/).fill("Abcdefg1");
   await page.getByLabel("Nhập lại mật khẩu mới").fill("Abcdefg1");
@@ -371,7 +411,9 @@ test("fonts are self-hosted", async ({ page }) => {
   await page.evaluate(() => document.fonts.ready);
   // document.fonts.check() is also true when no face matches at all, so look at the faces themselves.
   const loadedWeights = await page.evaluate(() =>
-    [...document.fonts].filter((f) => f.family.includes("Be Vietnam Pro") && f.status === "loaded").map((f) => f.weight),
+    [...document.fonts]
+      .filter((f) => f.family.includes("Be Vietnam Pro") && f.status === "loaded")
+      .map((f) => f.weight),
   );
   expect(loadedWeights.length).toBeGreaterThan(0);
   expect(local.length).toBeGreaterThan(0);
@@ -418,7 +460,10 @@ test("applications: board with every status, long title, remote job", async ({ p
   await signIn(page, "User");
   const items = [
     ...ALL_STATUSES.map((s, i) => application(i + 1, s)),
-    application(6, "pending", { jobTitle: "Chuyên viên phát triển kinh doanh khu vực miền Trung và Tây Nguyên kiêm quản lý đối tác chiến lược dài hạn" }),
+    application(6, "pending", {
+      jobTitle:
+        "Chuyên viên phát triển kinh doanh khu vực miền Trung và Tây Nguyên kiêm quản lý đối tác chiến lược dài hạn",
+    }),
   ];
   await applicationsFromBackend(page, items);
   await page.goto("/applications");
@@ -436,7 +481,11 @@ test("applications: the status filter asks the backend and can be cleared", asyn
   await offlineBackend(page);
   await signIn(page, "User");
   const requests: string[] = [];
-  await applicationsFromBackend(page, ALL_STATUSES.map((s, i) => application(i + 1, s)), requests);
+  await applicationsFromBackend(
+    page,
+    ALL_STATUSES.map((s, i) => application(i + 1, s)),
+    requests,
+  );
   await page.goto("/applications");
   await expect(page.locator(".jp-app-row")).toHaveCount(5);
   await page.getByRole("button", { name: "Nhận việc" }).click();
@@ -491,7 +540,13 @@ test("applications: recruiter is sent to the job board with a notice", async ({ 
 const DETAIL = application(1, "shortlisted", {
   coverLetter: "Kính gửi nhà tuyển dụng,\n\nTôi quan tâm đến vị trí này vì đã có 3 năm làm React.",
   statusHistory: [
-    { id: "h2", applicationId: "app-1", status: "shortlisted", note: "Mời phỏng vấn vòng 2 vào thứ Sáu.", changedAt: "2026-11-04T08:00:00Z" },
+    {
+      id: "h2",
+      applicationId: "app-1",
+      status: "shortlisted",
+      note: "Mời phỏng vấn vòng 2 vào thứ Sáu.",
+      changedAt: "2026-11-04T08:00:00Z",
+    },
     { id: "h1", applicationId: "app-1", status: "pending", note: null, changedAt: "2026-11-02T09:30:00Z" },
     { id: "h3", applicationId: "app-1", status: "reviewed", note: null, changedAt: "2026-11-03T10:15:00Z" },
   ],
@@ -517,11 +572,15 @@ test("application detail: status, letter, history oldest first, CV, no internal 
 test("application detail: unknown id and failed load", async ({ page }, testInfo) => {
   await offlineBackend(page);
   await signIn(page, "User");
-  await page.route(/\/api\/applications\/app-404$/, (route) => route.fulfill({ status: 404, json: { message: "not found" } }));
+  await page.route(/\/api\/applications\/app-404$/, (route) =>
+    route.fulfill({ status: 404, json: { message: "not found" } }),
+  );
   await page.goto("/applications/app-404");
   await expect(page.getByRole("heading", { name: "Không tìm thấy đơn ứng tuyển." })).toBeVisible();
   await shoot(page, testInfo, "application-not-found");
-  await page.route(/\/api\/applications\/app-bad$/, (route) => route.fulfill({ status: 403, json: { message: "forbidden" } }));
+  await page.route(/\/api\/applications\/app-bad$/, (route) =>
+    route.fulfill({ status: 403, json: { message: "forbidden" } }),
+  );
   await page.goto("/applications/app-bad");
   await expect(page.getByRole("alert").filter({ hasText: "Bạn không có quyền xem đơn ứng tuyển này" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Thử lại" })).toBeVisible();
@@ -600,7 +659,16 @@ test("profile: load error is Vietnamese and retry works", async ({ page }, testI
   await page.route(/\/api\/profiles\/me$/, (route) =>
     fail
       ? route.fulfill({ status: 400, json: { message: "Bad request" } })
-      : route.fulfill({ json: { id: "p1", userId: "e2e-User", fullName: "Người dùng thử", skills: [], experiences: [], education: [] } }),
+      : route.fulfill({
+          json: {
+            id: "p1",
+            userId: "e2e-User",
+            fullName: "Người dùng thử",
+            skills: [],
+            experiences: [],
+            education: [],
+          },
+        }),
   );
   await page.goto("/profile");
   await expect(page.getByRole("alert").filter({ hasText: "Không tải được hồ sơ" })).toBeVisible();
@@ -683,7 +751,9 @@ test("admin: a candidate is not let in", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Chỉ quản trị viên mới vào được khu vực này." })).toBeVisible();
 });
 
-test("admin jobs: read first, reject needs a reason, approve and reject leave the pending filter", async ({ page }, testInfo) => {
+test("admin jobs: read first, reject needs a reason, approve and reject leave the pending filter", async ({
+  page,
+}, testInfo) => {
   await offlineBackend(page);
   await signIn(page, "Admin");
   await page.goto("/admin/jobs?status=Pending");
@@ -721,7 +791,10 @@ test("admin jobs: read first, reject needs a reason, approve and reject leave th
   await expect(page.locator(".jp-queue")).not.toContainText(rejectedTitle);
 
   // Approve the next one.
-  await rows.filter({ hasText: approvedTitle }).getByRole("button", { name: /^Duyệt tin/ }).click();
+  await rows
+    .filter({ hasText: approvedTitle })
+    .getByRole("button", { name: /^Duyệt tin/ })
+    .click();
   await expect(page.locator(".jp-queue")).not.toContainText(approvedTitle);
 });
 
@@ -730,7 +803,9 @@ test("admin jobs: a failed list load can be retried", async ({ page }, testInfo)
   await signIn(page, "Admin");
   let fail = true;
   await page.route(/\/api\/admin\/jobs\?/, (route) =>
-    fail ? route.fulfill({ status: 400, json: { message: "bad" } }) : route.fulfill({ json: { data: [], pagination: { page: 1, pageSize: 6, totalItems: 0, totalPages: 1 } } }),
+    fail
+      ? route.fulfill({ status: 400, json: { message: "bad" } })
+      : route.fulfill({ json: { data: [], pagination: { page: 1, pageSize: 6, totalItems: 0, totalPages: 1 } } }),
   );
   await page.goto("/admin/jobs");
   await expect(page.getByRole("alert").filter({ hasText: "Không tải được danh sách tin" })).toBeVisible();
@@ -804,7 +879,9 @@ test("admin jobs: create, edit, soft delete, then purge from the deleted filter"
   await expect(rows.filter({ hasText: `${title} (đã sửa)` })).toHaveCount(0);
 });
 
-test("admin users: Vietnamese roles, filters, confirm before deactivating, admins untouched", async ({ page }, testInfo) => {
+test("admin users: Vietnamese roles, filters, confirm before deactivating, admins untouched", async ({
+  page,
+}, testInfo) => {
   await offlineBackend(page);
   await signIn(page, "Admin");
   await page.goto("/admin/users");
@@ -841,7 +918,9 @@ test("admin users: Vietnamese roles, filters, confirm before deactivating, admin
   await expect(page).toHaveURL(/role=Recruiter/);
   await expect(rows.filter({ hasText: "lan@example.com" })).toHaveCount(0);
   await page.getByLabel("Trạng thái").selectOption("inactive");
-  await expect(page.getByRole("heading", { name: "Không có người dùng nào khớp bộ lọc" }).or(rows.first())).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Không có người dùng nào khớp bộ lọc" }).or(rows.first()),
+  ).toBeVisible();
   await page.getByLabel("Vai trò").selectOption("");
   await page.getByLabel("Trạng thái").selectOption("");
   await page.getByLabel("Tên hoặc email").fill("zzzz-khong-co");
@@ -859,7 +938,9 @@ test("admin users: a failed change keeps the old state and says why", async ({ p
   const lan = page.locator(".jp-table--users tbody tr").filter({ hasText: "lan@example.com" });
   await expect(lan).toBeVisible();
   // A 4xx is shown, never replaced by mock success.
-  await page.route(/\/api\/admin\/users\/.*\/deactivate$/, (route) => route.fulfill({ status: 409, json: { message: "Không thể vô hiệu hóa tài khoản này." } }));
+  await page.route(/\/api\/admin\/users\/.*\/deactivate$/, (route) =>
+    route.fulfill({ status: 409, json: { message: "Không thể vô hiệu hóa tài khoản này." } }),
+  );
   await lan.getByRole("button", { name: "Vô hiệu hóa lan@example.com" }).click();
   await lan.getByRole("button", { name: "Xác nhận" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Không thể vô hiệu hóa tài khoản này." })).toBeVisible();
@@ -927,7 +1008,17 @@ const SCORE = {
       extra: ["Figma"],
       evidence: { React: "3 năm React tại công ty A" },
     },
-    semantic: { score: 74, title_fit: 0.8, top_matches: [{ requirement: "Xây dựng giao diện web", cv_excerpt: "Phát triển giao diện cho ứng dụng bán hàng", similarity: 0.8 }] },
+    semantic: {
+      score: 74,
+      title_fit: 0.8,
+      top_matches: [
+        {
+          requirement: "Xây dựng giao diện web",
+          cv_excerpt: "Phát triển giao diện cho ứng dụng bán hàng",
+          similarity: 0.8,
+        },
+      ],
+    },
     experience: { score: 80, cv_years: 3, required_years: 2 },
     education: { score: 100, cv_level: "bachelor", required_level: "none" },
   },
@@ -949,7 +1040,9 @@ test("resume score: pick a job, wrong file type, then a result with every band l
   await expect(page).toHaveURL(/jobId=/);
   await expect(page.locator(".jp-row").first()).toBeVisible();
 
-  await page.locator('input[type="file"]').setInputFiles({ name: "cv.txt", mimeType: "text/plain", buffer: Buffer.from("x") });
+  await page
+    .locator('input[type="file"]')
+    .setInputFiles({ name: "cv.txt", mimeType: "text/plain", buffer: Buffer.from("x") });
   await expect(page.getByText("Chỉ nhận PDF hoặc DOCX")).toBeVisible();
   await shoot(page, testInfo, "resume-score-bad-file");
 
@@ -966,7 +1059,9 @@ test("resume score: pick a job, wrong file type, then a result with every band l
 test("resume score: a service error is shown in Vietnamese", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page, "User");
-  await page.route(/\/api\/ai\/score-resume$/, (route) => route.fulfill({ status: 422, json: { code: "cv_encrypted" } }));
+  await page.route(/\/api\/ai\/score-resume$/, (route) =>
+    route.fulfill({ status: 422, json: { code: "cv_encrypted" } }),
+  );
   await page.goto("/resume-score?jobId=seed-1");
   await page.locator('input[type="file"]').setInputFiles(PDF);
   await page.getByRole("button", { name: "Chấm điểm CV" }).click();

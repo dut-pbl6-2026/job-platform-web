@@ -26,7 +26,9 @@ function loadMock(userId: string, fullName: string): Profile {
   try {
     const raw = localStorage.getItem(STORE_PREFIX + userId);
     if (raw) return JSON.parse(raw) as Profile;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   const p = emptyProfile(userId, fullName);
   saveMock(p);
   return p;
@@ -79,13 +81,18 @@ function asEdu(raw: unknown): Education | null {
 export function normalizeProfile(raw: unknown, fallbackUserId: string, fallbackName: string): Profile {
   const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const skills = Array.isArray(o.skills) ? o.skills.map(asSkill).filter((x): x is Skill => !!x) : [];
-  const experiences = Array.isArray(o.experiences) ? o.experiences.map(asExp).filter((x): x is WorkExperience => !!x)
-    : Array.isArray(o.workExperiences) ? (o.workExperiences as unknown[]).map(asExp).filter((x): x is WorkExperience => !!x)
-    : Array.isArray(o.experience) ? (o.experience as unknown[]).map(asExp).filter((x): x is WorkExperience => !!x)
-    : [];
-  const education = Array.isArray(o.education) ? o.education.map(asEdu).filter((x): x is Education => !!x)
-    : Array.isArray(o.educations) ? (o.educations as unknown[]).map(asEdu).filter((x): x is Education => !!x)
-    : [];
+  const experiences = Array.isArray(o.experiences)
+    ? o.experiences.map(asExp).filter((x): x is WorkExperience => !!x)
+    : Array.isArray(o.workExperiences)
+      ? (o.workExperiences as unknown[]).map(asExp).filter((x): x is WorkExperience => !!x)
+      : Array.isArray(o.experience)
+        ? (o.experience as unknown[]).map(asExp).filter((x): x is WorkExperience => !!x)
+        : [];
+  const education = Array.isArray(o.education)
+    ? o.education.map(asEdu).filter((x): x is Education => !!x)
+    : Array.isArray(o.educations)
+      ? (o.educations as unknown[]).map(asEdu).filter((x): x is Education => !!x)
+      : [];
   return {
     id: pickStr(o, "id") || "",
     userId: pickStr(o, "userId", "user_id") || fallbackUserId,

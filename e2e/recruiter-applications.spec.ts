@@ -16,15 +16,49 @@ async function signIn(page: Page, role: Role) {
   await page.addInitScript(() => localStorage.setItem("accessToken", "e2e-token"));
   await page.route("**/api/auth/me", (route) =>
     route.fulfill({
-      json: { id: `e2e-${role}`, email: `${role.toLowerCase()}@e2e.local`, fullName: "Nhà tuyển dụng thử", role, isActive: true, companyId: "33333333-3333-3333-3333-333333333333" },
+      json: {
+        id: `e2e-${role}`,
+        email: `${role.toLowerCase()}@e2e.local`,
+        fullName: "Nhà tuyển dụng thử",
+        role,
+        isActive: true,
+        companyId: "33333333-3333-3333-3333-333333333333",
+      },
     }),
   );
 }
 
 const APPLICATIONS = [
-  { id: APP_PENDING, jobId: JOB_ID, applicantId: APPLICANT_ID, status: "pending", cvUrl: "/api/applications/cv/e2e.pdf", coverLetter: "Kính gửi nhà tuyển dụng,\nTôi có 3 năm làm React.", createdAt: "2026-11-10T08:00:00Z", updatedAt: "2026-11-10T08:00:00Z" },
-  { id: APP_ACCEPTED, jobId: JOB_ID, applicantId: APPLICANT_ID, status: "accepted", cvUrl: "", coverLetter: null, createdAt: "2026-11-09T08:00:00Z", updatedAt: "2026-11-09T08:00:00Z" },
-  { id: APP_REVIEWED, jobId: JOB_ID, applicantId: APPLICANT_ID, status: "reviewed", cvUrl: "", coverLetter: null, createdAt: "2026-11-08T08:00:00Z", updatedAt: "2026-11-08T08:00:00Z" },
+  {
+    id: APP_PENDING,
+    jobId: JOB_ID,
+    applicantId: APPLICANT_ID,
+    status: "pending",
+    cvUrl: "/api/applications/cv/e2e.pdf",
+    coverLetter: "Kính gửi nhà tuyển dụng,\nTôi có 3 năm làm React.",
+    createdAt: "2026-11-10T08:00:00Z",
+    updatedAt: "2026-11-10T08:00:00Z",
+  },
+  {
+    id: APP_ACCEPTED,
+    jobId: JOB_ID,
+    applicantId: APPLICANT_ID,
+    status: "accepted",
+    cvUrl: "",
+    coverLetter: null,
+    createdAt: "2026-11-09T08:00:00Z",
+    updatedAt: "2026-11-09T08:00:00Z",
+  },
+  {
+    id: APP_REVIEWED,
+    jobId: JOB_ID,
+    applicantId: APPLICANT_ID,
+    status: "reviewed",
+    cvUrl: "",
+    coverLetter: null,
+    createdAt: "2026-11-08T08:00:00Z",
+    updatedAt: "2026-11-08T08:00:00Z",
+  },
 ];
 
 const STATUS_FLOW = {
@@ -46,17 +80,36 @@ async function mockApplications(page: Page, opts: { putStatus?: number } = {}): 
   const mocks: Mocks = { puts: [], listCalls: [], putStatus: opts.putStatus };
   await page.route(
     (url) => url.pathname === `/api/jobs/${JOB_ID}`,
-    (route) => route.fulfill({
-      json: {
-        id: JOB_ID, title: "Lập trình viên React", description: "Mô tả.", companyId: "33333333-3333-3333-3333-333333333333",
-        companyName: "Công ty thử nghiệm", location: "Hà Nội", salaryMin: 0, salaryMax: 0, salaryCurrency: "VND",
-        categoryId: null, categoryName: null, requirements: null, benefits: null, employmentType: "FullTime",
-        experienceLevel: "Entry", recruiterId: "e2e-Recruiter", status: "Active", viewCount: 0,
-        createdAt: "2026-11-01T08:00:00Z", updatedAt: "2026-11-01T08:00:00Z",
-      },
-    }),
+    (route) =>
+      route.fulfill({
+        json: {
+          id: JOB_ID,
+          title: "Lập trình viên React",
+          description: "Mô tả.",
+          companyId: "33333333-3333-3333-3333-333333333333",
+          companyName: "Công ty thử nghiệm",
+          location: "Hà Nội",
+          salaryMin: 0,
+          salaryMax: 0,
+          salaryCurrency: "VND",
+          categoryId: null,
+          categoryName: null,
+          requirements: null,
+          benefits: null,
+          employmentType: "FullTime",
+          experienceLevel: "Entry",
+          recruiterId: "e2e-Recruiter",
+          status: "Active",
+          viewCount: 0,
+          createdAt: "2026-11-01T08:00:00Z",
+          updatedAt: "2026-11-01T08:00:00Z",
+        },
+      }),
   );
-  await page.route((url) => url.pathname === "/api/applications/status-flow", (route) => route.fulfill({ json: STATUS_FLOW }));
+  await page.route(
+    (url) => url.pathname === "/api/applications/status-flow",
+    (route) => route.fulfill({ json: STATUS_FLOW }),
+  );
   await page.route(
     (url) => url.pathname === `/api/applications/job/${JOB_ID}`,
     (route) => {
@@ -74,7 +127,12 @@ async function mockApplications(page: Page, opts: { putStatus?: number } = {}): 
       if (opts.putStatus === 409) {
         return route.fulfill({
           status: 409,
-          json: { status: 409, message: "Invalid status transition from 'Pending' to 'Accepted'.", current_status: "pending", allowed_transitions: ["reviewed", "rejected"] },
+          json: {
+            status: 409,
+            message: "Invalid status transition from 'Pending' to 'Accepted'.",
+            current_status: "pending",
+            allowed_transitions: ["reviewed", "rejected"],
+          },
         });
       }
       return route.fulfill({ json: {} });
@@ -161,12 +219,34 @@ test("job list links to the job's applications", async ({ page }) => {
   await mockApplications(page);
   await page.route(
     (url) => url.pathname.endsWith("/api/jobs/recruiter"),
-    (route) => route.fulfill({
-      json: {
-        items: [{ id: JOB_ID, title: "Lập trình viên React", description: "Mô tả.", companyId: "33333333-3333-3333-3333-333333333333", location: "Hà Nội", status: "Active", createdAt: "2026-11-01T08:00:00Z", updatedAt: "2026-11-01T08:00:00Z", salaryMin: 0, salaryMax: 0, salaryCurrency: "VND", employmentType: "FullTime", experienceLevel: "Entry", recruiterId: "e2e-Recruiter", viewCount: 0 }],
-        total: 1, page: 1, size: 10, totalPages: 1,
-      },
-    }),
+    (route) =>
+      route.fulfill({
+        json: {
+          items: [
+            {
+              id: JOB_ID,
+              title: "Lập trình viên React",
+              description: "Mô tả.",
+              companyId: "33333333-3333-3333-3333-333333333333",
+              location: "Hà Nội",
+              status: "Active",
+              createdAt: "2026-11-01T08:00:00Z",
+              updatedAt: "2026-11-01T08:00:00Z",
+              salaryMin: 0,
+              salaryMax: 0,
+              salaryCurrency: "VND",
+              employmentType: "FullTime",
+              experienceLevel: "Entry",
+              recruiterId: "e2e-Recruiter",
+              viewCount: 0,
+            },
+          ],
+          total: 1,
+          page: 1,
+          size: 10,
+          totalPages: 1,
+        },
+      }),
   );
   await page.goto("/recruiter/jobs");
   await page.getByRole("link", { name: "Xem ứng viên" }).click();

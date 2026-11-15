@@ -14,7 +14,8 @@ export function AdminRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
   if (loading) return <PageLoading label="Đang kiểm tra quyền truy cập" />;
-  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
+  if (!isAuthenticated)
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   if (!isAdmin(user?.role)) {
     return (
       <>
@@ -35,7 +36,12 @@ export function AdminRoute({ children }: { children: ReactNode }) {
  * The admin frame: the shared shell bar, then a second bar with the three admin sections (the amber
  * underline is "where you are"), then the page. Admin is the same world as the job board, not another app.
  */
-export function AdminShell({ title, lead, actions, children }: {
+export function AdminShell({
+  title,
+  lead,
+  actions,
+  children,
+}: {
   title: string;
   lead?: string;
   actions?: ReactNode;

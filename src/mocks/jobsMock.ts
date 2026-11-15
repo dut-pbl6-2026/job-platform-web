@@ -17,9 +17,15 @@ type SeedJob = {
 
 // Mock categoryId uses lowercase name as id; real API uses UUIDs.
 const cats = [
-  { id: "it", name: "IT" }, { id: "finance", name: "Finance" }, { id: "marketing", name: "Marketing" },
-  { id: "healthcare", name: "Healthcare" }, { id: "education", name: "Education" }, { id: "engineering", name: "Engineering" },
-  { id: "sales", name: "Sales" }, { id: "hospitality", name: "Hospitality" }, { id: "others", name: "Others" },
+  { id: "it", name: "IT" },
+  { id: "finance", name: "Finance" },
+  { id: "marketing", name: "Marketing" },
+  { id: "healthcare", name: "Healthcare" },
+  { id: "education", name: "Education" },
+  { id: "engineering", name: "Engineering" },
+  { id: "sales", name: "Sales" },
+  { id: "hospitality", name: "Hospitality" },
+  { id: "others", name: "Others" },
 ];
 
 // Crawler categories are free-text vieclam.gov.vn groups; backend only knows the 9 predefined ones (JOB-01-06).
@@ -38,14 +44,33 @@ const CATEGORY_MAP: Record<string, string> = {
 };
 
 const LOCATION_MAP: Record<string, string> = {
-  "Ha Noi": "Hà Nội", "Ho Chi Minh": "Hồ Chí Minh", "Da Nang": "Đà Nẵng", Hue: "Huế", "Thua Thien Hue": "Thừa Thiên Huế",
-  "Can Tho": "Cần Thơ", "Hai Phong": "Hải Phòng", "Binh Duong": "Bình Dương", "Dong Nai": "Đồng Nai", "Bac Ninh": "Bắc Ninh",
-  "Quang Ninh": "Quảng Ninh", "Nghe An": "Nghệ An", "Thanh Hoa": "Thanh Hóa", "Khanh Hoa": "Khánh Hòa", "Lam Dong": "Lâm Đồng",
-  "Hai Duong": "Hải Dương", "Nam Dinh": "Nam Định", "Binh Dinh": "Bình Định", "Quang Nam": "Quảng Nam", "Long An": "Long An",
+  "Ha Noi": "Hà Nội",
+  "Ho Chi Minh": "Hồ Chí Minh",
+  "Da Nang": "Đà Nẵng",
+  Hue: "Huế",
+  "Thua Thien Hue": "Thừa Thiên Huế",
+  "Can Tho": "Cần Thơ",
+  "Hai Phong": "Hải Phòng",
+  "Binh Duong": "Bình Dương",
+  "Dong Nai": "Đồng Nai",
+  "Bac Ninh": "Bắc Ninh",
+  "Quang Ninh": "Quảng Ninh",
+  "Nghe An": "Nghệ An",
+  "Thanh Hoa": "Thanh Hóa",
+  "Khanh Hoa": "Khánh Hòa",
+  "Lam Dong": "Lâm Đồng",
+  "Hai Duong": "Hải Dương",
+  "Nam Dinh": "Nam Định",
+  "Binh Dinh": "Bình Định",
+  "Quang Nam": "Quảng Nam",
+  "Long An": "Long An",
 };
 
 function slug(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function toLocation(raw: string | null) {

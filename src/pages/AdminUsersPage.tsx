@@ -37,7 +37,9 @@ export default function AdminUsersPage() {
   const [actionErr, setActionErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
-  useEffect(() => { setDraftQ(q); }, [q]);
+  useEffect(() => {
+    setDraftQ(q);
+  }, [q]);
 
   const key = queryKeys.adminUsers({ q, role, status, page });
   const query = useQuery({
@@ -51,7 +53,8 @@ export default function AdminUsersPage() {
   function patchQuery(next: Record<string, string>) {
     const params = new URLSearchParams(sp);
     for (const [k, value] of Object.entries(next)) {
-      if (value) params.set(k, value); else params.delete(k);
+      if (value) params.set(k, value);
+      else params.delete(k);
     }
     if (!("page" in next)) params.delete("page");
     setSp(params);
@@ -102,7 +105,9 @@ export default function AdminUsersPage() {
             <option value="inactive">Đã vô hiệu hóa</option>
           </Select>
         </Field>
-        <Button type="submit" className="jp-user-filters-go">Tìm</Button>
+        <Button type="submit" className="jp-user-filters-go">
+          Tìm
+        </Button>
       </form>
 
       {actionErr && <Alert tone="error">{actionErr}</Alert>}
@@ -126,13 +131,21 @@ export default function AdminUsersPage() {
       {data && data.items.length === 0 && (
         <EmptyState
           title={filtered ? "Không có người dùng nào khớp bộ lọc" : "Chưa có người dùng"}
-          action={filtered ? <Button variant="secondary" onClick={() => setSp(new URLSearchParams())}>Xóa bộ lọc</Button> : undefined}
+          action={
+            filtered ? (
+              <Button variant="secondary" onClick={() => setSp(new URLSearchParams())}>
+                Xóa bộ lọc
+              </Button>
+            ) : undefined
+          }
         />
       )}
 
       {data && data.items.length > 0 && (
         <>
-          <p className="jp-count" aria-live="polite">{data.total.toLocaleString("vi-VN")} người dùng</p>
+          <p className="jp-count" aria-live="polite">
+            {data.total.toLocaleString("vi-VN")} người dùng
+          </p>
           <div className="jp-table-wrap">
             <table className="jp-table jp-table--users">
               <thead>
@@ -141,7 +154,9 @@ export default function AdminUsersPage() {
                   <th scope="col">Vai trò</th>
                   <th scope="col">Trạng thái</th>
                   <th scope="col">Ngày tạo</th>
-                  <th scope="col" className="jp-table-actions">Thao tác</th>
+                  <th scope="col" className="jp-table-actions">
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -174,7 +189,11 @@ export default function AdminUsersPage() {
                         {user.role === "Admin" ? (
                           <span className="jp-muted">Không áp dụng cho quản trị viên</span>
                         ) : confirming ? (
-                          <div className="jp-confirm" role="group" aria-label={`Xác nhận ${verb.toLowerCase()} ${user.email}`}>
+                          <div
+                            className="jp-confirm"
+                            role="group"
+                            aria-label={`Xác nhận ${verb.toLowerCase()} ${user.email}`}
+                          >
                             <span className="jp-confirm-text">{verb} tài khoản này?</span>
                             <Button
                               variant={user.isActive ? "danger" : "primary"}
@@ -183,13 +202,19 @@ export default function AdminUsersPage() {
                             >
                               {busy ? "Đang lưu…" : "Xác nhận"}
                             </Button>
-                            <Button variant="secondary" disabled={busy} onClick={() => setConfirmId(null)}>Hủy</Button>
+                            <Button variant="secondary" disabled={busy} onClick={() => setConfirmId(null)}>
+                              Hủy
+                            </Button>
                           </div>
                         ) : (
                           <Button
                             variant="secondary"
                             aria-label={`${verb} ${user.email}`}
-                            onClick={() => { setConfirmId(user.id); setDone(null); setActionErr(null); }}
+                            onClick={() => {
+                              setConfirmId(user.id);
+                              setDone(null);
+                              setActionErr(null);
+                            }}
                           >
                             {verb}
                           </Button>
@@ -201,7 +226,11 @@ export default function AdminUsersPage() {
               </tbody>
             </table>
           </div>
-          <Pagination page={page} totalPages={data.totalPages} onPage={(p) => patchQuery({ page: p ? String(p) : "" })} />
+          <Pagination
+            page={page}
+            totalPages={data.totalPages}
+            onPage={(p) => patchQuery({ page: p ? String(p) : "" })}
+          />
         </>
       )}
     </AdminShell>

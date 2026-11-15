@@ -3,11 +3,7 @@ import { Link } from "react-router-dom";
 import { Alert, Button, Textarea } from "./ui";
 import { useChat } from "../contexts/ChatContext";
 
-const STARTERS = [
-  "Gợi ý việc làm React tại Hà Nội",
-  "Cách viết CV cho vị trí junior",
-  "Mẹo phỏng vấn backend",
-];
+const STARTERS = ["Gợi ý việc làm React tại Hà Nội", "Cách viết CV cho vị trí junior", "Mẹo phỏng vấn backend"];
 
 export function ChatPanel({ variant = "dock" }: { variant?: "dock" | "page" }) {
   const { messages, sending, notice, error, send, newSession, cancel } = useChat();
@@ -33,18 +29,28 @@ export function ChatPanel({ variant = "dock" }: { variant?: "dock" | "page" }) {
           <p>Nhớ các tin nhắn gần nhất trong phiên</p>
         </div>
         <div className="chat-head-actions">
-          {sending && <Button variant="secondary" onClick={cancel}>Dừng</Button>}
-          <Button variant="secondary" onClick={() => void newSession()}>Phiên mới</Button>
+          {sending && (
+            <Button variant="secondary" onClick={cancel}>
+              Dừng
+            </Button>
+          )}
+          <Button variant="secondary" onClick={() => void newSession()}>
+            Phiên mới
+          </Button>
         </div>
       </header>
 
       <div className="chat-log" ref={scroller} role="log" aria-live="polite" aria-label="Cuộc trò chuyện">
         {messages.length === 0 && (
           <div className="chat-empty">
-            <p>Hỏi về việc làm, CV hoặc phỏng vấn. Khi dịch vụ AI chưa sẵn sàng, gợi ý tạm được lấy từ danh sách tin.</p>
+            <p>
+              Hỏi về việc làm, CV hoặc phỏng vấn. Khi dịch vụ AI chưa sẵn sàng, gợi ý tạm được lấy từ danh sách tin.
+            </p>
             <div className="chat-starters">
               {STARTERS.map((s) => (
-                <Button key={s} variant="secondary" onClick={() => void send(s)}>{s}</Button>
+                <Button key={s} variant="secondary" onClick={() => void send(s)}>
+                  {s}
+                </Button>
               ))}
             </div>
           </div>
@@ -66,12 +72,22 @@ export function ChatPanel({ variant = "dock" }: { variant?: "dock" | "page" }) {
         ))}
       </div>
 
-      {notice && <Alert tone="warning" className="chat-alert">{notice}</Alert>}
-      {error && <Alert tone="error" className="chat-alert">{error}</Alert>}
+      {notice && (
+        <Alert tone="warning" className="chat-alert">
+          {notice}
+        </Alert>
+      )}
+      {error && (
+        <Alert tone="error" className="chat-alert">
+          {error}
+        </Alert>
+      )}
       <p className="chat-disclaimer">Nội dung do AI tạo, hãy kiểm tra lại tin tuyển dụng.</p>
 
       <form className="chat-form" onSubmit={onSubmit}>
-        <label className="jp-sr" htmlFor="chat-input">Tin nhắn</label>
+        <label className="jp-sr" htmlFor="chat-input">
+          Tin nhắn
+        </label>
         <Textarea
           id="chat-input"
           rows={2}
@@ -85,7 +101,9 @@ export function ChatPanel({ variant = "dock" }: { variant?: "dock" | "page" }) {
             }
           }}
         />
-        <Button type="submit" disabled={sending || !draft.trim()}>Gửi</Button>
+        <Button type="submit" disabled={sending || !draft.trim()}>
+          Gửi
+        </Button>
       </form>
     </div>
   );

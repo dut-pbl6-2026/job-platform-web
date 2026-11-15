@@ -11,7 +11,14 @@ async function signIn(page: Page, role: Role, companyId: string | null = "333333
   await page.addInitScript(() => localStorage.setItem("accessToken", "e2e-token"));
   await page.route("**/api/auth/me", (route) =>
     route.fulfill({
-      json: { id: `e2e-${role}`, email: `${role.toLowerCase()}@e2e.local`, fullName: "Nhà tuyển dụng thử", role, isActive: true, companyId },
+      json: {
+        id: `e2e-${role}`,
+        email: `${role.toLowerCase()}@e2e.local`,
+        fullName: "Nhà tuyển dụng thử",
+        role,
+        isActive: true,
+        companyId,
+      },
     }),
   );
 }

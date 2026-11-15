@@ -35,13 +35,7 @@ export interface PaginatedApplications {
   totalPages: number;
 }
 
-export const APPLICATION_STATUSES: ApplicationStatus[] = [
-  "pending",
-  "reviewed",
-  "shortlisted",
-  "accepted",
-  "rejected",
-];
+export const APPLICATION_STATUSES: ApplicationStatus[] = ["pending", "reviewed", "shortlisted", "accepted", "rejected"];
 
 export const STATUS_LABEL: Record<ApplicationStatus, string> = {
   pending: "Chờ xem",

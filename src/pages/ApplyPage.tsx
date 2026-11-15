@@ -168,7 +168,12 @@ export default function ApplyPage() {
     }
     setSending(true);
     try {
-      await submitApplication({ jobId: currentJob.id, coverLetter: cover.trim() || undefined, cvFile: file, applicantId: user.id });
+      await submitApplication({
+        jobId: currentJob.id,
+        coverLetter: cover.trim() || undefined,
+        cvFile: file,
+        applicantId: user.id,
+      });
       setSent({ fileName: file.name });
     } catch (ex: unknown) {
       if (httpStatus(ex) === 409) {
@@ -188,7 +193,9 @@ export default function ApplyPage() {
         <main className="jp-page jp-page--narrow">
           <Panel className="jp-apply-done">
             <Icon name="checkCircle" size={32} className="jp-apply-done-icon" />
-            <h1 className="jp-h1" ref={doneRef} tabIndex={-1}>Đã gửi hồ sơ</h1>
+            <h1 className="jp-h1" ref={doneRef} tabIndex={-1}>
+              Đã gửi hồ sơ
+            </h1>
             <dl className="jp-apply-sent">
               <div>
                 <dt>Vị trí</dt>
@@ -206,7 +213,9 @@ export default function ApplyPage() {
             <p className="jp-muted">Nhà tuyển dụng sẽ xem CV của bạn. Theo dõi kết quả ở mục Đơn của tôi.</p>
             <div className="jp-apply-done-actions">
               <ButtonLink to="/applications">Xem đơn của tôi</ButtonLink>
-              <ButtonLink variant="secondary" to="/jobs">Tìm việc khác</ButtonLink>
+              <ButtonLink variant="secondary" to="/jobs">
+                Tìm việc khác
+              </ButtonLink>
             </div>
           </Panel>
         </main>
@@ -232,7 +241,13 @@ export default function ApplyPage() {
           {submitErr && (
             <Alert
               tone="error"
-              action={submitErr.duplicate ? <ButtonLink variant="secondary" to="/applications">Xem đơn đã nộp</ButtonLink> : undefined}
+              action={
+                submitErr.duplicate ? (
+                  <ButtonLink variant="secondary" to="/applications">
+                    Xem đơn đã nộp
+                  </ButtonLink>
+                ) : undefined
+              }
             >
               {submitErr.message}
             </Alert>
@@ -240,21 +255,20 @@ export default function ApplyPage() {
 
           <ol className="jp-steps">
             <li className="jp-step">
-              <span className="jp-step-no" aria-hidden="true">1</span>
+              <span className="jp-step-no" aria-hidden="true">
+                1
+              </span>
               <div className="jp-step-body">
-                <Field
-                  id="apply-cv"
-                  label="File CV"
-                  required
-                  hint="PDF, DOC hoặc DOCX, tối đa 5 MB."
-                  error={fileErr}
-                >
+                <Field id="apply-cv" label="File CV" required hint="PDF, DOC hoặc DOCX, tối đa 5 MB." error={fileErr}>
                   <button
                     ref={dropRef}
                     type="button"
                     className={cx("jp-drop", dragging && "is-dragging", fileErr && "is-error", file && "has-file")}
                     onClick={() => pickRef.current?.click()}
-                    onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragging(true);
+                    }}
                     onDragLeave={() => setDragging(false)}
                     onDrop={onDrop}
                   >
@@ -299,9 +313,16 @@ export default function ApplyPage() {
             </li>
 
             <li className="jp-step">
-              <span className="jp-step-no" aria-hidden="true">2</span>
+              <span className="jp-step-no" aria-hidden="true">
+                2
+              </span>
               <div className="jp-step-body">
-                <Field id="apply-cover" label="Thư xin việc" optional hint={`${cover.length.toLocaleString("vi-VN")}/${COVER_MAX.toLocaleString("vi-VN")} ký tự`}>
+                <Field
+                  id="apply-cover"
+                  label="Thư xin việc"
+                  optional
+                  hint={`${cover.length.toLocaleString("vi-VN")}/${COVER_MAX.toLocaleString("vi-VN")} ký tự`}
+                >
                   <Textarea
                     rows={6}
                     maxLength={COVER_MAX}
@@ -314,7 +335,9 @@ export default function ApplyPage() {
             </li>
 
             <li className="jp-step">
-              <span className="jp-step-no" aria-hidden="true">3</span>
+              <span className="jp-step-no" aria-hidden="true">
+                3
+              </span>
               <div className="jp-step-body">
                 <p className="jp-step-title">Gửi hồ sơ</p>
                 <Button type="submit" size="lg" loading={sending} className="jp-apply-submit">

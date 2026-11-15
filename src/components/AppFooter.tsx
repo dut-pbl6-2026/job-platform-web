@@ -28,8 +28,13 @@ export function AppFooter() {
     <footer className="jp-footer on-navy">
       <div className="jp-footer-inner">
         <div className="jp-footer-brand">
-          <Link to="/jobs" className="jp-footer-wordmark">jobplatform</Link>
-          <p>Nền tảng kết nối người tìm việc và nhà tuyển dụng: tìm việc theo kỹ năng, mức lương, địa điểm và theo dõi đơn ứng tuyển.</p>
+          <Link to="/jobs" className="jp-footer-wordmark">
+            jobplatform
+          </Link>
+          <p>
+            Nền tảng kết nối người tìm việc và nhà tuyển dụng: tìm việc theo kỹ năng, mức lương, địa điểm và theo dõi
+            đơn ứng tuyển.
+          </p>
         </div>
 
         <nav className="jp-footer-col" aria-label="Dành cho ứng viên">
@@ -45,14 +50,18 @@ export function AppFooter() {
         <nav className="jp-footer-col" aria-label="Việc làm theo ngành nghề">
           <h2 className="jp-footer-title">Việc làm theo ngành nghề</h2>
           {CATEGORY_LINKS.map((c) => (
-            <Link key={c.value} to={`/jobs?category=${encodeURIComponent(c.value)}`}>{c.label}</Link>
+            <Link key={c.value} to={`/jobs?category=${encodeURIComponent(c.value)}`}>
+              {c.label}
+            </Link>
           ))}
         </nav>
 
         <nav className="jp-footer-col" aria-label="Việc làm theo địa điểm">
           <h2 className="jp-footer-title">Việc làm theo địa điểm</h2>
           {LOCATION_LINKS.map((l) => (
-            <Link key={l.value} to={`/jobs?location=${encodeURIComponent(l.value)}`}>{l.label}</Link>
+            <Link key={l.value} to={`/jobs?location=${encodeURIComponent(l.value)}`}>
+              {l.label}
+            </Link>
           ))}
         </nav>
       </div>

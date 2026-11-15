@@ -2,7 +2,8 @@ import { api } from "./api";
 import type { ResumeScore, ScoreError } from "../types/resumeScore";
 
 export const SCORE_CV_MAX_BYTES = 5 * 1024 * 1024;
-export const SCORE_CV_ACCEPT = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+export const SCORE_CV_ACCEPT =
+  ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 export function validateScoreCv(file: File | null): string | null {
   if (!file) return "Hãy chọn file CV";
@@ -29,8 +30,13 @@ const ERROR_TEXT: Record<string, string> = {
 
 export function toScoreError(ex: unknown): ScoreError {
   const ax = ex as { response?: { status?: number; data?: { code?: string; detail?: string } }; code?: string };
-  const code = ax.response?.data?.code ?? (ax.response?.status === 401 ? "unauthorized" : ax.code === "ECONNABORTED" ? "busy" : "network");
-  return { code, message: ERROR_TEXT[code] ?? ax.response?.data?.detail ?? "Không chấm điểm được CV. Vui lòng thử lại." };
+  const code =
+    ax.response?.data?.code ??
+    (ax.response?.status === 401 ? "unauthorized" : ax.code === "ECONNABORTED" ? "busy" : "network");
+  return {
+    code,
+    message: ERROR_TEXT[code] ?? ax.response?.data?.detail ?? "Không chấm điểm được CV. Vui lòng thử lại.",
+  };
 }
 
 export async function scoreResume(jobId: string, cvFile: File): Promise<ResumeScore> {

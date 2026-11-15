@@ -41,35 +41,154 @@ export default function App() {
         <AuthProvider>
           <BrowserRouter>
             <ToastProvider>
-            <ChatProvider>
-            <ToastViewport />
-            <ChatDock />
-            <Routes>
-            <Route path="/" element={<Navigate to="/jobs" replace />} />
-            <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
-            <Route path="/register" element={<GuestOnly><RegisterPage /></GuestOnly>} />
-            <Route path="/forgot-password" element={<GuestOnly><ForgotPasswordPage /></GuestOnly>} />
-            <Route path="/reset-password" element={<GuestOnly><ResetPasswordPage /></GuestOnly>} />
-            <Route path="/verify-email" element={<VerifyEmailPage />} />
-            <Route path="/jobs" element={<JobListPage />} />
-            <Route path="/jobs/:id" element={<JobDetailPage />} />
-            <Route path="/jobs/:id/apply" element={<ProtectedRoute applicantOnly><ApplyPage /></ProtectedRoute>} />
-            <Route path="/resume-score" element={<ProtectedRoute applicantOnly><ResumeScorePage /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-            <Route path="/applications" element={<ProtectedRoute applicantOnly><ApplicationHistoryPage /></ProtectedRoute>} />
-            <Route path="/applications/:id" element={<ProtectedRoute applicantOnly><ApplicationDetailPage /></ProtectedRoute>} />
-            <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-            <Route path="/recruiter" element={<RecruiterRoute><RecruiterDashboardPage /></RecruiterRoute>} />
-            <Route path="/recruiter/jobs" element={<RecruiterRoute><RecruiterJobsPage /></RecruiterRoute>} />
-            <Route path="/recruiter/jobs/new" element={<RecruiterRoute><RecruiterPostJobPage /></RecruiterRoute>} />
-            <Route path="/recruiter/jobs/:jobId/applications" element={<RecruiterRoute><RecruiterApplicationsPage /></RecruiterRoute>} />
-            <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-            <Route path="/admin/jobs" element={<AdminRoute><AdminJobsPage /></AdminRoute>} />
-            <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
-            <Route path="*" element={<Navigate to="/jobs" replace />} />
-            </Routes>
-            <AppFooter />
-            </ChatProvider>
+              <ChatProvider>
+                <ToastViewport />
+                <ChatDock />
+                <Routes>
+                  <Route path="/" element={<Navigate to="/jobs" replace />} />
+                  <Route
+                    path="/login"
+                    element={
+                      <GuestOnly>
+                        <LoginPage />
+                      </GuestOnly>
+                    }
+                  />
+                  <Route
+                    path="/register"
+                    element={
+                      <GuestOnly>
+                        <RegisterPage />
+                      </GuestOnly>
+                    }
+                  />
+                  <Route
+                    path="/forgot-password"
+                    element={
+                      <GuestOnly>
+                        <ForgotPasswordPage />
+                      </GuestOnly>
+                    }
+                  />
+                  <Route
+                    path="/reset-password"
+                    element={
+                      <GuestOnly>
+                        <ResetPasswordPage />
+                      </GuestOnly>
+                    }
+                  />
+                  <Route path="/verify-email" element={<VerifyEmailPage />} />
+                  <Route path="/jobs" element={<JobListPage />} />
+                  <Route path="/jobs/:id" element={<JobDetailPage />} />
+                  <Route
+                    path="/jobs/:id/apply"
+                    element={
+                      <ProtectedRoute applicantOnly>
+                        <ApplyPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/resume-score"
+                    element={
+                      <ProtectedRoute applicantOnly>
+                        <ResumeScorePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <ProfilePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/applications"
+                    element={
+                      <ProtectedRoute applicantOnly>
+                        <ApplicationHistoryPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/applications/:id"
+                    element={
+                      <ProtectedRoute applicantOnly>
+                        <ApplicationDetailPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/chat"
+                    element={
+                      <ProtectedRoute>
+                        <ChatPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/recruiter"
+                    element={
+                      <RecruiterRoute>
+                        <RecruiterDashboardPage />
+                      </RecruiterRoute>
+                    }
+                  />
+                  <Route
+                    path="/recruiter/jobs"
+                    element={
+                      <RecruiterRoute>
+                        <RecruiterJobsPage />
+                      </RecruiterRoute>
+                    }
+                  />
+                  <Route
+                    path="/recruiter/jobs/new"
+                    element={
+                      <RecruiterRoute>
+                        <RecruiterPostJobPage />
+                      </RecruiterRoute>
+                    }
+                  />
+                  <Route
+                    path="/recruiter/jobs/:jobId/applications"
+                    element={
+                      <RecruiterRoute>
+                        <RecruiterApplicationsPage />
+                      </RecruiterRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <AdminRoute>
+                        <AdminDashboardPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/jobs"
+                    element={
+                      <AdminRoute>
+                        <AdminJobsPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/users"
+                    element={
+                      <AdminRoute>
+                        <AdminUsersPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/jobs" replace />} />
+                </Routes>
+                <AppFooter />
+              </ChatProvider>
             </ToastProvider>
           </BrowserRouter>
         </AuthProvider>

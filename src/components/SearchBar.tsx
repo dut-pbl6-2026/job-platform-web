@@ -3,7 +3,15 @@ import { Icon } from "./ui";
 import { LOCATION_SUGGESTIONS } from "../lib/searchFilters";
 
 /** Keyword + place + "Tìm việc". Submitting writes both to the URL; the page reads them back from there. */
-export function SearchBar({ initialQ, initialLoc, onSearch }: { initialQ?: string; initialLoc?: string; onSearch: (q: string, loc: string) => void }) {
+export function SearchBar({
+  initialQ,
+  initialLoc,
+  onSearch,
+}: {
+  initialQ?: string;
+  initialLoc?: string;
+  onSearch: (q: string, loc: string) => void;
+}) {
   const [q, setQ] = useState(initialQ || "");
   const [loc, setLoc] = useState(initialLoc || "");
 
@@ -43,10 +51,14 @@ export function SearchBar({ initialQ, initialLoc, onSearch }: { initialQ?: strin
           autoComplete="off"
         />
         <datalist id="jp-location-suggestions">
-          {LOCATION_SUGGESTIONS.map((place) => <option key={place} value={place} />)}
+          {LOCATION_SUGGESTIONS.map((place) => (
+            <option key={place} value={place} />
+          ))}
         </datalist>
       </label>
-      <button className="jp-btn jp-btn--primary jp-btn--lg jp-search-go" type="submit">Tìm việc</button>
+      <button className="jp-btn jp-btn--primary jp-btn--lg jp-search-go" type="submit">
+        Tìm việc
+      </button>
     </form>
   );
 }

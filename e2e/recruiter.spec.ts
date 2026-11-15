@@ -12,7 +12,13 @@ async function signIn(page: Page, role: Role) {
   await page.addInitScript(() => localStorage.setItem("accessToken", "e2e-token"));
   await page.route("**/api/auth/me", (route) =>
     route.fulfill({
-      json: { id: `e2e-${role}`, email: `${role.toLowerCase()}@e2e.local`, fullName: "Nhà tuyển dụng thử", role, isActive: true },
+      json: {
+        id: `e2e-${role}`,
+        email: `${role.toLowerCase()}@e2e.local`,
+        fullName: "Nhà tuyển dụng thử",
+        role,
+        isActive: true,
+      },
     }),
   );
 }
@@ -37,9 +43,30 @@ const JOB_BASE = {
 
 /** JobDetailDto rows as job-svc returns them, one per status the recruiter list can show. */
 const JOBS = [
-  { ...JOB_BASE, id: "11111111-1111-1111-1111-111111111111", title: "Lập trình viên React", location: "Hà Nội", status: "Active", createdAt: "2026-11-10T08:00:00Z" },
-  { ...JOB_BASE, id: "11111111-1111-1111-1111-222222222222", title: "Kỹ sư dữ liệu", location: "Đà Nẵng", status: "Pending", createdAt: "2026-11-09T08:00:00Z" },
-  { ...JOB_BASE, id: "11111111-1111-1111-1111-333333333333", title: "Chuyên viên tuyển dụng", location: "Remote", status: "Closed", createdAt: "2026-11-08T08:00:00Z" },
+  {
+    ...JOB_BASE,
+    id: "11111111-1111-1111-1111-111111111111",
+    title: "Lập trình viên React",
+    location: "Hà Nội",
+    status: "Active",
+    createdAt: "2026-11-10T08:00:00Z",
+  },
+  {
+    ...JOB_BASE,
+    id: "11111111-1111-1111-1111-222222222222",
+    title: "Kỹ sư dữ liệu",
+    location: "Đà Nẵng",
+    status: "Pending",
+    createdAt: "2026-11-09T08:00:00Z",
+  },
+  {
+    ...JOB_BASE,
+    id: "11111111-1111-1111-1111-333333333333",
+    title: "Chuyên viên tuyển dụng",
+    location: "Remote",
+    status: "Closed",
+    createdAt: "2026-11-08T08:00:00Z",
+  },
 ];
 
 /**
@@ -75,7 +102,14 @@ async function mockRecruiterApi(page: Page, jobs: typeof JOBS = JOBS) {
     (route) => {
       calls.push(route.request());
       const url = new URL(route.request().url());
-      route.fulfill({ json: { items: [], total: 2, page: Number(url.searchParams.get("page")) || 1, size: Number(url.searchParams.get("size")) || 20 } });
+      route.fulfill({
+        json: {
+          items: [],
+          total: 2,
+          page: Number(url.searchParams.get("page")) || 1,
+          size: Number(url.searchParams.get("size")) || 20,
+        },
+      });
     },
   );
   return calls;
@@ -87,7 +121,8 @@ async function openNavIfFolded(page: Page) {
   if (await menu.isVisible()) await menu.click();
 }
 
-const recruiterCalls = (calls: Request[]) => calls.filter((r) => new URL(r.url()).pathname.endsWith("/api/jobs/recruiter"));
+const recruiterCalls = (calls: Request[]) =>
+  calls.filter((r) => new URL(r.url()).pathname.endsWith("/api/jobs/recruiter"));
 
 test("recruiter sees the recruiter nav and real counts on the dashboard", async ({ page }) => {
   await offlineBackend(page);

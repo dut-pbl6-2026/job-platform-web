@@ -34,7 +34,12 @@ function facetCount(facets: SearchFacets | undefined, key: "experienceLevel" | "
 }
 
 /** VND amounts are typed in millions ("15" = 15.000.000 đ); USD as is. The URL always holds the raw amount. */
-function SalaryInput({ label, value, currency, onCommit }: {
+function SalaryInput({
+  label,
+  value,
+  currency,
+  onCommit,
+}: {
   label: string;
   value?: number;
   currency: "VND" | "USD";
@@ -63,13 +68,28 @@ function SalaryInput({ label, value, currency, onCommit }: {
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
-        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(); } }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          }
+        }}
       />
     </div>
   );
 }
 
-function Radio({ name, checked, label, onSelect }: { name: string; checked: boolean; label: string; onSelect: () => void }) {
+function Radio({
+  name,
+  checked,
+  label,
+  onSelect,
+}: {
+  name: string;
+  checked: boolean;
+  label: string;
+  onSelect: () => void;
+}) {
   return (
     <label className="jp-check jp-radio">
       <input type="radio" name={name} checked={checked} onChange={onSelect} />
@@ -118,25 +138,45 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
             <FilterChip
               key={c}
               pressed={currency === c}
-              onClick={() => currency !== c && onChange({ currency: c === "VND" ? undefined : c, minSalary: undefined, maxSalary: undefined })}
+              onClick={() =>
+                currency !== c &&
+                onChange({ currency: c === "VND" ? undefined : c, minSalary: undefined, maxSalary: undefined })
+              }
             >
               {c}
             </FilterChip>
           ))}
         </div>
-        <Radio name={`${uid}-salary`} checked={noSalary} label="Tất cả mức lương" onSelect={() => onChange({ minSalary: undefined, maxSalary: undefined })} />
+        <Radio
+          name={`${uid}-salary`}
+          checked={noSalary}
+          label="Tất cả mức lương"
+          onSelect={() => onChange({ minSalary: undefined, maxSalary: undefined })}
+        />
         {bands.map((band) => (
           <Radio
             key={band.label}
             name={`${uid}-salary`}
             checked={bandMatch === band}
             label={band.label}
-            onSelect={() => onChange({ minSalary: String(band.min), maxSalary: band.max != null ? String(band.max) : undefined })}
+            onSelect={() =>
+              onChange({ minSalary: String(band.min), maxSalary: band.max != null ? String(band.max) : undefined })
+            }
           />
         ))}
         <div className="jp-filter-salary">
-          <SalaryInput label={currency === "VND" ? "Từ (triệu)" : "Từ (USD)"} value={params.minSalary} currency={currency} onCommit={(raw) => onChange({ minSalary: raw })} />
-          <SalaryInput label={currency === "VND" ? "Đến (triệu)" : "Đến (USD)"} value={params.maxSalary} currency={currency} onCommit={(raw) => onChange({ maxSalary: raw })} />
+          <SalaryInput
+            label={currency === "VND" ? "Từ (triệu)" : "Từ (USD)"}
+            value={params.minSalary}
+            currency={currency}
+            onCommit={(raw) => onChange({ minSalary: raw })}
+          />
+          <SalaryInput
+            label={currency === "VND" ? "Đến (triệu)" : "Đến (USD)"}
+            value={params.maxSalary}
+            currency={currency}
+            onCommit={(raw) => onChange({ maxSalary: raw })}
+          />
         </div>
       </fieldset>
 
@@ -168,7 +208,9 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
 
       <fieldset className="jp-filter-group">
         <legend className="jp-filter-title">Kỹ năng</legend>
-        <label className="jp-sr" htmlFor={`${uid}-skill`}>Thêm kỹ năng</label>
+        <label className="jp-sr" htmlFor={`${uid}-skill`}>
+          Thêm kỹ năng
+        </label>
         <div className="jp-filter-skill">
           <input
             id={`${uid}-skill`}
@@ -182,21 +224,33 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
               addSkill(skillQ);
             }}
           />
-          <button type="button" className="jp-filter-skill-add" aria-label="Thêm kỹ năng" disabled={!skillQ.trim()} onClick={() => addSkill(skillQ)}>
+          <button
+            type="button"
+            className="jp-filter-skill-add"
+            aria-label="Thêm kỹ năng"
+            disabled={!skillQ.trim()}
+            onClick={() => addSkill(skillQ)}
+          >
             <Icon name="plus" />
           </button>
         </div>
         {selectedSkills.length > 0 && (
           <div className="jp-filter-chips">
             {selectedSkills.map((skill) => (
-              <RemovableChip key={skill} label={skill} onRemove={() => onChange({ skills: toggleCsv(params.skills, skill) || undefined })} />
+              <RemovableChip
+                key={skill}
+                label={skill}
+                onRemove={() => onChange({ skills: toggleCsv(params.skills, skill) || undefined })}
+              />
             ))}
           </div>
         )}
         {suggestions.length > 0 && (
           <div className="jp-filter-chips" aria-label="Gợi ý kỹ năng">
             {suggestions.map((skill) => (
-              <FilterChip key={skill.id} pressed={false} onClick={() => addSkill(skill.name)}>{skill.name}</FilterChip>
+              <FilterChip key={skill.id} pressed={false} onClick={() => addSkill(skill.name)}>
+                {skill.name}
+              </FilterChip>
             ))}
           </div>
         )}
