@@ -15,6 +15,8 @@ type FieldErrors = Partial<Record<"company" | "fullName" | "email" | "pwd" | "co
 
 const NEED_COMPANY = "Hãy chọn công ty bạn tuyển dụng cho.";
 const COMPANY_GONE = "Công ty không còn tồn tại, hãy chọn lại.";
+/** Shown on the login page after registering; the account cannot log in until the email is verified. */
+const VERIFY_NOTICE = "Check your email to verify your account.";
 
 /** auth-svc answers 422 for an unknown company and 400 (errors.CompanyId) for a missing one. */
 function companyErrorFrom(e: unknown): string | null {
@@ -80,7 +82,8 @@ export default function RegisterPage() {
         role: apiRole,
         ...(isRecruiter && company ? { companyId: company.id } : {}),
       });
-      nav(target, { replace: true });
+      // 202: the account exists but is not verified yet. Send the user to login with the notice.
+      nav(`/login${query}`, { replace: true, state: { notice: VERIFY_NOTICE } });
     } catch (ex: unknown) {
       const companyErr = isRecruiter ? companyErrorFrom(ex) : null;
       if (companyErr) {
