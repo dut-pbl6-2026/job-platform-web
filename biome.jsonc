@@ -46,18 +46,12 @@
       "style": {
         // Route params and auth state are read inside queries gated by `enabled` or by route guards;
         // converting ~15 sites to guards is a behavior change outside this gate.
-        "noNonNullAssertion": "off",
-        // Container divs/lists carry ARIA roles and CSS hooks; converting them to native elements
-        // changes markup and styling, so it is a separate a11y pass.
-        "noDescendingSpecificity": "off"
+        "noNonNullAssertion": "off"
       },
       "a11y": {
-        // Same as above: roles on existing elements are kept to preserve markup and CSS hooks.
+        // Container divs/lists carry ARIA roles and CSS hooks; converting them to native elements
+        // changes markup and styling, so it is a separate a11y pass.
         "useSemanticElements": "off"
-      },
-      "suspicious": {
-        // Both lists are static placeholders or pager slots that never reorder, so index keys are safe.
-        "noArrayIndexKey": "off"
       }
     }
   },
@@ -108,6 +102,29 @@
           "a11y": {
             "useKeyWithClickEvents": "off",
             "noLabelWithoutControl": "off"
+          }
+        }
+      }
+    },
+    {
+      // Skeleton rows and pager gaps are static placeholders; their order is never reordered independently.
+      "includes": ["src/components/ui/feedback.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
+    {
+      // Contextual overrides such as .jp-health .jp-table-wrap are deliberately more specific than the base
+      // rule. Where both match, the more specific one wins regardless of source order, so there is no bug.
+      "includes": ["src/styles/admin.css", "src/styles/ui.css"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDescendingSpecificity": "off"
           }
         }
       }
