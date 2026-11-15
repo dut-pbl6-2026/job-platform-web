@@ -24,7 +24,7 @@ jobs:
       - name: Install
         run: npm ci
       - name: Lint
-        run: npm run lint 2>&1 | head -100 || echo "lint pending"
+        run: npm run lint
       - name: Build
         run: npm run build
         env:

@@ -11,7 +11,7 @@
     "shots": "playwright test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\""
+    "format": "biome format --write ."
   },
   "dependencies": {
     "@tanstack/react-query": "^5.103.2",
