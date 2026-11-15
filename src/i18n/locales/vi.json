@@ -74,10 +74,87 @@
     "applicantOnly": "Trang này chỉ dành cho ứng viên."
   },
   "auth": {
+    "confirmMismatch": "Xác nhận mật khẩu không khớp",
     "passwordRules": {
       "title": "Mật khẩu cần:",
       "met": " (đã đạt)",
       "unmet": " (chưa đạt)"
+    },
+    "role": {
+      "prompt": "Bạn là",
+      "candidate": "Ứng viên",
+      "recruiter": "Nhà tuyển dụng"
+    },
+    "login": {
+      "title": "Đăng nhập",
+      "lead": "Đăng nhập để ứng tuyển và theo dõi đơn của bạn.",
+      "noAccount": "Chưa có tài khoản?",
+      "createAccount": "Tạo tài khoản",
+      "afterLoginNotice": "Đăng nhập xong, bạn quay lại trang đang xem.",
+      "emailLabel": "Email",
+      "passwordLabel": "Mật khẩu",
+      "passwordRequired": "Hãy nhập mật khẩu",
+      "remember": "Ghi nhớ tôi (30 ngày)",
+      "forgot": "Quên mật khẩu?",
+      "submit": "Đăng nhập",
+      "submitting": "Đang đăng nhập…",
+      "failed": "Đăng nhập thất bại. Vui lòng thử lại."
+    },
+    "register": {
+      "title": "Tạo tài khoản",
+      "lead": "Chọn vai trò rồi điền thông tin của bạn.",
+      "haveAccount": "Đã có tài khoản?",
+      "loginLink": "Đăng nhập",
+      "afterAuthNotice": "Tạo tài khoản xong, bạn quay lại trang đang xem.",
+      "company": "Công ty bạn tuyển dụng cho",
+      "fullName": "Họ và tên",
+      "emailLabel": "Email",
+      "passwordLabel": "Mật khẩu",
+      "confirmPasswordLabel": "Nhập lại mật khẩu",
+      "submitting": "Đang tạo tài khoản…",
+      "submitRecruiter": "Đăng ký nhà tuyển dụng",
+      "submitCandidate": "Đăng ký ứng viên",
+      "emailTaken": "Email này đã được đăng ký.",
+      "failed": "Đăng ký thất bại. Vui lòng thử lại.",
+      "needCompany": "Hãy chọn công ty bạn tuyển dụng cho.",
+      "companyGone": "Công ty không còn tồn tại, hãy chọn lại."
+    },
+    "forgot": {
+      "title": "Quên mật khẩu",
+      "lead": "Nhập email để nhận liên kết đặt lại mật khẩu. Liên kết có hiệu lực 15 phút.",
+      "backToLogin": "Quay lại đăng nhập",
+      "sent": "Nếu email tồn tại, liên kết đặt lại đã được gửi.",
+      "rateLimited": "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau 1 giờ.",
+      "failed": "Gửi yêu cầu thất bại. Vui lòng thử lại.",
+      "submitting": "Đang gửi…",
+      "submit": "Gửi liên kết đặt lại"
+    },
+    "reset": {
+      "title": "Đặt lại mật khẩu",
+      "lead": "Mã đặt lại dùng được một lần và có hiệu lực 15 phút.",
+      "backToLogin": "Quay lại đăng nhập",
+      "getNewLink": "Nhận liên kết mới",
+      "tokenRequired": "Hãy dán mã đặt lại từ email",
+      "tokenLabel": "Mã đặt lại",
+      "tokenPrefilled": "Đã điền từ liên kết trong email.",
+      "tokenHint": "Dán mã trong email đặt lại mật khẩu.",
+      "newPasswordLabel": "Mật khẩu mới",
+      "confirmNewPasswordLabel": "Nhập lại mật khẩu mới",
+      "success": "Đặt lại mật khẩu thành công. Vui lòng đăng nhập.",
+      "invalidToken": "Mã đặt lại không hợp lệ hoặc đã hết hạn.",
+      "failed": "Đặt lại thất bại. Vui lòng thử lại.",
+      "submitting": "Đang xử lý…",
+      "submit": "Đặt lại mật khẩu"
+    },
+    "verify": {
+      "failed": "Xác thực thất bại. Vui lòng thử lại."
+    },
+    "resend": {
+      "sent": "Nếu email này đang chờ xác minh, một liên kết mới đã được gửi.",
+      "rateLimited": "Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau.",
+      "sendFailed": "Chưa gửi được email xác minh. Vui lòng thử lại.",
+      "countdown": "Gửi lại sau {{seconds}} giây",
+      "send": "Gửi lại email xác minh"
     }
   },
   "validation": {
