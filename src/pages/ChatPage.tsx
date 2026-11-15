@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { DevTag, PageHead, TopBar } from "../components/ui";
 import { ChatPanel } from "../components/ChatPanel";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function ChatPage() {
-  useDocumentTitle("Trợ lý AI");
+  const { t } = useTranslation();
+  useDocumentTitle(t("nav.aiAssistant"));
   return (
     <>
       <TopBar />
@@ -11,10 +13,10 @@ export default function ChatPage() {
         <PageHead
           title={
             <>
-              Trợ lý việc làm <DevTag />
+              {t("chat.title")} <DevTag />
             </>
           }
-          lead="Gửi câu hỏi về tin tuyển dụng, CV hoặc nghề nghiệp. Cuộc trò chuyện được giữ theo từng phiên."
+          lead={t("chat.pageLead")}
         />
         <ChatPanel variant="page" />
       </main>

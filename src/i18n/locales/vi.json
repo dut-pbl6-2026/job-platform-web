@@ -945,5 +945,45 @@
       "serverDescription": "Mô tả công việc chưa hợp lệ.",
       "unnamedCompany": "Chưa cập nhật tên công ty"
     }
+  },
+  "chat": {
+    "title": "Trợ lý việc làm",
+    "remember": "Nhớ các tin nhắn gần nhất trong phiên",
+    "stop": "Dừng",
+    "newSession": "Phiên mới",
+    "logLabel": "Cuộc trò chuyện",
+    "intro": "Hỏi về việc làm, CV hoặc phỏng vấn. Khi dịch vụ AI chưa sẵn sàng, gợi ý tạm được lấy từ danh sách tin.",
+    "starters": {
+      "react": "Gợi ý việc làm React tại Hà Nội",
+      "cv": "Cách viết CV cho vị trí junior",
+      "interview": "Mẹo phỏng vấn backend"
+    },
+    "disclaimer": "Nội dung do AI tạo, hãy kiểm tra lại tin tuyển dụng.",
+    "inputLabel": "Tin nhắn",
+    "inputPlaceholder": "Hỏi về việc làm, CV, lương…",
+    "send": "Gửi",
+    "pageLead": "Gửi câu hỏi về tin tuyển dụng, CV hoặc nghề nghiệp. Cuộc trò chuyện được giữ theo từng phiên.",
+    "dockLabel": "Trợ lý việc làm",
+    "dockOpen": "Mở trợ lý việc làm",
+    "dockPage": "Mở trang chat",
+    "dockCollapse": "Thu nhỏ",
+    "stopped": "(đã dừng)",
+    "rateLimited": "Bạn đã gửi quá {{limit}} câu trong một giờ. Thử lại sau.",
+    "sendFailed": "Không gửi được tin. Kiểm tra đăng nhập hoặc thử lại.",
+    "historyFailed": "Không tải được phiên chat.",
+    "sessionFailed": "Không tạo được phiên chat. Vui lòng thử lại.",
+    "unavailable": "Tính năng chat AI đang phát triển.",
+    "truncation": "Hội thoại đã dài, tôi sẽ chỉ nhớ 20 tin nhắn gần nhất. Bạn có thể bắt đầu phiên mới.",
+    "mock": {
+      "offTopic": "Mình chỉ hỗ trợ câu hỏi về việc làm, CV và nghề nghiệp. Hãy hỏi về vị trí, kỹ năng hoặc mẹo phỏng vấn nhé.",
+      "intro": "Mình là trợ lý việc làm của Job Platform. Gợi ý dựa trên dữ liệu tin đăng (chế độ tạm khi AI-svc chưa sẵn sàng).",
+      "matches": "Một số tin phù hợp:",
+      "job": "- {{title}} tại {{company}}",
+      "openJob": "Bạn có thể mở từng tin để xem mô tả và ứng tuyển.",
+      "cv": "CV nên nêu kỹ năng đúng JD, số liệu cụ thể, và 3–5 dòng tóm tắt mục tiêu. Nêu stack, năm kinh nghiệm và thành quả đo được.",
+      "interview": "Chuẩn bị STAR cho 3 dự án gần nhất, đọc JD để lấy từ khóa, và hỏi lại về team/oncall. Lương thảo luận sau khi hai bên hiểu scope.",
+      "fallback": "Bạn có thể hỏi theo kỹ năng (React, kế toán…), địa điểm, hoặc mức lương. Mình sẽ gợi ý tin và mẹo CV.",
+      "disclaimer": "Nội dung do AI tạo, hãy kiểm tra lại tin tuyển dụng trước khi ứng tuyển."
+    }
   }
 }

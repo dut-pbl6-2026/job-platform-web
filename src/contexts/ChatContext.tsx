@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
+import i18n from "../i18n";
 import {
   ChatUnavailableError,
   createChatSession,
@@ -8,7 +9,7 @@ import {
   sendChatMessage,
 } from "../lib/chatApi";
 import type { ChatJobHint, ChatMessage } from "../types/chat";
-import { CHAT_TRUNCATION_NOTICE } from "../types/chat";
+import { CHAT_RATE_PER_HOUR, chatTruncationNotice } from "../types/chat";
 
 type ChatState = {
   open: boolean;
@@ -67,7 +68,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         const history = await fetchChatHistory(userId, id);
         if (!cancelled) setMessages(history);
       } catch (e) {
-        if (!cancelled) setError(e instanceof ChatUnavailableError ? e.message : "Không tải được phiên chat.");
+        if (!cancelled) setError(e instanceof ChatUnavailableError ? e.message : i18n.t("chat.historyFailed"));
       }
     })();
     return () => {
@@ -108,7 +109,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           },
           onTruncated: (msg) => {
             setTruncated(true);
-            setNotice(msg || CHAT_TRUNCATION_NOTICE);
+            setNotice(msg || chatTruncationNotice());
           },
           onDone: (sid) => persistSession(sid),
         });
@@ -119,16 +120,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         if ((e as { name?: string }).name === "AbortError") {
           setMessages((list) =>
-            list.map((m) => (m.id === assistantId && !m.content ? { ...m, content: "(đã dừng)" } : m)),
+            list.map((m) => (m.id === assistantId && !m.content ? { ...m, content: i18n.t("chat.stopped") } : m)),
           );
         } else if ((e as { status?: number }).status === 429) {
-          setError("Bạn đã gửi quá 20 câu trong một giờ. Thử lại sau.");
+          setError(i18n.t("chat.rateLimited", { limit: CHAT_RATE_PER_HOUR }));
           setMessages((list) => list.filter((m) => m.id !== assistantId && m.id !== userMsg.id));
         } else if (e instanceof ChatUnavailableError) {
           setError(e.message);
           setMessages((list) => list.filter((m) => m.id !== assistantId));
         } else {
-          setError("Không gửi được tin. Kiểm tra đăng nhập hoặc thử lại.");
+          setError(i18n.t("chat.sendFailed"));
           setMessages((list) => list.filter((m) => m.id !== assistantId));
         }
       } finally {

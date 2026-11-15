@@ -1,5 +1,5 @@
 /*
- * Design tokens and base styles for the "Bảng giờ tàu" (railway timetable) design.
+ * Design tokens and base styles for the railway timetable design.
  * Plan §2.2. Every rule names these tokens (--c-*, --fs-*, --sp-*); there is no other colour source.
  */
 
@@ -14,7 +14,7 @@
   --c-rule: #dde3eb;          /* row rules, borders */
   --c-amber: #f5b400;         /* "your selection": fill or band only, never text on white */
   --c-amber-soft: #fff6d9;    /* selected row */
-  --c-new: #d2232a;           /* "Mới" marker, always square + word */
+  --c-new: #d2232a;           /* "New" marker, always square + word */
   --c-danger: #b42318;        /* errors, always with icon + text */
   --c-success: #1f7a4d;       /* approved / done, with text */
   --c-warning: #9a6700;       /* pending, with text */

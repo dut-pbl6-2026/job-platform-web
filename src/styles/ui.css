@@ -1,5 +1,5 @@
 /*
- * Shared components of the "Bảng giờ tàu" world (src/components/ui). Every class is .jp-* so these
+ * Shared components of the railway timetable design (src/components/ui). Every class is .jp-* so these
  * rules never meet the legacy ones; tokens live in tokens.css.
  * Breakpoints: 1100px (board drops two columns), 768px (rows fold, filters become a drawer).
  */
@@ -781,7 +781,7 @@
 .jp-cell.jp-col--salary.is-negotiable { color: var(--c-muted); font-weight: 500; }
 .jp-cell.jp-col--posted { color: var(--c-muted); }
 
-/* 768–1099px: drop "Hình thức" and "Đăng" into the line under the company. */
+/* 768–1099px: drop the "type" and "posted" columns into the line under the company. */
 @media (max-width: 1099px) {
   .jp-board { --board-cols: minmax(0, 1fr) 150px 160px 124px; }
   .jp-board-head .jp-col--type,
