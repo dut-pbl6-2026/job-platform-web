@@ -178,7 +178,7 @@ test("login: wrong password", async ({ page }, testInfo) => {
   await page.getByLabel("Email").fill("a@e2e.local");
   await page.getByLabel(/^Mật khẩu/).fill("sai-mat-khau");
   await page.getByRole("button", { name: "Đăng nhập", exact: true }).last().click();
-  await expect(page.getByRole("alert").filter({ hasText: "Email hoặc mật khẩu không đúng" })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "Check your credentials or verify your email" })).toBeVisible();
   await shoot(page, testInfo, "login-wrong-password");
 });
 

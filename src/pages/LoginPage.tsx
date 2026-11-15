@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Alert, AuthLayout, Button, Checkbox, Field, Input, PasswordInput } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail } from "../lib/validation";
@@ -8,10 +8,15 @@ import { DEFAULT_AFTER_AUTH } from "../lib/redirect";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
+const LOGIN_FAILED = "Check your credentials or verify your email";
+
 export default function LoginPage() {
   useDocumentTitle("Đăng nhập");
   const { login } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
+  // Set by RegisterPage: the account was created and must be verified before it can log in.
+  const notice = (location.state as { notice?: unknown } | null)?.notice;
   const { target, query } = useAuthRedirect();
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
@@ -38,7 +43,8 @@ export default function LoginPage() {
       await login(email.trim(), pwd, rememberMe);
       nav(target, { replace: true });
     } catch (ex: unknown) {
-      setErr(httpStatus(ex) === 401 ? "Email hoặc mật khẩu không đúng." : apiErrorMessage(ex, "Đăng nhập thất bại. Vui lòng thử lại."));
+      // auth-svc answers 401 for a wrong password and for an unverified account alike, so the message names both.
+      setErr(httpStatus(ex) === 401 ? LOGIN_FAILED : apiErrorMessage(ex, "Đăng nhập thất bại. Vui lòng thử lại."));
     } finally {
       setLoading(false);
     }
@@ -50,6 +56,7 @@ export default function LoginPage() {
       lead="Đăng nhập để ứng tuyển và theo dõi đơn của bạn."
       footer={<>Chưa có tài khoản? <Link className="jp-link" to={`/register${query}`}>Tạo tài khoản</Link></>}
     >
+      {typeof notice === "string" && <Alert tone="success">{notice}</Alert>}
       {target !== DEFAULT_AFTER_AUTH && <Alert tone="info">Đăng nhập xong, bạn quay lại trang đang xem.</Alert>}
       {err && <Alert tone="error">{err}</Alert>}
 

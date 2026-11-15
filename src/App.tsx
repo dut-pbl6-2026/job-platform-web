@@ -16,6 +16,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 import JobListPage from "./pages/JobListPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import ApplyPage from "./pages/ApplyPage";
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/register" element={<GuestOnly><RegisterPage /></GuestOnly>} />
             <Route path="/forgot-password" element={<GuestOnly><ForgotPasswordPage /></GuestOnly>} />
             <Route path="/reset-password" element={<GuestOnly><ResetPasswordPage /></GuestOnly>} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/jobs" element={<JobListPage />} />
             <Route path="/jobs/:id" element={<JobDetailPage />} />
             <Route path="/jobs/:id/apply" element={<ProtectedRoute applicantOnly><ApplyPage /></ProtectedRoute>} />

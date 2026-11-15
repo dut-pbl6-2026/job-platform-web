@@ -121,10 +121,15 @@ api.interceptors.response.use(
 );
 
 
-// Typed helpers — 2026 best practice: register returns 201 RegisterResponse(userId), not tokens
+// Typed helpers. Registration answers 202 with { message } only: no tokens and no user id, because the
+// account must be verified by email before it can log in.
 export async function register(payload: { email: string; password: string; fullName: string; role?: string; companyId?: string }) {
   const { data } = await api.post("/auth/register", payload);
-  return data as { userId: string; message: string };
+  return data as { message: string };
+}
+export async function verifyEmail(token: string) {
+  const { data } = await api.post("/auth/verify-email", { token });
+  return data as { message: string };
 }
 export async function login(payload: { email: string; password: string; rememberMe?: boolean }) {
   const { data } = await api.post("/auth/login", payload);

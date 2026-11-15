@@ -8,7 +8,7 @@ type AuthState = {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  register: (p: { email: string; password: string; fullName: string; role?: string; companyId?: string }) => Promise<void>;
+  register: (p: { email: string; password: string; fullName: string; role?: string; companyId?: string }) => Promise<string>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   forgotPassword: (email: string) => Promise<string>;
@@ -53,13 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(me);
   }, []);
 
-  // Best practice 2026: register 201 userId then explicit login (avoids contract drift)
+  // Registration does not sign the user in: the account must verify its email first. No tokens are stored.
   const register = useCallback(async (p: { email: string; password: string; fullName: string; role?: string; companyId?: string }) => {
-    await apiRegister(p);
-    const res = await apiLogin({ email: p.email, password: p.password });
-    setTokens(res.accessToken, res.refreshToken);
-    const me = await fetchMe();
-    setUser(me);
+    const res = await apiRegister(p);
+    return res.message;
   }, []);
 
   const logout = useCallback(async () => {

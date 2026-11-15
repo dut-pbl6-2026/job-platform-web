@@ -7,7 +7,7 @@
 export const DEFAULT_AFTER_AUTH = "/jobs";
 
 // Landing back on an auth page after signing in would loop, so these are never valid targets.
-const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
+const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
 
 /** Returns `pathname + search + hash` when `raw` is a safe in-app path, otherwise null. */
 export function safeInternalPath(raw: unknown): string | null {
