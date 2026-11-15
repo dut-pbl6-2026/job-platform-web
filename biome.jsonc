@@ -1,0 +1,135 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.7/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/playwright-report",
+      "!**/test-results",
+      "!**/.impeccable",
+      "!**/*.md",
+      "!**/*.yml",
+      "!**/*.yaml"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "css": {
+    "formatter": {
+      "enabled": false
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "useExhaustiveDependencies": "error",
+        "useHookAtTopLevel": "error"
+      },
+      "style": {
+        // Route params and auth state are read inside queries gated by `enabled` or by route guards;
+        // converting ~15 sites to guards is a behavior change outside this gate.
+        "noNonNullAssertion": "off",
+        // Container divs/lists carry ARIA roles and CSS hooks; converting them to native elements
+        // changes markup and styling, so it is a separate a11y pass.
+        "noDescendingSpecificity": "off"
+      },
+      "a11y": {
+        // Same as above: roles on existing elements are kept to preserve markup and CSS hooks.
+        "useSemanticElements": "off"
+      },
+      "suspicious": {
+        // Both lists are static placeholders or pager slots that never reorder, so index keys are safe.
+        "noArrayIndexKey": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      // normalizeJob and the paginated readers adapt untyped backend JSON in several shapes.
+      "includes": ["src/lib/jobsApi.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      // Playwright assertions use innerText on purpose: it returns rendered text, which respects CSS
+      // text-transform. textContent would change what the assertions check.
+      "includes": ["e2e/**"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "useDomNodeTextContent": "off"
+          }
+        }
+      }
+    },
+    {
+      // ARIA combobox: focus stays in the input and the active option is set via aria-activedescendant.
+      // Biome does not model that pattern, so the option-level rules do not apply here.
+      "includes": ["src/components/CompanyPicker.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useFocusableInteractive": "off",
+            "useKeyWithClickEvents": "off",
+            "noNoninteractiveElementToInteractiveRole": "off"
+          }
+        }
+      }
+    },
+    {
+      // The drawer <dialog> closes on backdrop click; Escape is handled natively by the dialog.
+      // The label wraps a custom Select component, which Biome cannot see as a control.
+      "includes": ["src/pages/JobListPage.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useKeyWithClickEvents": "off",
+            "noLabelWithoutControl": "off"
+          }
+        }
+      }
+    },
+    {
+      // The reduced-motion media query must override inline and animation styles, which needs !important.
+      "includes": ["src/styles/tokens.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          }
+        }
+      }
+    }
+  ],
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  }
+}
