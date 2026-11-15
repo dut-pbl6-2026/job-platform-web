@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Navigate, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { isRecruiter } from "../lib/roles";
@@ -41,6 +42,7 @@ export function RecruiterShell({
   back?: ReactNode;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <TopBar />
@@ -51,6 +53,9 @@ export function RecruiterShell({
               {link.label}
             </NavLink>
           ))}
+          <NavLink to="/recruiter/invite-codes" end className="jp-subnav-link">
+            {t("invite.navLabel")}
+          </NavLink>
         </div>
       </nav>
       <main className="jp-page">

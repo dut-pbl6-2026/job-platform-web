@@ -23,7 +23,7 @@ type AuthState = {
     password: string;
     fullName: string;
     role?: string;
-    companyId?: string;
+    inviteCode?: string;
   }) => Promise<string>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Registration does not sign the user in: the account must verify its email first. No tokens are stored.
   const register = useCallback(
-    async (p: { email: string; password: string; fullName: string; role?: string; companyId?: string }) => {
+    async (p: { email: string; password: string; fullName: string; role?: string; inviteCode?: string }) => {
       const res = await apiRegister(p);
       return res.message;
     },

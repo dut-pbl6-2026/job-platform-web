@@ -157,7 +157,7 @@ export async function register(payload: {
   password: string;
   fullName: string;
   role?: string;
-  companyId?: string;
+  inviteCode?: string;
 }) {
   const { data } = await api.post("/auth/register", payload);
   return data as { message: string };
