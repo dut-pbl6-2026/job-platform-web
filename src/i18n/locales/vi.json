@@ -1,0 +1,173 @@
+{
+  "common": {
+    "loading": "Đang tải",
+    "new": "Mới",
+    "notProvided": "Chưa cập nhật",
+    "optional": " (không bắt buộc)",
+    "inDevelopment": "đang phát triển",
+    "pagination": "Phân trang",
+    "previous": "Trước",
+    "next": "Sau",
+    "pageNumber": "Trang {{page}}",
+    "showPassword": "Hiện mật khẩu",
+    "hidePassword": "Ẩn mật khẩu",
+    "removeFilter": "Bỏ lọc {{label}}"
+  },
+  "nav": {
+    "homeLabel": "jobplatform, về bảng việc làm",
+    "mainLabel": "Điều hướng chính",
+    "jobs": "Việc làm",
+    "createCv": "Tạo CV",
+    "recruit": "Tuyển dụng",
+    "myApplications": "Đơn của tôi",
+    "aiAssistant": "Trợ lý AI",
+    "admin": "Quản trị",
+    "register": "Đăng ký",
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "menu": "Menu"
+  },
+  "footer": {
+    "about": "Nền tảng kết nối người tìm việc và nhà tuyển dụng: tìm việc theo kỹ năng, mức lương, địa điểm và theo dõi đơn ứng tuyển.",
+    "forCandidates": "Dành cho ứng viên",
+    "latestJobs": "Việc làm mới nhất",
+    "profileAndCv": "Hồ sơ & CV",
+    "myApplications": "Đơn ứng tuyển của tôi",
+    "aiAssistant": "Trợ lý AI",
+    "login": "Đăng nhập",
+    "register": "Đăng ký tài khoản",
+    "byCategory": "Việc làm theo ngành nghề",
+    "byLocation": "Việc làm theo địa điểm",
+    "jobsInHanoi": "Việc làm tại Hà Nội",
+    "jobsInHcmc": "Việc làm tại TP. Hồ Chí Minh",
+    "jobsInDanang": "Việc làm tại Đà Nẵng",
+    "jobsNorth": "Việc làm Miền Bắc",
+    "jobsSouth": "Việc làm Miền Nam",
+    "copyright": "© {{year}} Job Platform · Đồ án PBL6"
+  },
+  "errorBoundary": {
+    "title": "Đã xảy ra lỗi",
+    "fallback": "Ứng dụng gặp lỗi ngoài dự kiến.",
+    "retry": "Thử lại",
+    "backToBoard": "Về bảng việc làm"
+  },
+  "toast": {
+    "viewDetails": "Xem chi tiết",
+    "close": "Đóng thông báo",
+    "moreJobs": "Có thêm {{more}} việc làm mới"
+  },
+  "notification": {
+    "title": "Thông báo",
+    "noContent": "Không nhận được thông báo",
+    "jobHeadlineWithCompany": "Việc làm mới: {{title}} tại {{company}}",
+    "jobHeadline": "Việc làm mới: {{title}}",
+    "newJobFallback": "Có việc làm mới"
+  },
+  "categories": {
+    "title": "Ngành nghề",
+    "loadFailed": "Chưa tải được danh mục ngành nghề nên chưa lọc theo ngành được.",
+    "retrying": "Đang thử lại…",
+    "retry": "Thử lại"
+  },
+  "route": {
+    "checkingSession": "Đang kiểm tra phiên đăng nhập",
+    "applicantOnly": "Trang này chỉ dành cho ứng viên."
+  },
+  "auth": {
+    "passwordRules": {
+      "title": "Mật khẩu cần:",
+      "met": " (đã đạt)",
+      "unmet": " (chưa đạt)"
+    }
+  },
+  "validation": {
+    "passwordRules": {
+      "length": "Có ít nhất 8 ký tự",
+      "upper": "Có ít nhất 1 chữ hoa",
+      "digit": "Có ít nhất 1 chữ số"
+    },
+    "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Email không hợp lệ",
+    "emailTooLong": "Email tối đa 256 ký tự",
+    "passwordRequired": "Mật khẩu là bắt buộc",
+    "passwordFormat": "Mật khẩu 8+ ký tự, 1 chữ hoa, 1 số",
+    "fullNameRequired": "Họ tên là bắt buộc",
+    "fullNameTooLong": "Tối đa 128 ký tự",
+    "fullNameTooShort": "Tối thiểu 2 ký tự"
+  },
+  "board": {
+    "label": "Bảng việc làm",
+    "position": "Vị trí · Công ty",
+    "location": "Nơi làm",
+    "salary": "Lương",
+    "salarySortedDesc": "Lương, đang xếp cao đến thấp. Bấm để xếp thấp đến cao",
+    "salarySortedAsc": "Lương, đang xếp thấp đến cao. Bấm để xếp cao đến thấp",
+    "salarySortable": "Lương. Bấm để xếp cao đến thấp",
+    "level": "Cấp bậc",
+    "type": "Hình thức",
+    "posted": "Đăng",
+    "selected": " (bạn vừa xem)",
+    "srLocation": "Nơi làm: ",
+    "srSalary": "Lương: ",
+    "srLevel": "Cấp bậc: ",
+    "srType": "Hình thức: ",
+    "srPosted": "Đăng: "
+  },
+  "salary": {
+    "negotiable": "Thỏa thuận",
+    "range": "{{from}} – {{to}} {{unit}}",
+    "exact": "{{amount}} {{unit}}",
+    "from": "Từ {{amount}} {{unit}}",
+    "to": "Tới {{amount}} {{unit}}",
+    "millionUnit": "triệu",
+    "dongUnit": "đ"
+  },
+  "time": {
+    "justNow": "vừa xong",
+    "minutesAgo": "{{minutes}} phút trước",
+    "hoursAgo": "{{hours}} giờ trước",
+    "daysAgo": "{{days}} ngày trước"
+  },
+  "labels": {
+    "unassigned": "Chưa phân loại",
+    "category": {
+      "IT": "Công nghệ Thông tin",
+      "Sales": "Kinh doanh/Bán hàng",
+      "Marketing": "Marketing/PR/Quảng cáo",
+      "Finance": "Tài chính/Kế toán/Ngân hàng",
+      "Healthcare": "Y tế/Dược",
+      "Education": "Giáo dục/Đào tạo",
+      "Engineering": "Kỹ thuật/Sản xuất",
+      "Hospitality": "Nhà hàng/Khách sạn/Du lịch",
+      "Others": "Ngành nghề khác"
+    },
+    "employmentType": {
+      "fulltime": "Toàn thời gian",
+      "parttime": "Bán thời gian",
+      "contract": "Hợp đồng",
+      "internship": "Thực tập"
+    },
+    "experience": {
+      "entry": "Mới vào nghề",
+      "junior": "Mới vào nghề",
+      "mid": "Trung cấp",
+      "middle": "Trung cấp",
+      "senior": "Cấp cao",
+      "lead": "Trưởng nhóm"
+    },
+    "jobStatus": {
+      "active": "Đang tuyển",
+      "pending": "Chờ duyệt",
+      "closed": "Đã đóng",
+      "rejected": "Bị từ chối",
+      "deleted": "Đã xóa"
+    },
+    "remote": "Làm từ xa",
+    "role": {
+      "user": "Người tìm việc",
+      "recruiter": "Nhà tuyển dụng",
+      "employer": "Nhà tuyển dụng",
+      "admin": "Quản trị viên"
+    }
+  }
+}

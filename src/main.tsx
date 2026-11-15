@@ -1,5 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+// Imported first: the resources must be ready before any module calls t() at import time.
+import "./i18n";
 import App from "./App";
 import { MOCKS_ENABLED } from "./lib/config";
 import "./styles/fonts.css";
