@@ -292,6 +292,18 @@ test("forgot password: success message", async ({ page }, testInfo) => {
   await shoot(page, testInfo, "forgot-password-sent");
 });
 
+test("forgot password: rate limit shows Vietnamese copy, not the backend text", async ({ page }) => {
+  await offlineBackend(page);
+  await page.route("**/api/auth/forgot-password", (route) =>
+    route.fulfill({ status: 429, json: { status: 429, title: "Too Many Requests", detail: "Forgot password request limit exceeded. Please try again later." } }));
+  await page.goto("/forgot-password");
+  await page.getByLabel("Email").fill("a@e2e.local");
+  await page.getByRole("button", { name: "Gửi liên kết đặt lại" }).click();
+  const alert = page.getByRole("alert");
+  await expect(alert).toContainText("Bạn đã gửi quá nhiều yêu cầu");
+  await expect(alert).not.toContainText("limit exceeded");
+});
+
 test("reset password: expired token offers a new link", async ({ page }, testInfo) => {
   await offlineBackend(page);
   await page.route("**/api/auth/reset-password", (route) => route.fulfill({ status: 401, json: { message: "Invalid token" } }));
