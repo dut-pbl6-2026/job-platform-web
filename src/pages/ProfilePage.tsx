@@ -1,4 +1,6 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -30,12 +32,11 @@ import { apiErrorMessage, loadErrorMessage } from "../lib/http";
 import { queryKeys } from "../lib/queryClient";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
-const MISSING = "Chưa cập nhật";
-
 type Errors = Record<string, string>;
 
 export default function ProfilePage() {
-  useDocumentTitle("Hồ sơ của tôi");
+  const { t } = useTranslation();
+  useDocumentTitle(t("profile.title"));
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const query = useQuery({
@@ -47,7 +48,7 @@ export default function ProfilePage() {
   });
 
   const profile = query.data;
-  const failure = query.isError ? loadErrorMessage(query.error, "hồ sơ") : null;
+  const failure = query.isError ? loadErrorMessage(query.error, t("profile.loadWhat")) : null;
 
   /** After any change, ask the backend again so the page shows what was really saved. */
   async function refresh() {
@@ -58,16 +59,16 @@ export default function ProfilePage() {
     <>
       <TopBar />
       <main className="jp-page">
-        <PageHead title="Hồ sơ của tôi" lead="Thông tin cá nhân, kỹ năng, kinh nghiệm và học vấn của bạn." />
+        <PageHead title={t("profile.title")} lead={t("profile.lead")} />
 
-        {query.isPending && <SkeletonBlock height={360} label="Đang tải hồ sơ" />}
+        {query.isPending && <SkeletonBlock height={360} label={t("profile.loading")} />}
 
         {failure && (
           <Alert
             tone="error"
             action={
               <Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>
-                {query.isFetching ? "Đang thử lại…" : "Thử lại"}
+                {query.isFetching ? t("jobs.retrying") : t("jobs.retry")}
               </Button>
             }
           >
@@ -105,6 +106,7 @@ function InfoPanel({
   fallbackName: string;
   onSaved: () => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -138,7 +140,7 @@ function InfoPanel({
     e.preventDefault();
     const name = form.fullName.trim();
     if (name.length < 2) {
-      setErrors({ fullName: "Họ tên cần từ 2 ký tự." });
+      setErrors({ fullName: t("profile.info.nameTooShort") });
       return;
     }
     setErrors({});
@@ -150,34 +152,34 @@ function InfoPanel({
       setEditing(false);
       setSaved(true);
     } catch (ex) {
-      setServerErr(apiErrorMessage(ex, "Chưa lưu được hồ sơ. Vui lòng thử lại."));
+      setServerErr(apiErrorMessage(ex, t("profile.info.saveFailed")));
     } finally {
       setSaving(false);
     }
   }
 
   const rows: [string, ReactNode][] = [
-    ["Họ tên", profile.fullName || fallbackName],
-    ["Chức danh", profile.headline],
-    ["Điện thoại", profile.phone],
-    ["Địa chỉ", profile.address],
-    ["Ngày sinh", formatDate(profile.dateOfBirth)],
+    [t("profile.info.fullName"), profile.fullName || fallbackName],
+    [t("profile.info.headline"), profile.headline],
+    [t("profile.info.phone"), profile.phone],
+    [t("profile.info.address"), profile.address],
+    [t("profile.info.dob"), formatDate(profile.dateOfBirth)],
   ];
 
   return (
     <Panel
-      title="Thông tin cá nhân"
+      title={t("profile.info.title")}
       actions={
         !editing ? (
           <Button variant="secondary" icon="pencil" onClick={startEdit}>
-            Sửa thông tin
+            {t("profile.info.edit")}
           </Button>
         ) : undefined
       }
     >
       {saved && !editing && (
         <Alert tone="success" className="jp-panel-alert">
-          Đã lưu hồ sơ.
+          {t("profile.info.saved")}
         </Alert>
       )}
 
@@ -187,16 +189,16 @@ function InfoPanel({
             {rows.map(([term, value]) => (
               <div key={term}>
                 <dt>{term}</dt>
-                <dd className={value ? undefined : "jp-muted"}>{value || MISSING}</dd>
+                <dd className={value ? undefined : "jp-muted"}>{value || t("common.notProvided")}</dd>
               </div>
             ))}
           </dl>
           <div className="jp-kv-summary">
-            <h3 className="jp-label">Giới thiệu ngắn</h3>
+            <h3 className="jp-label">{t("profile.info.summary")}</h3>
             {profile.summary?.trim() ? (
               <p className="jp-prose">{profile.summary}</p>
             ) : (
-              <p className="jp-muted">{MISSING}</p>
+              <p className="jp-muted">{t("common.notProvided")}</p>
             )}
           </div>
         </>
@@ -207,30 +209,34 @@ function InfoPanel({
               {serverErr}
             </Alert>
           )}
-          <Field id="profile-name" label="Họ tên" required error={errors.fullName}>
+          <Field id="profile-name" label={t("profile.info.fullName")} required error={errors.fullName}>
             <Input value={form.fullName} maxLength={128} autoComplete="name" onChange={set("fullName")} />
           </Field>
-          <Field id="profile-headline" label="Chức danh" optional>
-            <Input value={form.headline} placeholder="Ví dụ: Lập trình viên Frontend" onChange={set("headline")} />
+          <Field id="profile-headline" label={t("profile.info.headline")} optional>
+            <Input
+              value={form.headline}
+              placeholder={t("profile.info.headlinePlaceholder")}
+              onChange={set("headline")}
+            />
           </Field>
-          <Field id="profile-phone" label="Điện thoại" optional>
+          <Field id="profile-phone" label={t("profile.info.phone")} optional>
             <Input value={form.phone} inputMode="tel" autoComplete="tel" onChange={set("phone")} />
           </Field>
-          <Field id="profile-dob" label="Ngày sinh" optional>
+          <Field id="profile-dob" label={t("profile.info.dob")} optional>
             <Input type="date" value={form.dateOfBirth} autoComplete="bday" onChange={set("dateOfBirth")} />
           </Field>
-          <Field id="profile-address" label="Địa chỉ" optional className="jp-field--wide">
+          <Field id="profile-address" label={t("profile.info.address")} optional className="jp-field--wide">
             <Input value={form.address} autoComplete="street-address" onChange={set("address")} />
           </Field>
-          <Field id="profile-summary" label="Giới thiệu ngắn" optional className="jp-field--wide">
+          <Field id="profile-summary" label={t("profile.info.summary")} optional className="jp-field--wide">
             <Textarea rows={4} value={form.summary} onChange={set("summary")} />
           </Field>
           <div className="jp-form-actions jp-field--wide">
             <Button variant="secondary" onClick={() => setEditing(false)} disabled={saving}>
-              Hủy
+              {t("profile.info.cancel")}
             </Button>
             <Button type="submit" loading={saving}>
-              {saving ? "Đang lưu…" : "Lưu hồ sơ"}
+              {saving ? t("profile.saving") : t("profile.info.save")}
             </Button>
           </div>
         </form>
@@ -282,6 +288,7 @@ function Section({
   children: ReactNode;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const formId = useId();
   return (
     <Panel
@@ -295,7 +302,7 @@ function Section({
           aria-controls={formId}
           onClick={onToggle}
         >
-          {open ? "Đóng" : "Thêm"}
+          {open ? t("profile.close") : t("profile.add")}
         </Button>
       }
     >
@@ -310,18 +317,19 @@ function Section({
   );
 }
 
-/** "3/2020 – nay" style range; a missing end date reads "từ …" rather than a dash. */
+/** Date range such as "3/2020 – present"; a missing end date reads "from …" rather than a dash. */
 function range(start: string | null | undefined, end: string | null | undefined, current = false): string {
   const from = formatDate(start);
-  const to = current ? "Hiện tại" : formatDate(end);
-  if (from && to) return `${from} – ${to}`;
-  if (from) return `Từ ${from}`;
+  const to = current ? i18n.t("profile.present") : formatDate(end);
+  if (from && to) return i18n.t("profile.range", { from, to });
+  if (from) return i18n.t("profile.from", { date: from });
   return to;
 }
 
 /* Skills ------------------------------------------------------------------------------------------- */
 
 function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skill[]; onChange: () => Promise<void> }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [level, setLevel] = useState("3");
@@ -332,12 +340,12 @@ function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skil
   async function add(e: FormEvent) {
     e.preventDefault();
     const next: Errors = {};
-    if (!name.trim()) next.name = "Nhập tên kỹ năng.";
+    if (!name.trim()) next.name = t("profile.skills.nameRequired");
     const y = Number(years);
-    if (!Number.isInteger(y) || y < 0 || y > 40) next.years = "Nhập số năm từ 0 đến 40.";
+    if (!Number.isInteger(y) || y < 0 || y > 40) next.years = t("profile.skills.yearsInvalid");
     setErrors(next);
     if (Object.keys(next).length) return;
-    const ok = await run("add", "Chưa thêm được kỹ năng. Vui lòng thử lại.", () =>
+    const ok = await run("add", t("profile.skills.addFailed"), () =>
       addSkill(userId, { name: name.trim(), proficiency: Number(level), yearsOfExperience: y }),
     );
     if (ok) {
@@ -348,21 +356,25 @@ function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skil
 
   return (
     <Section
-      title="Kỹ năng"
+      title={t("profile.skills.title")}
       open={open}
       onToggle={() => {
         setOpen((v) => !v);
         setErrors({});
         setErr(null);
       }}
-      empty={skills.length === 0 ? "Chưa có kỹ năng nào." : null}
+      empty={skills.length === 0 ? t("profile.skills.empty") : null}
       err={err}
       form={
         <form className="jp-addform" onSubmit={add} noValidate>
-          <Field id="skill-name" label="Tên kỹ năng" required error={errors.name}>
-            <Input value={name} placeholder="Ví dụ: React" onChange={(e) => setName(e.target.value)} />
+          <Field id="skill-name" label={t("profile.skills.name")} required error={errors.name}>
+            <Input
+              value={name}
+              placeholder={t("profile.skills.namePlaceholder")}
+              onChange={(e) => setName(e.target.value)}
+            />
           </Field>
-          <Field id="skill-level" label="Mức thành thạo" hint="5/5 là thành thạo nhất.">
+          <Field id="skill-level" label={t("profile.skills.level")} hint={t("profile.skills.levelHint")}>
             <Select value={level} onChange={(e) => setLevel(e.target.value)}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <option key={n} value={n}>
@@ -371,7 +383,7 @@ function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skil
               ))}
             </Select>
           </Field>
-          <Field id="skill-years" label="Số năm kinh nghiệm" required error={errors.years}>
+          <Field id="skill-years" label={t("profile.skills.years")} required error={errors.years}>
             <Input
               type="number"
               inputMode="numeric"
@@ -382,7 +394,7 @@ function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skil
             />
           </Field>
           <Button type="submit" loading={busy === "add"}>
-            {busy === "add" ? "Đang lưu…" : "Lưu kỹ năng"}
+            {busy === "add" ? t("profile.saving") : t("profile.skills.save")}
           </Button>
         </form>
       }
@@ -393,18 +405,16 @@ function SkillPanel({ userId, skills, onChange }: { userId: string; skills: Skil
             <div className="jp-item-main">
               <strong className="jp-item-title">{s.name}</strong>
               <span className="jp-item-meta">
-                Mức {s.proficiency}/5 · {s.yearsOfExperience} năm
+                {t("profile.skills.meta", { level: s.proficiency, years: s.yearsOfExperience })}
               </span>
             </div>
             <Button
               variant="ghost"
-              aria-label={`Xóa kỹ năng ${s.name}`}
+              aria-label={t("profile.skills.deleteLabel", { name: s.name })}
               loading={busy === s.id}
-              onClick={() =>
-                void run(s.id, "Chưa xóa được kỹ năng. Vui lòng thử lại.", () => deleteSkill(userId, s.id))
-              }
+              onClick={() => void run(s.id, t("profile.skills.deleteFailed"), () => deleteSkill(userId, s.id))}
             >
-              Xóa
+              {t("profile.delete")}
             </Button>
           </li>
         ))}
@@ -426,6 +436,7 @@ function ExperiencePanel({
   items: WorkExperience[];
   onChange: () => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [f, setF] = useState(EMPTY_EXP);
   const [errors, setErrors] = useState<Errors>({});
@@ -437,12 +448,12 @@ function ExperiencePanel({
   async function add(e: FormEvent) {
     e.preventDefault();
     const next: Errors = {};
-    if (!f.company.trim()) next.company = "Nhập tên công ty.";
-    if (!f.title.trim()) next.title = "Nhập chức danh.";
-    if (!f.startDate) next.startDate = "Chọn ngày bắt đầu.";
+    if (!f.company.trim()) next.company = t("profile.experience.companyRequired");
+    if (!f.title.trim()) next.title = t("profile.experience.titleRequired");
+    if (!f.startDate) next.startDate = t("profile.experience.startRequired");
     setErrors(next);
     if (Object.keys(next).length) return;
-    const ok = await run("add", "Chưa thêm được kinh nghiệm. Vui lòng thử lại.", () =>
+    const ok = await run("add", t("profile.experience.addFailed"), () =>
       addExperience(userId, {
         ...f,
         company: f.company.trim(),
@@ -458,44 +469,44 @@ function ExperiencePanel({
 
   return (
     <Section
-      title="Kinh nghiệm làm việc"
+      title={t("profile.experience.title")}
       open={open}
       onToggle={() => {
         setOpen((v) => !v);
         setErrors({});
         setErr(null);
       }}
-      empty={items.length === 0 ? "Chưa có kinh nghiệm nào." : null}
+      empty={items.length === 0 ? t("profile.experience.empty") : null}
       err={err}
       form={
         <form className="jp-addform jp-form-grid" onSubmit={add} noValidate>
-          <Field id="exp-company" label="Công ty" required error={errors.company}>
+          <Field id="exp-company" label={t("profile.experience.company")} required error={errors.company}>
             <Input value={f.company} onChange={text("company")} />
           </Field>
-          <Field id="exp-title" label="Chức danh" required error={errors.title}>
+          <Field id="exp-title" label={t("profile.experience.jobTitle")} required error={errors.title}>
             <Input value={f.title} onChange={text("title")} />
           </Field>
-          <Field id="exp-start" label="Bắt đầu" required error={errors.startDate}>
+          <Field id="exp-start" label={t("profile.experience.start")} required error={errors.startDate}>
             <Input type="date" value={f.startDate} onChange={text("startDate")} />
           </Field>
           {!f.isCurrent && (
-            <Field id="exp-end" label="Kết thúc" optional>
+            <Field id="exp-end" label={t("profile.experience.end")} optional>
               <Input type="date" value={f.endDate} onChange={text("endDate")} />
             </Field>
           )}
           <div className="jp-field--wide">
             <Checkbox
-              label="Đang làm việc ở đây"
+              label={t("profile.experience.current")}
               checked={f.isCurrent}
               onChange={(e) => setF({ ...f, isCurrent: e.target.checked })}
             />
           </div>
-          <Field id="exp-desc" label="Mô tả ngắn" optional className="jp-field--wide">
+          <Field id="exp-desc" label={t("profile.experience.description")} optional className="jp-field--wide">
             <Textarea rows={3} value={f.description} onChange={text("description")} />
           </Field>
           <div className="jp-form-actions jp-field--wide">
             <Button type="submit" loading={busy === "add"}>
-              {busy === "add" ? "Đang lưu…" : "Lưu kinh nghiệm"}
+              {busy === "add" ? t("profile.saving") : t("profile.experience.save")}
             </Button>
           </div>
         </form>
@@ -512,13 +523,11 @@ function ExperiencePanel({
             </div>
             <Button
               variant="ghost"
-              aria-label={`Xóa kinh nghiệm ${x.title}`}
+              aria-label={t("profile.experience.deleteLabel", { title: x.title })}
               loading={busy === x.id}
-              onClick={() =>
-                void run(x.id, "Chưa xóa được kinh nghiệm. Vui lòng thử lại.", () => deleteExperience(userId, x.id))
-              }
+              onClick={() => void run(x.id, t("profile.experience.deleteFailed"), () => deleteExperience(userId, x.id))}
             >
-              Xóa
+              {t("profile.delete")}
             </Button>
           </li>
         ))}
@@ -540,6 +549,7 @@ function EducationPanel({
   items: Education[];
   onChange: () => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [f, setF] = useState(EMPTY_EDU);
   const [errors, setErrors] = useState<Errors>({});
@@ -550,13 +560,13 @@ function EducationPanel({
   async function add(e: FormEvent) {
     e.preventDefault();
     const next: Errors = {};
-    if (!f.institution.trim()) next.institution = "Nhập tên trường.";
-    if (!f.degree.trim()) next.degree = "Nhập bằng cấp.";
-    if (!f.field.trim()) next.field = "Nhập ngành học.";
-    if (!f.startDate) next.startDate = "Chọn ngày bắt đầu.";
+    if (!f.institution.trim()) next.institution = t("profile.education.schoolRequired");
+    if (!f.degree.trim()) next.degree = t("profile.education.degreeRequired");
+    if (!f.field.trim()) next.field = t("profile.education.fieldRequired");
+    if (!f.startDate) next.startDate = t("profile.education.startRequired");
     setErrors(next);
     if (Object.keys(next).length) return;
-    const ok = await run("add", "Chưa thêm được học vấn. Vui lòng thử lại.", () =>
+    const ok = await run("add", t("profile.education.addFailed"), () =>
       addEducation(userId, { ...f, institution: f.institution.trim(), degree: f.degree.trim(), field: f.field.trim() }),
     );
     if (ok) {
@@ -567,38 +577,50 @@ function EducationPanel({
 
   return (
     <Section
-      title="Học vấn"
+      title={t("profile.education.title")}
       open={open}
       onToggle={() => {
         setOpen((v) => !v);
         setErrors({});
         setErr(null);
       }}
-      empty={items.length === 0 ? "Chưa có học vấn nào." : null}
+      empty={items.length === 0 ? t("profile.education.empty") : null}
       err={err}
       form={
         <form className="jp-addform jp-form-grid" onSubmit={add} noValidate>
-          <Field id="edu-school" label="Trường" required error={errors.institution} className="jp-field--wide">
+          <Field
+            id="edu-school"
+            label={t("profile.education.school")}
+            required
+            error={errors.institution}
+            className="jp-field--wide"
+          >
             <Input value={f.institution} onChange={text("institution")} />
           </Field>
-          <Field id="edu-degree" label="Bằng cấp" required error={errors.degree} hint="Ví dụ: Cử nhân">
+          <Field
+            id="edu-degree"
+            label={t("profile.education.degree")}
+            required
+            error={errors.degree}
+            hint={t("profile.education.degreeHint")}
+          >
             <Input value={f.degree} onChange={text("degree")} />
           </Field>
-          <Field id="edu-field" label="Ngành" required error={errors.field}>
+          <Field id="edu-field" label={t("profile.education.field")} required error={errors.field}>
             <Input value={f.field} onChange={text("field")} />
           </Field>
-          <Field id="edu-start" label="Bắt đầu" required error={errors.startDate}>
+          <Field id="edu-start" label={t("profile.education.start")} required error={errors.startDate}>
             <Input type="date" value={f.startDate} onChange={text("startDate")} />
           </Field>
-          <Field id="edu-end" label="Kết thúc" optional>
+          <Field id="edu-end" label={t("profile.education.end")} optional>
             <Input type="date" value={f.endDate} onChange={text("endDate")} />
           </Field>
-          <Field id="edu-grade" label="Điểm trung bình" optional className="jp-field--wide">
+          <Field id="edu-grade" label={t("profile.education.grade")} optional className="jp-field--wide">
             <Input value={f.grade} onChange={text("grade")} />
           </Field>
           <div className="jp-form-actions jp-field--wide">
             <Button type="submit" loading={busy === "add"}>
-              {busy === "add" ? "Đang lưu…" : "Lưu học vấn"}
+              {busy === "add" ? t("profile.saving") : t("profile.education.save")}
             </Button>
           </div>
         </form>
@@ -613,18 +635,18 @@ function EducationPanel({
               </strong>
               <span className="jp-item-sub">{x.institution}</span>
               <span className="jp-item-meta">
-                {[range(x.startDate, x.endDate), x.grade ? `Điểm ${x.grade}` : ""].filter(Boolean).join(" · ")}
+                {[range(x.startDate, x.endDate), x.grade ? t("profile.education.gradeNote", { grade: x.grade }) : ""]
+                  .filter(Boolean)
+                  .join(" · ")}
               </span>
             </div>
             <Button
               variant="ghost"
-              aria-label={`Xóa học vấn ${x.institution}`}
+              aria-label={t("profile.education.deleteLabel", { school: x.institution })}
               loading={busy === x.id}
-              onClick={() =>
-                void run(x.id, "Chưa xóa được học vấn. Vui lòng thử lại.", () => deleteEducation(userId, x.id))
-              }
+              onClick={() => void run(x.id, t("profile.education.deleteFailed"), () => deleteEducation(userId, x.id))}
             >
-              Xóa
+              {t("profile.delete")}
             </Button>
           </li>
         ))}

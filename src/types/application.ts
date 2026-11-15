@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 export type ApplicationStatus = "pending" | "reviewed" | "shortlisted" | "accepted" | "rejected";
 
 export interface StatusHistoryEntry {
@@ -37,10 +38,22 @@ export interface PaginatedApplications {
 
 export const APPLICATION_STATUSES: ApplicationStatus[] = ["pending", "reviewed", "shortlisted", "accepted", "rejected"];
 
+// Getters, not values: each label is read through i18n when it is used, so the callers below
+// (and the recruiter and admin screens) keep their `STATUS_LABEL[status]` form unchanged.
 export const STATUS_LABEL: Record<ApplicationStatus, string> = {
-  pending: "Chờ xem",
-  reviewed: "Đã xem",
-  shortlisted: "Vào vòng sau",
-  accepted: "Nhận việc",
-  rejected: "Không đậu",
+  get pending() {
+    return i18n.t("applications.status.pending");
+  },
+  get reviewed() {
+    return i18n.t("applications.status.reviewed");
+  },
+  get shortlisted() {
+    return i18n.t("applications.status.shortlisted");
+  },
+  get accepted() {
+    return i18n.t("applications.status.accepted");
+  },
+  get rejected() {
+    return i18n.t("applications.status.rejected");
+  },
 };

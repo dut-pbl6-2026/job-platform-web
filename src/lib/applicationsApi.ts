@@ -1,4 +1,5 @@
 import { api } from "./api";
+import i18n from "../i18n";
 import { unwrap, pickStr, pickNum, toOneBased, fromOneBased, shouldUseMock, httpStatus } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
 import type { Application, ApplicationStatus, PaginatedApplications, StatusHistoryEntry } from "../types/application";
@@ -17,9 +18,9 @@ function isAllowedCv(file: File): boolean {
 }
 
 export function validateCvFile(file: File | null): string | null {
-  if (!file) return "Hãy chọn file CV";
-  if (!isAllowedCv(file)) return "Chỉ nhận PDF, DOC hoặc DOCX";
-  if (file.size > CV_MAX_BYTES) return "File tối đa 5 MB";
+  if (!file) return i18n.t("cv.missing");
+  if (!isAllowedCv(file)) return i18n.t("cv.allowedDocPdf");
+  if (file.size > CV_MAX_BYTES) return i18n.t("cv.tooLarge");
   return null;
 }
 
@@ -129,14 +130,14 @@ export async function submitApplication(payload: {
     const { data } = await api.post("/applications", form);
     const body = unwrap<Record<string, unknown>>(data);
     const id = pickStr(body, "id") || "";
-    const message = pickStr(body, "message") || "Đã gửi hồ sơ";
+    const message = pickStr(body, "message") || i18n.t("applications.submit.sent");
     return { id, message };
   } catch (e: unknown) {
     if (!shouldUseMock(e, "POST /applications")) throw e;
     const existing = loadStore();
     if (existing.some((a) => a.applicantId === payload.applicantId && a.jobId === payload.jobId)) {
-      const err = Object.assign(new Error("Đã ứng tuyển tin này"), {
-        response: { status: 409, data: { message: "Bạn đã ứng tuyển tin này rồi" } },
+      const err = Object.assign(new Error(i18n.t("applications.submit.duplicate")), {
+        response: { status: 409, data: { message: i18n.t("applications.submit.duplicateBody") } },
       });
       throw err;
     }
@@ -156,13 +157,19 @@ export async function submitApplication(payload: {
       createdAt: now,
       updatedAt: now,
       statusHistory: [
-        { id: crypto.randomUUID(), applicationId: "", status: "pending", note: "Đã gửi hồ sơ", changedAt: now },
+        {
+          id: crypto.randomUUID(),
+          applicationId: "",
+          status: "pending",
+          note: i18n.t("applications.submit.sent"),
+          changedAt: now,
+        },
       ],
     };
     app.statusHistory![0].applicationId = app.id;
     saveStore([app, ...existing]);
     await new Promise((r) => setTimeout(r, 350));
-    return { id: app.id, message: "Đã gửi hồ sơ (chế độ tạm, chưa có app-svc)" };
+    return { id: app.id, message: i18n.t("applications.submit.sentTemporary") };
   }
 }
 
@@ -215,7 +222,7 @@ export async function fetchApplicationById(id: string, userId: string): Promise<
 export async function downloadCv(cvUrl: string, fileName?: string | null): Promise<void> {
   if (!cvUrl.startsWith("/")) {
     // blob: (mock mode) or an absolute storage URL: nothing to authenticate.
-    if (!/^(https?|blob):/i.test(cvUrl)) throw new Error("Đường dẫn CV không hợp lệ");
+    if (!/^(https?|blob):/i.test(cvUrl)) throw new Error(i18n.t("cv.invalidUrl"));
     window.open(cvUrl, "_blank", "noopener");
     return;
   }
