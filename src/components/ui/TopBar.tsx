@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { isAdmin, isUser } from "../../lib/roles";
+import { isAdmin, isRecruiter, isUser } from "../../lib/roles";
 import { Icon } from "./Icon";
 import { DevTag, cx } from "./controls";
 
@@ -10,8 +10,8 @@ type Item = { to: string; label: string; match: (path: string) => boolean; dev?:
 /**
  * The navy shell bar shared by every screen. The active item carries the amber band (amber means
  * "where you are"). Below 768px the nav and account actions fold into a disclosure menu.
- * The recruiter dead end ("Đăng tuyển & tìm hồ sơ" linking back to /jobs) is gone: there is no
- * recruiter flow on the web yet (PRODUCT.md).
+ * Recruiters get a "Tuyển dụng" item for the recruiter area. Create-CV is applicant-only, so it is
+ * shown to guests and Users only, as on mobile.
  */
 export function TopBar() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -24,8 +24,13 @@ export function TopBar() {
 
   const items: Item[] = [
     { to: "/jobs", label: "Việc làm", match: (p) => p === "/jobs" || p.startsWith("/jobs/") },
-    { to: isAuthenticated ? "/profile" : "/register", label: "Tạo CV", match: (p) => p === "/profile" },
   ];
+  if (!isAuthenticated || isUser(user?.role)) {
+    items.push({ to: isAuthenticated ? "/profile" : "/register", label: "Tạo CV", match: (p) => p === "/profile" });
+  }
+  if (isAuthenticated && isRecruiter(user?.role)) {
+    items.push({ to: "/recruiter", label: "Tuyển dụng", match: (p) => p === "/recruiter" || p.startsWith("/recruiter/") });
+  }
   if (isAuthenticated && isUser(user?.role)) {
     items.push({ to: "/applications", label: "Đơn của tôi", match: (p) => p.startsWith("/applications") });
   }

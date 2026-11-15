@@ -423,3 +423,28 @@ export function timeAgo(iso: string) {
   if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
   return `${Math.floor(diff / 86400)} ngày trước`;
 }
+
+/** The job statuses a recruiter can filter by, as job-svc parses them (case-insensitive enum names). */
+export type RecruiterJobStatus = "Active" | "Pending" | "Closed";
+
+/**
+ * job-svc GET /api/jobs/recruiter: the signed-in recruiter's own jobs, newest first. Pages start at 1
+ * and the response carries the real `total`. No mock fallback: recruiter screens show real data or an error.
+ */
+export async function fetchRecruiterJobs(
+  params: { page?: number; size?: number; status?: RecruiterJobStatus } = {},
+): Promise<PaginatedJobs> {
+  const size = params.size ?? 10;
+  const { data } = await api.get("/jobs/recruiter", {
+    params: { page: params.page ?? 1, size, status: params.status },
+  });
+  const items = Array.isArray(data?.items) ? data.items.map(normalizeJob) : [];
+  const total = Number(data?.total) || 0;
+  return {
+    items,
+    total,
+    page: Number(data?.page) || 1,
+    size: Number(data?.size) || size,
+    totalPages: Math.max(1, Math.ceil(total / (Number(data?.size) || size))),
+  };
+}

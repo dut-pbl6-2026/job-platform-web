@@ -8,6 +8,7 @@ import { ToastViewport } from "./components/ToastViewport";
 import { ChatDock } from "./components/ChatDock";
 import { GuestOnly, ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminShell";
+import { RecruiterRoute } from "./components/RecruiterShell";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AppFooter } from "./components/AppFooter";
 import { createQueryClient } from "./lib/queryClient";
@@ -26,6 +27,8 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminJobsPage from "./pages/AdminJobsPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import ChatPage from "./pages/ChatPage";
+import RecruiterDashboardPage from "./pages/RecruiterDashboardPage";
+import RecruiterJobsPage from "./pages/RecruiterJobsPage";
 
 export default function App() {
   const [queryClient] = useState(() => createQueryClient());
@@ -46,12 +49,14 @@ export default function App() {
             <Route path="/reset-password" element={<GuestOnly><ResetPasswordPage /></GuestOnly>} />
             <Route path="/jobs" element={<JobListPage />} />
             <Route path="/jobs/:id" element={<JobDetailPage />} />
-            <Route path="/jobs/:id/apply" element={<ProtectedRoute><ApplyPage /></ProtectedRoute>} />
-            <Route path="/resume-score" element={<ProtectedRoute><ResumeScorePage /></ProtectedRoute>} />
+            <Route path="/jobs/:id/apply" element={<ProtectedRoute applicantOnly><ApplyPage /></ProtectedRoute>} />
+            <Route path="/resume-score" element={<ProtectedRoute applicantOnly><ResumeScorePage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-            <Route path="/applications" element={<ProtectedRoute><ApplicationHistoryPage /></ProtectedRoute>} />
-            <Route path="/applications/:id" element={<ProtectedRoute><ApplicationDetailPage /></ProtectedRoute>} />
+            <Route path="/applications" element={<ProtectedRoute applicantOnly><ApplicationHistoryPage /></ProtectedRoute>} />
+            <Route path="/applications/:id" element={<ProtectedRoute applicantOnly><ApplicationDetailPage /></ProtectedRoute>} />
             <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+            <Route path="/recruiter" element={<RecruiterRoute><RecruiterDashboardPage /></RecruiterRoute>} />
+            <Route path="/recruiter/jobs" element={<RecruiterRoute><RecruiterJobsPage /></RecruiterRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
             <Route path="/admin/jobs" element={<AdminRoute><AdminJobsPage /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />

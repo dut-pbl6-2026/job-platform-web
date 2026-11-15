@@ -14,7 +14,7 @@ The audience that decides success comes first: **course graders and demo-day vie
 
 - **Candidates (User):** Vietnamese job seekers. They search and filter jobs, read a job, apply with a CV, keep a profile, and track their applications.
 - **Admins:** they review pending job posts (read, then approve or reject with a reason), activate or deactivate users, and check platform stats and service health.
-- **Recruiters:** today they can only edit their own job from the job detail page. No posting or candidate-management flow exists on the web yet; `Đăng tuyển & tìm hồ sơ` links back to `/jobs`.
+- **Recruiters:** they have a dashboard (`/recruiter`) with real counts of their jobs and recent postings, and a job list (`/recruiter/jobs`) with status filters. They can still edit their own job from the job detail page. Posting a job and reviewing candidates are not on the web yet.
 
 ## Product Purpose
 

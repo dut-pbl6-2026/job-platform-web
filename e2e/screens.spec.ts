@@ -468,11 +468,12 @@ test("applications: load error is Vietnamese and retry works", async ({ page }, 
   await expect(page.locator(".jp-app-row")).toHaveCount(1);
 });
 
-test("applications: recruiter is told the page is for candidates", async ({ page }) => {
+test("applications: recruiter is sent to the job board with a notice", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page, "Recruiter");
   await page.goto("/applications");
-  await expect(page.getByRole("heading", { name: "Trang này dành cho người tìm việc." })).toBeVisible();
+  await expect(page).toHaveURL(/\/jobs$/);
+  await expect(page.getByText("Trang này chỉ dành cho ứng viên.")).toBeVisible();
 });
 
 const DETAIL = application(1, "shortlisted", {
