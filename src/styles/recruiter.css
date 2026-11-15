@@ -79,3 +79,61 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Applications for one job: a card per application. */
+.jp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.jp-recruiter-apps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.jp-recruiter-app {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+}
+
+.jp-recruiter-app-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.jp-recruiter-app-status {
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.jp-recruiter-app-letter p {
+  white-space: pre-line;
+  margin: var(--sp-2) 0 0;
+}
+
+.jp-recruiter-app-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.jp-recruiter-app-status-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}

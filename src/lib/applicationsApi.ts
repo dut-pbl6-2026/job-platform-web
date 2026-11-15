@@ -258,3 +258,23 @@ export async function fetchApplicationsByJob(
     totalPages: Math.max(1, Math.ceil(total / pageSize)),
   };
 }
+
+/** Allowed next statuses per current status, from app-svc GET /api/applications/status-flow (public). */
+export async function fetchStatusFlow(): Promise<Partial<Record<ApplicationStatus, ApplicationStatus[]>>> {
+  const { data } = await api.get("/applications/status-flow");
+  const raw = (data?.transitions ?? {}) as Record<string, unknown>;
+  const out: Partial<Record<ApplicationStatus, ApplicationStatus[]>> = {};
+  for (const [from, to] of Object.entries(raw)) {
+    if (!Array.isArray(to)) continue;
+    out[asStatus(from)] = to.map((s) => asStatus(s));
+  }
+  return out;
+}
+
+/**
+ * app-svc PUT /api/applications/{id}/status (Recruiter or Admin). Status is sent lowercase.
+ * A 409 means the transition is no longer allowed (someone else changed it); the caller refetches.
+ */
+export async function updateApplicationStatus(id: string, status: ApplicationStatus): Promise<void> {
+  await api.put(`/applications/${encodeURIComponent(id)}/status`, { status });
+}

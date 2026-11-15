@@ -94,6 +94,7 @@ export default function RecruiterJobsPage() {
                   <th scope="col">Địa điểm</th>
                   <th scope="col">Trạng thái</th>
                   <th scope="col">Ngày đăng</th>
+                  <th scope="col"><span className="jp-sr-only">Hồ sơ</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -103,6 +104,7 @@ export default function RecruiterJobsPage() {
                     <td>{locationLabel(job.location)}</td>
                     <td>{jobStatusLabel(job.status)}</td>
                     <td>{formatDate(job.createdAt)}</td>
+                    <td><Link to={`/recruiter/jobs/${job.id}/applications`}>Xem ứng viên</Link></td>
                   </tr>
                 ))}
               </tbody>

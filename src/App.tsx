@@ -30,6 +30,7 @@ import ChatPage from "./pages/ChatPage";
 import RecruiterDashboardPage from "./pages/RecruiterDashboardPage";
 import RecruiterJobsPage from "./pages/RecruiterJobsPage";
 import RecruiterPostJobPage from "./pages/RecruiterPostJobPage";
+import RecruiterApplicationsPage from "./pages/RecruiterApplicationsPage";
 
 export default function App() {
   const [queryClient] = useState(() => createQueryClient());
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/recruiter" element={<RecruiterRoute><RecruiterDashboardPage /></RecruiterRoute>} />
             <Route path="/recruiter/jobs" element={<RecruiterRoute><RecruiterJobsPage /></RecruiterRoute>} />
             <Route path="/recruiter/jobs/new" element={<RecruiterRoute><RecruiterPostJobPage /></RecruiterRoute>} />
+            <Route path="/recruiter/jobs/:jobId/applications" element={<RecruiterRoute><RecruiterApplicationsPage /></RecruiterRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
             <Route path="/admin/jobs" element={<AdminRoute><AdminJobsPage /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
