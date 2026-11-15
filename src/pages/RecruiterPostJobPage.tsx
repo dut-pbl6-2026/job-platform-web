@@ -1,22 +1,20 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
 import { Alert, Button, Field, Input, Select, Textarea } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import i18n from "../i18n";
 import { apiErrorMessage } from "../lib/http";
 import { createJob, fetchCategories, type JobCreatePayload } from "../lib/jobsApi";
+import { employmentTypeLabel } from "../lib/labels";
 import { queryKeys } from "../lib/queryClient";
 import { showToast } from "../lib/toastBus";
 
-// Values are the backend enum names (job-svc); labels are the mobile post-job screen's Vietnamese.
-const EMPLOYMENT_TYPES: { value: string; label: string }[] = [
-  { value: "FullTime", label: "Toàn thời gian" },
-  { value: "PartTime", label: "Bán thời gian" },
-  { value: "Contract", label: "Hợp đồng" },
-  { value: "Internship", label: "Thực tập" },
-];
+// Values are the backend enum names (job-svc); labels come from labels.ts.
+const EMPLOYMENT_TYPES = ["FullTime", "PartTime", "Contract", "Internship"] as const;
 
 const EXPERIENCE_LEVELS: { value: string; label: string }[] = [
   { value: "Entry", label: "Junior" },
@@ -55,21 +53,24 @@ type Errors = Partial<Record<keyof Form, string>>;
 
 function validate(f: Form): Errors {
   const e: Errors = {};
-  if (!f.title.trim()) e.title = "Vui lòng nhập tiêu đề";
-  if (!f.description.trim()) e.description = "Vui lòng nhập mô tả";
-  if (!f.location.trim()) e.location = "Vui lòng nhập địa điểm";
+  if (!f.title.trim()) e.title = i18n.t("recruiter.post.validation.titleRequired");
+  if (!f.description.trim()) e.description = i18n.t("recruiter.post.validation.descriptionRequired");
+  if (!f.location.trim()) e.location = i18n.t("recruiter.post.validation.locationRequired");
   const min = f.salaryMin.trim() === "" ? null : Number(f.salaryMin);
   const max = f.salaryMax.trim() === "" ? null : Number(f.salaryMax);
-  if (min !== null && (!Number.isFinite(min) || min < 0)) e.salaryMin = "Mức lương phải là số không âm";
-  if (max !== null && (!Number.isFinite(max) || max < 0)) e.salaryMax = "Mức lương phải là số không âm";
+  if (min !== null && (!Number.isFinite(min) || min < 0))
+    e.salaryMin = i18n.t("recruiter.post.validation.salaryNotNegative");
+  if (max !== null && (!Number.isFinite(max) || max < 0))
+    e.salaryMax = i18n.t("recruiter.post.validation.salaryNotNegative");
   if (min !== null && max !== null && Number.isFinite(min) && Number.isFinite(max) && min > max) {
-    e.salaryMax = "Mức lương tối đa phải lớn hơn hoặc bằng tối thiểu";
+    e.salaryMax = i18n.t("recruiter.post.validation.salaryRange");
   }
   return e;
 }
 
 export default function RecruiterPostJobPage() {
-  useDocumentTitle("Nhà tuyển dụng: Đăng tin");
+  const { t } = useTranslation();
+  useDocumentTitle(t("recruiter.documentTitles.post"));
   const navigate = useNavigate();
   const { user } = useAuth();
   const companyId = user?.companyId ?? "";
@@ -81,7 +82,7 @@ export default function RecruiterPostJobPage() {
   const submit = useMutation({
     mutationFn: (payload: JobCreatePayload) => createJob(payload),
     onSuccess: () => {
-      showToast({ title: "Tin tuyển dụng đã được gửi duyệt thành công!", kind: "success" });
+      showToast({ title: t("recruiter.post.published"), kind: "success" });
       navigate("/recruiter/jobs");
     },
   });
@@ -114,33 +115,26 @@ export default function RecruiterPostJobPage() {
   }
 
   return (
-    <RecruiterShell
-      title="Đăng tin tuyển dụng"
-      lead="Điền thông tin vị trí. Tin sẽ đăng dưới công ty của tài khoản bạn."
-    >
-      {!companyId && (
-        <Alert tone="warning">
-          Tài khoản của bạn chưa gắn với công ty nên chưa đăng tin được. Hãy liên hệ quản trị viên.
-        </Alert>
-      )}
+    <RecruiterShell title={t("recruiter.post.title")} lead={t("recruiter.post.lead")}>
+      {!companyId && <Alert tone="warning">{t("recruiter.post.noCompany")}</Alert>}
 
       <form className="jp-recruiter-form" onSubmit={onSubmit} noValidate>
         <fieldset className="jp-recruiter-section">
-          <legend>Mô tả công việc &amp; Yêu cầu</legend>
-          <Field id="post-title" label="Tiêu đề vị trí" required error={errors.title}>
+          <legend>{t("recruiter.post.sectionJob")}</legend>
+          <Field id="post-title" label={t("recruiter.post.titleLabel")} required error={errors.title}>
             <Input
               id="post-title"
               value={form.title}
-              placeholder="Ví dụ: Senior UI/UX Designer"
+              placeholder={t("recruiter.post.titlePlaceholder")}
               onChange={(e) => set("title", e.target.value)}
             />
           </Field>
           <Field
             id="post-description"
-            label="Mô tả công việc"
+            label={t("recruiter.post.descriptionLabel")}
             required
             error={errors.description}
-            hint="Mô tả chi tiết trách nhiệm và kỹ năng cần có"
+            hint={t("recruiter.post.descriptionHint")}
           >
             <Textarea
               id="post-description"
@@ -149,7 +143,7 @@ export default function RecruiterPostJobPage() {
               onChange={(e) => set("description", e.target.value)}
             />
           </Field>
-          <Field id="post-requirements" label="Yêu cầu" optional>
+          <Field id="post-requirements" label={t("recruiter.post.requirementsLabel")} optional>
             <Textarea
               id="post-requirements"
               rows={4}
@@ -160,18 +154,18 @@ export default function RecruiterPostJobPage() {
         </fieldset>
 
         <fieldset className="jp-recruiter-section">
-          <legend>Công ty &amp; Địa điểm làm việc</legend>
-          <Field id="post-location" label="Địa điểm" required error={errors.location}>
+          <legend>{t("recruiter.post.sectionCompany")}</legend>
+          <Field id="post-location" label={t("recruiter.post.locationLabel")} required error={errors.location}>
             <Input
               id="post-location"
               value={form.location}
-              placeholder="Ví dụ: Hà Nội"
+              placeholder={t("recruiter.post.locationPlaceholder")}
               onChange={(e) => set("location", e.target.value)}
             />
           </Field>
-          <Field id="post-category" label="Lĩnh vực" optional>
+          <Field id="post-category" label={t("recruiter.post.categoryLabel")} optional>
             <Select id="post-category" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
-              <option value="">Chưa chọn</option>
+              <option value="">{t("recruiter.post.notChosen")}</option>
               {(categories.data ?? []).map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -182,9 +176,9 @@ export default function RecruiterPostJobPage() {
         </fieldset>
 
         <fieldset className="jp-recruiter-section">
-          <legend>Mức lương &amp; Tiền tệ</legend>
+          <legend>{t("recruiter.post.sectionSalary")}</legend>
           <div className="jp-recruiter-row">
-            <Field id="post-salary-min" label="Lương tối thiểu (VND)" optional error={errors.salaryMin}>
+            <Field id="post-salary-min" label={t("recruiter.post.salaryMinLabel")} optional error={errors.salaryMin}>
               <Input
                 id="post-salary-min"
                 inputMode="numeric"
@@ -192,7 +186,7 @@ export default function RecruiterPostJobPage() {
                 onChange={(e) => set("salaryMin", e.target.value)}
               />
             </Field>
-            <Field id="post-salary-max" label="Lương tối đa (VND)" optional error={errors.salaryMax}>
+            <Field id="post-salary-max" label={t("recruiter.post.salaryMaxLabel")} optional error={errors.salaryMax}>
               <Input
                 id="post-salary-max"
                 inputMode="numeric"
@@ -204,30 +198,30 @@ export default function RecruiterPostJobPage() {
         </fieldset>
 
         <fieldset className="jp-recruiter-section">
-          <legend>Loại hình &amp; Cấp độ</legend>
+          <legend>{t("recruiter.post.sectionType")}</legend>
           <div className="jp-recruiter-row">
-            <Field id="post-employment" label="Loại hình làm việc" required>
+            <Field id="post-employment" label={t("recruiter.post.employmentLabel")} required>
               <Select
                 id="post-employment"
                 value={form.employmentType}
                 onChange={(e) => set("employmentType", e.target.value)}
               >
-                {EMPLOYMENT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {EMPLOYMENT_TYPES.map((value) => (
+                  <option key={value} value={value}>
+                    {employmentTypeLabel(value)}
                   </option>
                 ))}
               </Select>
             </Field>
-            <Field id="post-experience" label="Cấp độ kinh nghiệm" required>
+            <Field id="post-experience" label={t("recruiter.post.experienceLabel")} required>
               <Select
                 id="post-experience"
                 value={form.experienceLevel}
                 onChange={(e) => set("experienceLevel", e.target.value)}
               >
-                {EXPERIENCE_LEVELS.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {EXPERIENCE_LEVELS.map((level) => (
+                  <option key={level.value} value={level.value}>
+                    {level.label}
                   </option>
                 ))}
               </Select>
@@ -236,8 +230,13 @@ export default function RecruiterPostJobPage() {
         </fieldset>
 
         <fieldset className="jp-recruiter-section">
-          <legend>Chế độ đãi ngộ &amp; Phúc lợi</legend>
-          <Field id="post-benefits" label="Phúc lợi" optional hint="Bảo hiểm, thưởng, ngày phép, đào tạo...">
+          <legend>{t("recruiter.post.sectionBenefits")}</legend>
+          <Field
+            id="post-benefits"
+            label={t("recruiter.post.benefitsLabel")}
+            optional
+            hint={t("recruiter.post.benefitsHint")}
+          >
             <Textarea
               id="post-benefits"
               rows={4}
@@ -248,14 +247,12 @@ export default function RecruiterPostJobPage() {
         </fieldset>
 
         {submit.isError && (
-          <Alert tone="error">
-            {apiErrorMessage(submit.error, "Không gửi được tin tuyển dụng. Vui lòng thử lại.")}
-          </Alert>
+          <Alert tone="error">{apiErrorMessage(submit.error, t("recruiter.post.submitFailed"))}</Alert>
         )}
 
         <div className="jp-recruiter-actions">
           <Button type="submit" loading={submit.isPending} disabled={!companyId}>
-            {submit.isPending ? "Đang đăng…" : "Xuất bản"}
+            {submit.isPending ? t("recruiter.post.publishing") : t("recruiter.post.publish")}
           </Button>
         </div>
       </form>

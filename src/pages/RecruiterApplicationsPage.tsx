@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
@@ -23,12 +24,13 @@ function parseStatus(raw: string | null): ApplicationStatus | "" {
  * applicantId), so rows show the application date, status, cover letter and CV. Ids are never shown.
  */
 export default function RecruiterApplicationsPage() {
+  const { t } = useTranslation();
   const { jobId = "" } = useParams();
   const [params, setParams] = useSearchParams();
   const queryClient = useQueryClient();
   const status = parseStatus(params.get("status"));
   const page = Math.max(1, Number(params.get("page")) || 1);
-  useDocumentTitle("Nhà tuyển dụng: Hồ sơ ứng viên");
+  useDocumentTitle(t("recruiter.documentTitles.applications"));
   const [cvError, setCvError] = useState<string | null>(null);
 
   const job = useQuery({
@@ -52,7 +54,10 @@ export default function RecruiterApplicationsPage() {
   const update = useMutation({
     mutationFn: ({ id, next }: { id: string; next: ApplicationStatus }) => updateApplicationStatus(id, next),
     onSuccess: (_data, vars) => {
-      showToast({ title: `Đã cập nhật trạng thái ứng viên thành: ${STATUS_LABEL[vars.next]}`, kind: "success" });
+      showToast({
+        title: t("recruiter.applications.statusToast", { status: STATUS_LABEL[vars.next] }),
+        kind: "success",
+      });
       void queryClient.invalidateQueries({ queryKey: ["recruiter", "applications", jobId] });
     },
   });
@@ -73,23 +78,25 @@ export default function RecruiterApplicationsPage() {
 
   function errorFor(e: unknown): string {
     // 409: the status changed on the server since this list loaded. The backend message is English, so it is not shown.
-    if (httpStatus(e) === 409) return "Trạng thái hồ sơ đã thay đổi. Danh sách vừa được làm mới, hãy thử lại.";
-    return apiErrorMessage(e, "Không cập nhật được trạng thái. Vui lòng thử lại.");
+    if (httpStatus(e) === 409) return t("recruiter.applications.statusChanged");
+    return apiErrorMessage(e, t("recruiter.applications.updateFailed"));
   }
 
   const data = list.data;
   const flowMap = flow.data ?? {};
-  const title = job.data?.title ? `Hồ sơ ứng viên: ${job.data.title}` : "Hồ sơ ứng viên";
+  const title = job.data?.title
+    ? t("recruiter.applications.titleWithJob", { title: job.data.title })
+    : t("recruiter.applications.title");
 
   return (
     <RecruiterShell
       title={title}
-      lead="Xem hồ sơ, tải CV và cập nhật trạng thái theo quy trình."
-      back={<BackLink to="/recruiter/jobs">Tin tuyển dụng</BackLink>}
+      lead={t("recruiter.applications.lead")}
+      back={<BackLink to="/recruiter/jobs">{t("recruiter.applications.back")}</BackLink>}
     >
-      <div className="jp-recruiter-filters" role="group" aria-label="Lọc theo trạng thái hồ sơ">
+      <div className="jp-recruiter-filters" role="group" aria-label={t("recruiter.applications.filterGroup")}>
         <FilterChip pressed={status === ""} onClick={() => patch({ status: "" })}>
-          Tất cả
+          {t("applications.all")}
         </FilterChip>
         {APPLICATION_STATUSES.map((s) => (
           <FilterChip key={s} pressed={status === s} onClick={() => patch({ status: s })}>
@@ -101,39 +108,43 @@ export default function RecruiterApplicationsPage() {
       {cvError && <Alert tone="error">{cvError}</Alert>}
       {update.isError && <Alert tone="error">{errorFor(update.error)}</Alert>}
 
-      {list.isPending && <SkeletonRows rows={4} label="Đang tải hồ sơ" />}
+      {list.isPending && <SkeletonRows rows={4} label={t("recruiter.applications.loading")} />}
 
       {list.isError && (
         <Alert
           tone="error"
           action={
             <Button variant="secondary" loading={list.isFetching} onClick={() => void list.refetch()}>
-              {list.isFetching ? "Đang thử lại…" : "Thử lại"}
+              {list.isFetching ? t("jobs.retrying") : t("jobs.retry")}
             </Button>
           }
         >
-          {loadErrorMessage(list.error, "danh sách hồ sơ")}
+          {loadErrorMessage(list.error, t("recruiter.applications.loadWhat"))}
         </Alert>
       )}
 
       {data && data.items.length === 0 && (
-        <EmptyState title={status ? "Không có hồ sơ ở trạng thái này." : "Tin này chưa có hồ sơ ứng tuyển."} />
+        <EmptyState
+          title={status ? t("recruiter.applications.emptyFiltered") : t("recruiter.applications.emptyNone")}
+        />
       )}
 
       {data && data.items.length > 0 && (
         <>
-          <ul className="jp-recruiter-apps" aria-label="Danh sách hồ sơ ứng tuyển">
+          <ul className="jp-recruiter-apps" aria-label={t("recruiter.applications.listLabel")}>
             {data.items.map((app) => {
               const next = (flowMap[app.status] ?? []) as ApplicationStatus[];
               return (
                 <li className="jp-recruiter-app" key={app.id}>
                   <div className="jp-recruiter-app-head">
-                    <span className="jp-recruiter-app-date">Ứng tuyển: {formatDate(app.createdAt)}</span>
+                    <span className="jp-recruiter-app-date">
+                      {t("recruiter.applications.applied", { date: formatDate(app.createdAt) })}
+                    </span>
                     <span className="jp-recruiter-app-status">{STATUS_LABEL[app.status]}</span>
                   </div>
                   {app.coverLetter && (
                     <details className="jp-recruiter-app-letter">
-                      <summary>Thư ứng tuyển</summary>
+                      <summary>{t("recruiter.applications.letter")}</summary>
                       <p>{app.coverLetter}</p>
                     </details>
                   )}
@@ -144,10 +155,10 @@ export default function RecruiterApplicationsPage() {
                         onClick={() => {
                           const cv = app.cvUrl ?? "";
                           setCvError(null);
-                          downloadCv(cv).catch(() => setCvError("Không tải được CV. Vui lòng thử lại."));
+                          downloadCv(cv).catch(() => setCvError(t("recruiter.applications.cvFailed")));
                         }}
                       >
-                        Xem CV
+                        {t("recruiter.applications.viewCv")}
                       </Button>
                     )}
                     {next.length > 0 ? (
@@ -161,11 +172,11 @@ export default function RecruiterApplicationsPage() {
                         }}
                       >
                         <label className="jp-sr-only" htmlFor={`next-${app.id}`}>
-                          Cập nhật trạng thái
+                          {t("recruiter.applications.updateStatusLabel")}
                         </label>
                         <select id={`next-${app.id}`} name="next" className="jp-input" defaultValue="" required>
                           <option value="" disabled>
-                            Chọn trạng thái mới
+                            {t("recruiter.applications.chooseNext")}
                           </option>
                           {next.map((s) => (
                             <option key={s} value={s}>
@@ -174,11 +185,11 @@ export default function RecruiterApplicationsPage() {
                           ))}
                         </select>
                         <Button type="submit" loading={update.isPending && update.variables?.id === app.id}>
-                          Cập nhật
+                          {t("recruiter.applications.update")}
                         </Button>
                       </form>
                     ) : (
-                      <span className="jp-muted">Đã kết thúc quy trình</span>
+                      <span className="jp-muted">{t("recruiter.applications.ended")}</span>
                     )}
                   </div>
                 </li>

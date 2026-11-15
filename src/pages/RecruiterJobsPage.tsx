@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
@@ -8,11 +9,14 @@ import { loadErrorMessage } from "../lib/http";
 import { jobStatusLabel, locationLabel } from "../lib/labels";
 import { fetchRecruiterJobs, type RecruiterJobStatus } from "../lib/jobsApi";
 
-const FILTERS: { value: RecruiterJobStatus | ""; label: string }[] = [
-  { value: "", label: "Tất cả" },
-  { value: "Active", label: "Đang mở" },
-  { value: "Pending", label: "Chờ duyệt" },
-  { value: "Closed", label: "Đã đóng" },
+const FILTERS: {
+  value: RecruiterJobStatus | "";
+  labelKey: "recruiter.jobs.all" | "recruiter.jobs.active" | "recruiter.jobs.pending" | "recruiter.jobs.closed";
+}[] = [
+  { value: "", labelKey: "recruiter.jobs.all" },
+  { value: "Active", labelKey: "recruiter.jobs.active" },
+  { value: "Pending", labelKey: "recruiter.jobs.pending" },
+  { value: "Closed", labelKey: "recruiter.jobs.closed" },
 ];
 
 const PAGE_SIZE = 10;
@@ -22,7 +26,8 @@ function parseStatus(raw: string | null): RecruiterJobStatus | "" {
 }
 
 export default function RecruiterJobsPage() {
-  useDocumentTitle("Nhà tuyển dụng: Tin tuyển dụng");
+  const { t } = useTranslation();
+  useDocumentTitle(t("recruiter.documentTitles.jobs"));
   const [params, setParams] = useSearchParams();
   const status = parseStatus(params.get("status"));
   // The URL is 1-based, like the API. The Pagination component counts from 0.
@@ -53,35 +58,35 @@ export default function RecruiterJobsPage() {
 
   return (
     <RecruiterShell
-      title="Quản lý tin tuyển dụng"
-      lead="Các tin bạn đã đăng, theo trạng thái."
-      actions={<ButtonLink to="/recruiter/jobs/new">Đăng tin mới</ButtonLink>}
+      title={t("recruiter.jobs.title")}
+      lead={t("recruiter.jobs.lead")}
+      actions={<ButtonLink to="/recruiter/jobs/new">{t("recruiter.jobs.newJob")}</ButtonLink>}
     >
-      <div className="jp-recruiter-filters" role="group" aria-label="Lọc theo trạng thái">
+      <div className="jp-recruiter-filters" role="group" aria-label={t("recruiter.jobs.filterGroup")}>
         {FILTERS.map((f) => (
           <FilterChip key={f.value || "all"} pressed={status === f.value} onClick={() => patch({ status: f.value })}>
-            {f.label}
+            {t(f.labelKey)}
           </FilterChip>
         ))}
       </div>
 
-      {list.isPending && <SkeletonRows rows={5} label="Đang tải tin tuyển dụng" />}
+      {list.isPending && <SkeletonRows rows={5} label={t("recruiter.jobs.loading")} />}
 
       {list.isError && (
         <Alert
           tone="error"
           action={
             <Button variant="secondary" loading={list.isFetching} onClick={() => void list.refetch()}>
-              {list.isFetching ? "Đang thử lại…" : "Thử lại"}
+              {list.isFetching ? t("jobs.retrying") : t("jobs.retry")}
             </Button>
           }
         >
-          {loadErrorMessage(list.error, "danh sách tin tuyển dụng")}
+          {loadErrorMessage(list.error, t("recruiter.jobs.loadWhat"))}
         </Alert>
       )}
 
       {data && data.items.length === 0 && (
-        <EmptyState title={status ? "Không có tin nào ở trạng thái này." : "Bạn chưa có tin tuyển dụng nào."} />
+        <EmptyState title={status ? t("recruiter.jobs.emptyFiltered") : t("recruiter.jobs.empty")} />
       )}
 
       {data && data.items.length > 0 && (
@@ -90,12 +95,12 @@ export default function RecruiterJobsPage() {
             <table className="jp-table">
               <thead>
                 <tr>
-                  <th scope="col">Tin tuyển dụng</th>
-                  <th scope="col">Địa điểm</th>
-                  <th scope="col">Trạng thái</th>
-                  <th scope="col">Ngày đăng</th>
+                  <th scope="col">{t("recruiter.jobs.colJob")}</th>
+                  <th scope="col">{t("recruiter.jobs.colLocation")}</th>
+                  <th scope="col">{t("recruiter.jobs.colStatus")}</th>
+                  <th scope="col">{t("recruiter.jobs.colPosted")}</th>
                   <th scope="col">
-                    <span className="jp-sr-only">Hồ sơ</span>
+                    <span className="jp-sr-only">{t("recruiter.jobs.applicantsSr")}</span>
                   </th>
                 </tr>
               </thead>
@@ -109,7 +114,7 @@ export default function RecruiterJobsPage() {
                     <td>{jobStatusLabel(job.status)}</td>
                     <td>{formatDate(job.createdAt)}</td>
                     <td>
-                      <Link to={`/recruiter/jobs/${job.id}/applications`}>Xem ứng viên</Link>
+                      <Link to={`/recruiter/jobs/${job.id}/applications`}>{t("recruiter.jobs.viewApplicants")}</Link>
                     </td>
                   </tr>
                 ))}

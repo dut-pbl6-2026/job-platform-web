@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Navigate, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { isRecruiter } from "../lib/roles";
@@ -6,23 +7,24 @@ import { NoticeRedirect } from "./ProtectedRoute";
 import { PageHead, PageLoading, TopBar } from "./ui";
 
 const LINKS = [
-  { to: "/recruiter", label: "Tổng quan", end: true },
-  { to: "/recruiter/jobs", label: "Tin tuyển dụng", end: true },
-  { to: "/recruiter/jobs/new", label: "Đăng tin", end: true },
-];
+  { to: "/recruiter", labelKey: "recruiter.nav.overview", end: true },
+  { to: "/recruiter/jobs", labelKey: "recruiter.nav.jobs", end: true },
+  { to: "/recruiter/jobs/new", labelKey: "recruiter.nav.post", end: true },
+] as const;
 
 /**
  * Recruiter-only area. Only the Recruiter role gets in: Admin is refused too, as on mobile
  * (recruiter-only routes). Anyone else is sent to the job board with a notice.
  */
 export function RecruiterRoute({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
-  if (loading) return <PageLoading label="Đang kiểm tra quyền truy cập" />;
+  if (loading) return <PageLoading label={t("recruiter.checkingAccess")} />;
   if (!isAuthenticated)
     return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   if (!isRecruiter(user?.role)) {
-    return <NoticeRedirect to="/jobs" title="Khu vực này chỉ dành cho nhà tuyển dụng." dedupeKey="recruiter-only" />;
+    return <NoticeRedirect to="/jobs" title={t("recruiter.accessNotice")} dedupeKey="recruiter-only" />;
   }
   return <>{children}</>;
 }
@@ -41,14 +43,15 @@ export function RecruiterShell({
   back?: ReactNode;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <TopBar />
-      <nav className="jp-subnav" aria-label="Điều hướng nhà tuyển dụng">
+      <nav className="jp-subnav" aria-label={t("recruiter.nav.label")}>
         <div className="jp-subnav-inner">
           {LINKS.map((link) => (
             <NavLink key={link.to} to={link.to} end={link.end} className="jp-subnav-link">
-              {link.label}
+              {t(link.labelKey)}
             </NavLink>
           ))}
         </div>
