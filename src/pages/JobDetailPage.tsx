@@ -151,9 +151,7 @@ export default function JobDetailPage() {
                 <p className="jp-prose">{s.text}</p>
               </section>
             ))}
-            {empty.length > 0 && (
-              <p className="jp-detail-empty jp-muted">Chưa cập nhật: {empty.join(", ")}.</p>
-            )}
+            {empty.length > 0 && <p className="jp-detail-empty jp-muted">Chưa cập nhật: {empty.join(", ")}.</p>}
             <p className="jp-detail-meta jp-muted">
               {[
                 `Danh mục: ${categoryLabel(job.category?.name)}`,

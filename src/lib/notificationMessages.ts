@@ -1,14 +1,7 @@
 import type { Job } from "../types/job";
 import type { IncomingNotification, ToastInput } from "../types/notification";
 
-const JOB_EVENT_TYPES = new Set([
-  "job.created",
-  "job_created",
-  "job.posted",
-  "job_posted",
-  "new_job",
-  "jobposted",
-]);
+const JOB_EVENT_TYPES = new Set(["job.created", "job_created", "job.posted", "job_posted", "new_job", "jobposted"]);
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -23,7 +16,9 @@ function pickString(data: Record<string, unknown>, keys: string[]): string | und
   return undefined;
 }
 
-export function parseNotificationEnvelope(raw: unknown): { messageType: string; notification: IncomingNotification } | null {
+export function parseNotificationEnvelope(
+  raw: unknown,
+): { messageType: string; notification: IncomingNotification } | null {
   const msg = asRecord(raw);
   if (!msg) return null;
 
@@ -45,15 +40,16 @@ export function parseNotificationEnvelope(raw: unknown): { messageType: string; 
   const payload = asRecord(msg.payload) ?? msg;
   const data = asRecord(payload.data) ?? {};
   const nestedType = payload.type != null ? String(payload.type) : "";
-  const type = payload.notificationType != null
-    ? String(payload.notificationType)
-    : payload.event != null
-      ? String(payload.event)
-      : nestedType && nestedType !== "notification"
-        ? nestedType
-        : messageType !== "notification"
-          ? messageType
-          : "";
+  const type =
+    payload.notificationType != null
+      ? String(payload.notificationType)
+      : payload.event != null
+        ? String(payload.event)
+        : nestedType && nestedType !== "notification"
+          ? nestedType
+          : messageType !== "notification"
+            ? messageType
+            : "";
 
   return {
     messageType: messageType || "notification",
@@ -80,7 +76,11 @@ export function toToastInput(notification: IncomingNotification): ToastInput | n
   const jobTitle = pickString(data, ["title", "jobTitle", "job_title"]);
   const company = pickString(data, ["company", "companyName", "company_name", "CompanyName"]);
   const event = (notification.type ?? "").toLowerCase().replace(/\s+/g, "");
-  const isJob = JOB_EVENT_TYPES.has(event) || event.includes("job.created") || event.includes("job_created") || (!!jobId && event.includes("job"));
+  const isJob =
+    JOB_EVENT_TYPES.has(event) ||
+    event.includes("job.created") ||
+    event.includes("job_created") ||
+    (!!jobId && event.includes("job"));
 
   if (isJob) {
     return {
@@ -103,7 +103,7 @@ export function toToastInput(notification: IncomingNotification): ToastInput | n
     kind: event === "error" ? "error" : "info",
     title: notification.title ?? "Thông báo",
     body: notification.body,
-    href: event.startsWith("application") ? applicationHref ?? jobHref : jobHref ?? applicationHref,
+    href: event.startsWith("application") ? (applicationHref ?? jobHref) : (jobHref ?? applicationHref),
   };
 }
 

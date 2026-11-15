@@ -36,9 +36,28 @@ export const SALARY_BANDS_USD = [
 ] as const;
 
 /** Suggestions under the place field; the visitor can still type any place. */
-export const LOCATION_SUGGESTIONS = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Hải Phòng", "Cần Thơ", "Bình Dương", "Đồng Nai", "Bắc Ninh"] as const;
+export const LOCATION_SUGGESTIONS = [
+  "Hà Nội",
+  "Hồ Chí Minh",
+  "Đà Nẵng",
+  "Hải Phòng",
+  "Cần Thơ",
+  "Bình Dương",
+  "Đồng Nai",
+  "Bắc Ninh",
+] as const;
 
-const NORTH = ["hà nội", "hải phòng", "bắc ninh", "quảng ninh", "hải dương", "nam định", "thanh hóa", "nghệ an", "ha noi"];
+const NORTH = [
+  "hà nội",
+  "hải phòng",
+  "bắc ninh",
+  "quảng ninh",
+  "hải dương",
+  "nam định",
+  "thanh hóa",
+  "nghệ an",
+  "ha noi",
+];
 const SOUTH = ["hồ chí minh", "bình dương", "đồng nai", "long an", "cần thơ", "ho chi minh"];
 
 export function locationMatches(jobLocation: string, filter: string) {
@@ -48,7 +67,8 @@ export function locationMatches(jobLocation: string, filter: string) {
   if (want === "remote") return loc === "remote";
   if (want === "miền bắc") return NORTH.some((p) => loc.includes(p));
   if (want === "miền nam") return SOUTH.some((p) => loc.includes(p));
-  if (want.includes("hồ chí minh") || want.includes("ho chi minh")) return loc.includes("hồ chí minh") || loc.includes("ho chi minh");
+  if (want.includes("hồ chí minh") || want.includes("ho chi minh"))
+    return loc.includes("hồ chí minh") || loc.includes("ho chi minh");
   return loc.includes(want) || want.includes(loc);
 }
 
@@ -90,18 +110,21 @@ export function parseSearchParams(sp: URLSearchParams): JobSearchParams {
 export function hasActiveFilters(params: JobSearchParams) {
   return Boolean(
     params.location ||
-    params.category ||
-    params.employmentType ||
-    params.experienceLevel ||
-    params.skills ||
-    params.minSalary != null ||
-    params.maxSalary != null ||
-    (params.sortBy && params.sortBy !== "relevance")
+      params.category ||
+      params.employmentType ||
+      params.experienceLevel ||
+      params.skills ||
+      params.minSalary != null ||
+      params.maxSalary != null ||
+      (params.sortBy && params.sortBy !== "relevance"),
   );
 }
 
 export function splitCsv(value?: string) {
-  return (value || "").split(",").map((part) => part.trim()).filter(Boolean);
+  return (value || "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
 }
 
 export function toggleCsv(current: string | undefined, value: string) {

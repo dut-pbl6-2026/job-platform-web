@@ -8,7 +8,12 @@ import { cx } from "./controls";
  * The four sign-in screens share this: the navy shell bar (so there is always a way back to the
  * board), then one plain panel on the ground colour. No gradient, no brand claims.
  */
-export function AuthLayout({ title, lead, footer, children }: {
+export function AuthLayout({
+  title,
+  lead,
+  footer,
+  children,
+}: {
   title: ReactNode;
   lead?: ReactNode;
   footer?: ReactNode;
@@ -43,7 +48,9 @@ export function PasswordRules({ value }: { value: string }) {
           const met = rule.test(value);
           return (
             <li key={rule.id} className={cx("jp-rule", met && "is-met")}>
-              <span className="jp-rule-box" aria-hidden="true">{met && <Icon name="check" size={12} />}</span>
+              <span className="jp-rule-box" aria-hidden="true">
+                {met && <Icon name="check" size={12} />}
+              </span>
               <span>{rule.label}</span>
               <span className="jp-sr">{met ? " (đã đạt)" : " (chưa đạt)"}</span>
             </li>

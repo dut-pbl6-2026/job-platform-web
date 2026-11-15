@@ -1,5 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { fetchMe, forgotPassword as apiForgot, getAccessToken, login as apiLogin, logoutApi, register as apiRegister, resetPassword as apiReset, setTokens, subscribeTokenChanges } from "../lib/api";
+import {
+  fetchMe,
+  forgotPassword as apiForgot,
+  getAccessToken,
+  login as apiLogin,
+  logoutApi,
+  register as apiRegister,
+  resetPassword as apiReset,
+  setTokens,
+  subscribeTokenChanges,
+} from "../lib/api";
 
 type User = { id: string; email: string; fullName: string; role: string; isActive: boolean; companyId?: string | null };
 
@@ -8,7 +18,13 @@ type AuthState = {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  register: (p: { email: string; password: string; fullName: string; role?: string; companyId?: string }) => Promise<string>;
+  register: (p: {
+    email: string;
+    password: string;
+    fullName: string;
+    role?: string;
+    companyId?: string;
+  }) => Promise<string>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   forgotPassword: (email: string) => Promise<string>;
@@ -23,7 +39,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     const token = getAccessToken();
-    if (!token) { setUser(null); setLoading(false); return; }
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
     try {
       const me = await fetchMe();
       setUser(me);
@@ -33,18 +53,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // A network error or 5xx (backend restarting) must not log the user out.
       const status = (e as { response?: { status?: number } })?.response?.status;
       if (status === 401 || status === 403) setTokens(null, null);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { refreshUser(); }, [refreshUser]);
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   // Keep tabs in sync: logout in one tab logs out the others, login in one tab logs in the others.
   const userRef = useRef(user);
   userRef.current = user;
-  useEffect(() => subscribeTokenChanges((loggedIn) => {
-    if (!loggedIn) setUser(null);
-    else if (!userRef.current) void refreshUser();
-  }), [refreshUser]);
+  useEffect(
+    () =>
+      subscribeTokenChanges((loggedIn) => {
+        if (!loggedIn) setUser(null);
+        else if (!userRef.current) void refreshUser();
+      }),
+    [refreshUser],
+  );
 
   const login = useCallback(async (email: string, password: string, rememberMe = false) => {
     const res = await apiLogin({ email, password, rememberMe });
@@ -54,13 +82,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Registration does not sign the user in: the account must verify its email first. No tokens are stored.
-  const register = useCallback(async (p: { email: string; password: string; fullName: string; role?: string; companyId?: string }) => {
-    const res = await apiRegister(p);
-    return res.message;
-  }, []);
+  const register = useCallback(
+    async (p: { email: string; password: string; fullName: string; role?: string; companyId?: string }) => {
+      const res = await apiRegister(p);
+      return res.message;
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
-    try { await logoutApi(); } catch { /* ignore */ }
+    try {
+      await logoutApi();
+    } catch {
+      /* ignore */
+    }
     setTokens(null, null);
     setUser(null);
   }, []);
@@ -75,9 +110,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res.message;
   }, []);
 
-  const value = useMemo<AuthState>(() => ({
-    user, loading, isAuthenticated: !!user, login, register, logout, refreshUser, forgotPassword, resetPassword
-  }), [user, loading, login, register, logout, refreshUser, forgotPassword, resetPassword]);
+  const value = useMemo<AuthState>(
+    () => ({
+      user,
+      loading,
+      isAuthenticated: !!user,
+      login,
+      register,
+      logout,
+      refreshUser,
+      forgotPassword,
+      resetPassword,
+    }),
+    [user, loading, login, register, logout, refreshUser, forgotPassword, resetPassword],
+  );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

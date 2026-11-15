@@ -3,12 +3,13 @@
 React web client of **Vietnam Job Platform** (PBL6 2026, `dut-pbl6-2026`). Product truth lives in `PRODUCT.md`: read it before any UI work.
 
 ## Stack
-React 18 · Vite 5 · TypeScript 5 (strict) · React Router 7 · TanStack Query 5 · Axios. Plain CSS in `src/styles/` (no Tailwind, no CSS-in-JS). No test runner and no ESLint config yet.
+React 19 · Vite 8 · TypeScript 7 (strict) · React Router 7 · TanStack Query 5 · Axios. Plain CSS in `src/styles/` (no Tailwind, no CSS-in-JS). Lint and format: Biome 2.6.7 (`biome.jsonc`). No ESLint: typescript-eslint does not support TypeScript 7. Playwright specs in `e2e/` are screenshot and smoke checks; there is no unit test runner.
 
 ## Commands
 - Dev with backend: `npm run dev` (port 5173; proxies `/api` and `/ws` to the gateway on `:5000`)
 - Dev without backend: `VITE_ENABLE_MOCKS=true npm run dev` (mock fallback on network errors and 5xx only)
 - Build and type check: `npm run build` (runs `tsc -b`, then `vite build`; must pass before every commit)
+- Lint: `npm run lint` (Biome `check`, the CI gate; exit code fails the job). `npm run lint:fix` applies safe fixes.
 - Local backend: `run-backend.bat` / `run-backend.sh` (Postgres + auth, seeds Admin `admin@jobplatform.local`)
 
 ## Layout

@@ -23,9 +23,15 @@ function paginate<T>(items: T[], page: number, size: number): Paginated<T> {
  * auth-svc and job-svc admin lists return { data: [...], pagination: { page (1-based), pageSize, totalItems, totalPages } }.
  * Do not unwrap() first: an array `data` is an object too, and the items would be lost.
  */
-function readPage(raw: unknown, page0: number, size: number): { items: unknown[]; page: number; size: number; total: number; totalPages: number } {
+function readPage(
+  raw: unknown,
+  page0: number,
+  size: number,
+): { items: unknown[]; page: number; size: number; total: number; totalPages: number } {
   const r = (raw ?? {}) as Record<string, unknown>;
-  const items = (Array.isArray(r.items) ? r.items : Array.isArray(r.data) ? r.data : Array.isArray(raw) ? raw : []) as unknown[];
+  const items = (
+    Array.isArray(r.items) ? r.items : Array.isArray(r.data) ? r.data : Array.isArray(raw) ? raw : []
+  ) as unknown[];
   const meta = (r.pagination && typeof r.pagination === "object" ? r.pagination : r) as Record<string, unknown>;
   const s = pickNum(meta, "size", "pageSize") ?? size;
   const total = pickNum(meta, "total", "totalItems") ?? items.length;
@@ -59,7 +65,9 @@ function loadUsers(): AdminUser[] {
   try {
     const raw = localStorage.getItem(USERS_KEY);
     if (raw) return JSON.parse(raw) as AdminUser[];
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   const users = seedUsers();
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
   return users;
@@ -83,7 +91,9 @@ function loadJobs(): PendingJob[] {
   try {
     const raw = localStorage.getItem(JOBS_KEY);
     if (raw) return JSON.parse(raw) as PendingJob[];
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   const jobs = seedJobs();
   localStorage.setItem(JOBS_KEY, JSON.stringify(jobs));
   return jobs;
@@ -139,7 +149,8 @@ export async function fetchAdminStatistics(): Promise<AdminStatistics> {
   try {
     const { data } = await api.get("/admin/stats");
     const body = (data ?? {}) as Record<string, unknown>;
-    const sec = (key: string) => (body[key] && typeof body[key] === "object" ? body[key] : {}) as Record<string, unknown>;
+    const sec = (key: string) =>
+      (body[key] && typeof body[key] === "object" ? body[key] : {}) as Record<string, unknown>;
     const ok = (key: string) => String(sec(key).status ?? "").toLowerCase() === "ok";
     const users = sec("users");
     const jobs = sec("jobs");
@@ -156,7 +167,11 @@ export async function fetchAdminStatistics(): Promise<AdminStatistics> {
       pendingJobs: pickNum(jobs, "pending") ?? null,
       totalApplications: pickNum(apps, "total") ?? null,
       applicationStatus: ok("applications")
-        ? { pending: pickNum(apps, "pending") ?? 0, accepted: pickNum(apps, "accepted") ?? 0, rejected: pickNum(apps, "rejected") ?? 0 }
+        ? {
+            pending: pickNum(apps, "pending") ?? 0,
+            accepted: pickNum(apps, "accepted") ?? 0,
+            rejected: pickNum(apps, "rejected") ?? 0,
+          }
         : null,
       unavailable: STAT_SECTIONS.filter((key) => !ok(key)),
     };
@@ -183,7 +198,7 @@ export async function fetchAdminHealth(): Promise<AdminHealth> {
           return {
             name: pickStr(o, "name") || "service",
             status: up ? ("online" as const) : ("offline" as const),
-            latencyMs: up ? pickNum(o, "latencyMs") ?? null : null,
+            latencyMs: up ? (pickNum(o, "latencyMs") ?? null) : null,
           };
         }),
       ],
@@ -201,7 +216,13 @@ export async function fetchAdminHealth(): Promise<AdminHealth> {
 }
 
 /** auth-svc GET /api/admin/users?search=&role=&isActive=&page(1-based)&size. */
-export async function fetchAdminUsers(params: { q?: string; role?: string; status?: string; page?: number; size?: number }): Promise<Paginated<AdminUser>> {
+export async function fetchAdminUsers(params: {
+  q?: string;
+  role?: string;
+  status?: string;
+  page?: number;
+  size?: number;
+}): Promise<Paginated<AdminUser>> {
   const page = params.page ?? 0;
   const size = params.size ?? 8;
   try {
@@ -252,7 +273,12 @@ export function isAdminJobStatus(value: string): value is AdminJobStatus {
 }
 
 /** job-svc GET /api/admin/jobs?status=&q=&page(1-based)&size. `q` matches the title, ignoring case. */
-export async function fetchAdminJobs(params: { status?: AdminJobStatus | ""; q?: string; page?: number; size?: number }): Promise<Paginated<PendingJob>> {
+export async function fetchAdminJobs(params: {
+  status?: AdminJobStatus | "";
+  q?: string;
+  page?: number;
+  size?: number;
+}): Promise<Paginated<PendingJob>> {
   const page = params.page ?? 0;
   const size = params.size ?? 8;
   const q = params.q?.trim() || undefined;

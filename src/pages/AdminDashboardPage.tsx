@@ -29,7 +29,11 @@ export default function AdminDashboardPage() {
     <AdminShell
       title="Bảng quản trị"
       lead="Số liệu nền tảng và tình trạng các dịch vụ."
-      actions={pending > 0 ? <ButtonLink to="/admin/jobs?status=Pending">Duyệt {pending.toLocaleString("vi-VN")} tin chờ duyệt</ButtonLink> : undefined}
+      actions={
+        pending > 0 ? (
+          <ButtonLink to="/admin/jobs?status=Pending">Duyệt {pending.toLocaleString("vi-VN")} tin chờ duyệt</ButtonLink>
+        ) : undefined
+      }
     >
       {stats.isPending && <SkeletonBlock height={240} label="Đang tải số liệu" />}
 
@@ -87,7 +91,9 @@ export default function AdminDashboardPage() {
       )}
 
       <section className="jp-health" aria-labelledby="health-title">
-        <h2 className="jp-h2" id="health-title">Tình trạng dịch vụ</h2>
+        <h2 className="jp-h2" id="health-title">
+          Tình trạng dịch vụ
+        </h2>
         {health.isPending && <SkeletonBlock height={120} label="Đang kiểm tra dịch vụ" />}
         {health.isError && (
           <Alert
@@ -108,7 +114,9 @@ export default function AdminDashboardPage() {
                 <tr>
                   <th scope="col">Dịch vụ</th>
                   <th scope="col">Trạng thái</th>
-                  <th scope="col" className="jp-num">Độ trễ</th>
+                  <th scope="col" className="jp-num">
+                    Độ trễ
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -120,7 +128,9 @@ export default function AdminDashboardPage() {
                         {svc.status === "online" ? "Hoạt động" : "Không phản hồi"}
                       </StatusMark>
                     </td>
-                    <td className="jp-num">{svc.latencyMs == null ? <Dash /> : `${svc.latencyMs.toLocaleString("vi-VN")} ms`}</td>
+                    <td className="jp-num">
+                      {svc.latencyMs == null ? <Dash /> : `${svc.latencyMs.toLocaleString("vi-VN")} ms`}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -135,7 +145,9 @@ export default function AdminDashboardPage() {
 function Dash() {
   return (
     <>
-      <span aria-hidden="true" className="jp-missing">—</span>
+      <span aria-hidden="true" className="jp-missing">
+        —
+      </span>
       <span className="jp-sr">Chưa có số liệu</span>
     </>
   );
@@ -154,7 +166,9 @@ function StatGroup({ title, cells, className }: { title: string; cells: Cell[]; 
               {c.value == null ? (
                 <Dash />
               ) : c.to ? (
-                <Link to={c.to} className="jp-link">{c.value.toLocaleString("vi-VN")}</Link>
+                <Link to={c.to} className="jp-link">
+                  {c.value.toLocaleString("vi-VN")}
+                </Link>
               ) : (
                 c.value.toLocaleString("vi-VN")
               )}

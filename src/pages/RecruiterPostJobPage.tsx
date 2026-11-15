@@ -114,7 +114,10 @@ export default function RecruiterPostJobPage() {
   }
 
   return (
-    <RecruiterShell title="Đăng tin tuyển dụng" lead="Điền thông tin vị trí. Tin sẽ đăng dưới công ty của tài khoản bạn.">
+    <RecruiterShell
+      title="Đăng tin tuyển dụng"
+      lead="Điền thông tin vị trí. Tin sẽ đăng dưới công ty của tài khoản bạn."
+    >
       {!companyId && (
         <Alert tone="warning">
           Tài khoản của bạn chưa gắn với công ty nên chưa đăng tin được. Hãy liên hệ quản trị viên.
@@ -125,26 +128,54 @@ export default function RecruiterPostJobPage() {
         <fieldset className="jp-recruiter-section">
           <legend>Mô tả công việc &amp; Yêu cầu</legend>
           <Field id="post-title" label="Tiêu đề vị trí" required error={errors.title}>
-            <Input id="post-title" value={form.title} placeholder="Ví dụ: Senior UI/UX Designer" onChange={(e) => set("title", e.target.value)} />
+            <Input
+              id="post-title"
+              value={form.title}
+              placeholder="Ví dụ: Senior UI/UX Designer"
+              onChange={(e) => set("title", e.target.value)}
+            />
           </Field>
-          <Field id="post-description" label="Mô tả công việc" required error={errors.description} hint="Mô tả chi tiết trách nhiệm và kỹ năng cần có">
-            <Textarea id="post-description" rows={6} value={form.description} onChange={(e) => set("description", e.target.value)} />
+          <Field
+            id="post-description"
+            label="Mô tả công việc"
+            required
+            error={errors.description}
+            hint="Mô tả chi tiết trách nhiệm và kỹ năng cần có"
+          >
+            <Textarea
+              id="post-description"
+              rows={6}
+              value={form.description}
+              onChange={(e) => set("description", e.target.value)}
+            />
           </Field>
           <Field id="post-requirements" label="Yêu cầu" optional>
-            <Textarea id="post-requirements" rows={4} value={form.requirements} onChange={(e) => set("requirements", e.target.value)} />
+            <Textarea
+              id="post-requirements"
+              rows={4}
+              value={form.requirements}
+              onChange={(e) => set("requirements", e.target.value)}
+            />
           </Field>
         </fieldset>
 
         <fieldset className="jp-recruiter-section">
           <legend>Công ty &amp; Địa điểm làm việc</legend>
           <Field id="post-location" label="Địa điểm" required error={errors.location}>
-            <Input id="post-location" value={form.location} placeholder="Ví dụ: Hà Nội" onChange={(e) => set("location", e.target.value)} />
+            <Input
+              id="post-location"
+              value={form.location}
+              placeholder="Ví dụ: Hà Nội"
+              onChange={(e) => set("location", e.target.value)}
+            />
           </Field>
           <Field id="post-category" label="Lĩnh vực" optional>
             <Select id="post-category" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
               <option value="">Chưa chọn</option>
               {(categories.data ?? []).map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </Select>
           </Field>
@@ -154,10 +185,20 @@ export default function RecruiterPostJobPage() {
           <legend>Mức lương &amp; Tiền tệ</legend>
           <div className="jp-recruiter-row">
             <Field id="post-salary-min" label="Lương tối thiểu (VND)" optional error={errors.salaryMin}>
-              <Input id="post-salary-min" inputMode="numeric" value={form.salaryMin} onChange={(e) => set("salaryMin", e.target.value)} />
+              <Input
+                id="post-salary-min"
+                inputMode="numeric"
+                value={form.salaryMin}
+                onChange={(e) => set("salaryMin", e.target.value)}
+              />
             </Field>
             <Field id="post-salary-max" label="Lương tối đa (VND)" optional error={errors.salaryMax}>
-              <Input id="post-salary-max" inputMode="numeric" value={form.salaryMax} onChange={(e) => set("salaryMax", e.target.value)} />
+              <Input
+                id="post-salary-max"
+                inputMode="numeric"
+                value={form.salaryMax}
+                onChange={(e) => set("salaryMax", e.target.value)}
+              />
             </Field>
           </div>
         </fieldset>
@@ -166,13 +207,29 @@ export default function RecruiterPostJobPage() {
           <legend>Loại hình &amp; Cấp độ</legend>
           <div className="jp-recruiter-row">
             <Field id="post-employment" label="Loại hình làm việc" required>
-              <Select id="post-employment" value={form.employmentType} onChange={(e) => set("employmentType", e.target.value)}>
-                {EMPLOYMENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              <Select
+                id="post-employment"
+                value={form.employmentType}
+                onChange={(e) => set("employmentType", e.target.value)}
+              >
+                {EMPLOYMENT_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
               </Select>
             </Field>
             <Field id="post-experience" label="Cấp độ kinh nghiệm" required>
-              <Select id="post-experience" value={form.experienceLevel} onChange={(e) => set("experienceLevel", e.target.value)}>
-                {EXPERIENCE_LEVELS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              <Select
+                id="post-experience"
+                value={form.experienceLevel}
+                onChange={(e) => set("experienceLevel", e.target.value)}
+              >
+                {EXPERIENCE_LEVELS.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
               </Select>
             </Field>
           </div>
@@ -181,12 +238,19 @@ export default function RecruiterPostJobPage() {
         <fieldset className="jp-recruiter-section">
           <legend>Chế độ đãi ngộ &amp; Phúc lợi</legend>
           <Field id="post-benefits" label="Phúc lợi" optional hint="Bảo hiểm, thưởng, ngày phép, đào tạo...">
-            <Textarea id="post-benefits" rows={4} value={form.benefits} onChange={(e) => set("benefits", e.target.value)} />
+            <Textarea
+              id="post-benefits"
+              rows={4}
+              value={form.benefits}
+              onChange={(e) => set("benefits", e.target.value)}
+            />
           </Field>
         </fieldset>
 
         {submit.isError && (
-          <Alert tone="error">{apiErrorMessage(submit.error, "Không gửi được tin tuyển dụng. Vui lòng thử lại.")}</Alert>
+          <Alert tone="error">
+            {apiErrorMessage(submit.error, "Không gửi được tin tuyển dụng. Vui lòng thử lại.")}
+          </Alert>
         )}
 
         <div className="jp-recruiter-actions">

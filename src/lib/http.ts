@@ -2,8 +2,9 @@ import { isAxiosError } from "axios";
 import { MOCKS_ENABLED } from "./config";
 
 export function httpStatus(e: unknown): number | undefined {
-  return (e as { status?: number; response?: { status?: number } })?.response?.status
-    ?? (e as { status?: number })?.status;
+  return (
+    (e as { status?: number; response?: { status?: number } })?.response?.status ?? (e as { status?: number })?.status
+  );
 }
 
 /**
@@ -28,7 +29,8 @@ export function loadErrorMessage(e: unknown, what: string): string {
   if (isAxiosError(e) && !e.response) {
     return `Không kết nối được máy chủ nên chưa tải được ${what}. Kiểm tra mạng rồi thử lại.`;
   }
-  if (status && status >= 500) return `Máy chủ đang gặp sự cố (lỗi ${status}) nên chưa tải được ${what}. Vui lòng thử lại sau.`;
+  if (status && status >= 500)
+    return `Máy chủ đang gặp sự cố (lỗi ${status}) nên chưa tải được ${what}. Vui lòng thử lại sau.`;
   if (status === 401 || status === 403) return `Bạn không có quyền xem ${what}. Hãy đăng nhập lại.`;
   if (status === 404) return `Không tìm thấy ${what}.`;
   if (status) return `Không tải được ${what} (lỗi ${status}).`;

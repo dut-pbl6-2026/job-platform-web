@@ -44,14 +44,25 @@ export default function ForgotPasswordPage() {
     <AuthLayout
       title="Quên mật khẩu"
       lead="Nhập email để nhận liên kết đặt lại mật khẩu. Liên kết có hiệu lực 15 phút."
-      footer={<Link className="jp-link" to="/login">Quay lại đăng nhập</Link>}
+      footer={
+        <Link className="jp-link" to="/login">
+          Quay lại đăng nhập
+        </Link>
+      }
     >
       {err && <Alert tone="error">{err}</Alert>}
       {msg && <Alert tone="success">{msg}</Alert>}
 
       <form className="jp-form" onSubmit={onSubmit} noValidate>
         <Field id="forgot-email" label="Email" error={emailErr}>
-          <Input type="email" inputMode="email" autoComplete="email" placeholder="ten@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="ten@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Field>
         <Button type="submit" size="lg" block loading={loading}>
           {loading ? "Đang gửi…" : "Gửi liên kết đặt lại"}

@@ -35,11 +35,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((list) => list.filter((item) => item.id !== id));
   }, []);
 
-  const arm = useCallback((id: string) => {
-    const previous = timersRef.current.get(id);
-    if (previous) window.clearTimeout(previous);
-    timersRef.current.set(id, window.setTimeout(() => dismiss(id), TOAST_DISMISS_MS));
-  }, [dismiss]);
+  const arm = useCallback(
+    (id: string) => {
+      const previous = timersRef.current.get(id);
+      if (previous) window.clearTimeout(previous);
+      timersRef.current.set(
+        id,
+        window.setTimeout(() => dismiss(id), TOAST_DISMISS_MS),
+      );
+    },
+    [dismiss],
+  );
 
   const remember = useCallback((key: string) => {
     if (seenRef.current.has(key)) return false;
@@ -52,20 +58,24 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, []);
 
-  const push = useCallback((input: ToastInput) => {
-    const key = input.dedupeKey || input.id;
-    if (key && !remember(key)) return;
-    const id = input.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `toast-${Date.now()}`);
-    const item: ToastItem = {
-      id,
-      kind: input.kind ?? "info",
-      title: input.title,
-      body: input.body,
-      href: input.href,
-    };
-    setToasts((list) => [item, ...list.filter((toast) => toast.id !== id)].slice(0, TOAST_STACK_LIMIT));
-    arm(id);
-  }, [arm, remember]);
+  const push = useCallback(
+    (input: ToastInput) => {
+      const key = input.dedupeKey || input.id;
+      if (key && !remember(key)) return;
+      const id =
+        input.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `toast-${Date.now()}`);
+      const item: ToastItem = {
+        id,
+        kind: input.kind ?? "info",
+        title: input.title,
+        body: input.body,
+        href: input.href,
+      };
+      setToasts((list) => [item, ...list.filter((toast) => toast.id !== id)].slice(0, TOAST_STACK_LIMIT));
+      arm(id);
+    },
+    [arm, remember],
+  );
 
   const pause = useCallback((id: string) => {
     const timer = timersRef.current.get(id);
@@ -121,7 +131,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         for (const job of fresh.slice(0, 3)) showToast(toastFromJob(job));
         if (fresh.length > 3) {
           showToast({
-            dedupeKey: `job-batch:${fresh.map((job) => job.id).sort().join(",")}`,
+            dedupeKey: `job-batch:${fresh
+              .map((job) => job.id)
+              .sort()
+              .join(",")}`,
             kind: "job",
             title: `Có thêm ${fresh.length - 3} việc làm mới`,
             href: "/jobs",
@@ -150,7 +163,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAuthenticated) return;
     setToasts([]);
-    timersRef.current.forEach((timer) => window.clearTimeout(timer));
+    timersRef.current.forEach((timer) => {
+      window.clearTimeout(timer);
+    });
     timersRef.current.clear();
   }, [isAuthenticated]);
 

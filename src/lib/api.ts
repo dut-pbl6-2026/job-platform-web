@@ -78,10 +78,9 @@ function refreshAccessToken(sentAccess: string): Promise<string> {
     if (access && access !== sentAccess) return access;
     const refreshToken = getRefreshToken();
     if (!refreshToken) throw new Error("No refresh token");
-    const res = await axios.post<{ accessToken: string; refreshToken: string }>(
-      `${API_BASE}/auth/refresh`,
-      { refreshToken }
-    );
+    const res = await axios.post<{ accessToken: string; refreshToken: string }>(`${API_BASE}/auth/refresh`, {
+      refreshToken,
+    });
     setTokens(res.data.accessToken, res.data.refreshToken);
     return res.data.accessToken;
   }).finally(() => {
@@ -117,13 +116,18 @@ api.interceptors.response.use(
     }
     original.headers.Authorization = `Bearer ${access}`;
     return api(original);
-  }
+  },
 );
-
 
 // Typed helpers. Registration answers 202 with { message } only: no tokens and no user id, because the
 // account must be verified by email before it can log in.
-export async function register(payload: { email: string; password: string; fullName: string; role?: string; companyId?: string }) {
+export async function register(payload: {
+  email: string;
+  password: string;
+  fullName: string;
+  role?: string;
+  companyId?: string;
+}) {
   const { data } = await api.post("/auth/register", payload);
   return data as { message: string };
 }
@@ -133,11 +137,22 @@ export async function verifyEmail(token: string) {
 }
 export async function login(payload: { email: string; password: string; rememberMe?: boolean }) {
   const { data } = await api.post("/auth/login", payload);
-  return data as { accessToken: string; refreshToken: string; user: { id: string; email: string; fullName: string; role: string } };
+  return data as {
+    accessToken: string;
+    refreshToken: string;
+    user: { id: string; email: string; fullName: string; role: string };
+  };
 }
 export async function fetchMe() {
   const { data } = await api.get("/auth/me");
-  return data as { id: string; email: string; fullName: string; role: string; isActive: boolean; companyId?: string | null };
+  return data as {
+    id: string;
+    email: string;
+    fullName: string;
+    role: string;
+    isActive: boolean;
+    companyId?: string | null;
+  };
 }
 export async function logoutApi() {
   const rt = getRefreshToken();

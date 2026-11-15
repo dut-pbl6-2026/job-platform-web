@@ -14,8 +14,12 @@ export function ChatDock() {
         <div className="chat-dock-panel" role="dialog" aria-label="Trợ lý việc làm">
           <ChatPanel />
           <div className="chat-dock-links">
-            <Link to="/chat" onClick={() => setOpen(false)}>Mở trang chat</Link>
-            <button type="button" onClick={() => setOpen(false)}>Thu nhỏ</button>
+            <Link to="/chat" onClick={() => setOpen(false)}>
+              Mở trang chat
+            </Link>
+            <button type="button" onClick={() => setOpen(false)}>
+              Thu nhỏ
+            </button>
           </div>
         </div>
       )}

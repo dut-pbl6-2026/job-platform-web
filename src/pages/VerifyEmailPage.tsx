@@ -5,11 +5,7 @@ import { verifyEmail } from "../lib/api";
 import { apiErrorMessage, httpStatus } from "../lib/http";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
-type Result =
-  | { kind: "pending" }
-  | { kind: "success" }
-  | { kind: "invalid" }
-  | { kind: "error"; message: string };
+type Result = { kind: "pending" } | { kind: "success" } | { kind: "invalid" } | { kind: "error"; message: string };
 
 const INVALID_LINK = "This verification link is invalid, has expired or has already been used.";
 
@@ -37,17 +33,28 @@ export default function VerifyEmailPage() {
   return (
     <AuthLayout
       title="Verify your email"
-      footer={<Link className="jp-link" to="/login">Back to login</Link>}
+      footer={
+        <Link className="jp-link" to="/login">
+          Back to login
+        </Link>
+      }
     >
       {result.kind === "pending" && <Alert tone="info">Verifying your email…</Alert>}
       {result.kind === "success" && (
         <Alert tone="success">
-          Your email has been verified. You can now <Link className="jp-link" to="/login">log in</Link>.
+          Your email has been verified. You can now{" "}
+          <Link className="jp-link" to="/login">
+            log in
+          </Link>
+          .
         </Alert>
       )}
       {result.kind === "invalid" && (
         <Alert tone="error">
-          {INVALID_LINK} <Link className="jp-link" to="/login">Back to login</Link>
+          {INVALID_LINK}{" "}
+          <Link className="jp-link" to="/login">
+            Back to login
+          </Link>
         </Alert>
       )}
       {result.kind === "error" && <Alert tone="error">{result.message}</Alert>}

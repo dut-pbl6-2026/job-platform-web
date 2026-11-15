@@ -19,7 +19,8 @@ export function RecruiterRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
   if (loading) return <PageLoading label="Đang kiểm tra quyền truy cập" />;
-  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
+  if (!isAuthenticated)
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   if (!isRecruiter(user?.role)) {
     return <NoticeRedirect to="/jobs" title="Khu vực này chỉ dành cho nhà tuyển dụng." dedupeKey="recruiter-only" />;
   }
@@ -27,7 +28,13 @@ export function RecruiterRoute({ children }: { children: ReactNode }) {
 }
 
 /** The recruiter frame: the shared shell bar, a second bar with the recruiter sections, then the page. */
-export function RecruiterShell({ title, lead, actions, back, children }: {
+export function RecruiterShell({
+  title,
+  lead,
+  actions,
+  back,
+  children,
+}: {
   title: string;
   lead?: string;
   actions?: ReactNode;

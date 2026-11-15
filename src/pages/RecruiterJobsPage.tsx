@@ -94,27 +94,29 @@ export default function RecruiterJobsPage() {
                   <th scope="col">Địa điểm</th>
                   <th scope="col">Trạng thái</th>
                   <th scope="col">Ngày đăng</th>
-                  <th scope="col"><span className="jp-sr-only">Hồ sơ</span></th>
+                  <th scope="col">
+                    <span className="jp-sr-only">Hồ sơ</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((job) => (
                   <tr key={job.id}>
-                    <td><Link to={`/jobs/${job.id}`}>{job.title}</Link></td>
+                    <td>
+                      <Link to={`/jobs/${job.id}`}>{job.title}</Link>
+                    </td>
                     <td>{locationLabel(job.location)}</td>
                     <td>{jobStatusLabel(job.status)}</td>
                     <td>{formatDate(job.createdAt)}</td>
-                    <td><Link to={`/recruiter/jobs/${job.id}/applications`}>Xem ứng viên</Link></td>
+                    <td>
+                      <Link to={`/recruiter/jobs/${job.id}/applications`}>Xem ứng viên</Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <Pagination
-            page={data.page - 1}
-            totalPages={data.totalPages}
-            onPage={(p) => patch({ page: p + 1 })}
-          />
+          <Pagination page={data.page - 1} totalPages={data.totalPages} onPage={(p) => patch({ page: p + 1 })} />
         </>
       )}
     </RecruiterShell>

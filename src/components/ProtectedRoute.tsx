@@ -24,12 +24,19 @@ export function NoticeRedirect({ to, title, dedupeKey }: { to: string; title: st
  * `applicantOnly` routes (apply, applications, resume score) are for Users. Recruiters and Admins
  * are bounced to the job board, as on mobile (app_router.dart: applicant-only routes).
  */
-export function ProtectedRoute({ children, applicantOnly = false }: { children: React.ReactNode; applicantOnly?: boolean }) {
+export function ProtectedRoute({
+  children,
+  applicantOnly = false,
+}: {
+  children: React.ReactNode;
+  applicantOnly?: boolean;
+}) {
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
   if (loading) return <PageLoading label="Đang kiểm tra phiên đăng nhập" />;
   // Remember where the user was heading so login can send them back there.
-  if (!isAuthenticated) return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
+  if (!isAuthenticated)
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   if (applicantOnly && !isUser(user?.role)) {
     return <NoticeRedirect to="/jobs" title="Trang này chỉ dành cho ứng viên." dedupeKey="applicant-only" />;
   }

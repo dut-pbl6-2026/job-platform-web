@@ -42,13 +42,8 @@ export default function RecruiterDashboardPage() {
   const countError = counts.find((q) => q.isError);
 
   return (
-    <RecruiterShell
-      title="Tổng quan tuyển dụng"
-      lead="Đang mở · Chờ duyệt · Đã đóng"
-    >
-      {countError && (
-        <Alert tone="error">{loadErrorMessage(countError.error, "số liệu tin tuyển dụng")}</Alert>
-      )}
+    <RecruiterShell title="Tổng quan tuyển dụng" lead="Đang mở · Chờ duyệt · Đã đóng">
+      {countError && <Alert tone="error">{loadErrorMessage(countError.error, "số liệu tin tuyển dụng")}</Alert>}
 
       <div className="jp-recruiter-tiles" role="list" aria-label="Số liệu tin tuyển dụng">
         {TILES.map((tile, i) => {
@@ -66,15 +61,15 @@ export default function RecruiterDashboardPage() {
 
       <Panel
         title="Tin đăng gần đây"
-        actions={<Link className="jp-link" to="/recruiter/jobs">Xem tất cả</Link>}
+        actions={
+          <Link className="jp-link" to="/recruiter/jobs">
+            Xem tất cả
+          </Link>
+        }
       >
         {recent.isPending && <SkeletonRows rows={3} label="Đang tải tin đăng" />}
-        {recent.isError && (
-          <Alert tone="error">{loadErrorMessage(recent.error, "danh sách tin đăng")}</Alert>
-        )}
-        {recent.data && recentJobs.length === 0 && (
-          <EmptyState title="Bạn chưa có tin tuyển dụng nào." />
-        )}
+        {recent.isError && <Alert tone="error">{loadErrorMessage(recent.error, "danh sách tin đăng")}</Alert>}
+        {recent.data && recentJobs.length === 0 && <EmptyState title="Bạn chưa có tin tuyển dụng nào." />}
         {recentJobs.length > 0 && (
           <div className="jp-table-wrap">
             <table className="jp-table">
@@ -91,7 +86,9 @@ export default function RecruiterDashboardPage() {
                   const a = applicants[i];
                   return (
                     <tr key={job.id}>
-                      <td><Link to={`/jobs/${job.id}`}>{job.title}</Link></td>
+                      <td>
+                        <Link to={`/jobs/${job.id}`}>{job.title}</Link>
+                      </td>
                       <td>{jobStatusLabel(job.status)}</td>
                       <td>{formatDate(job.createdAt)}</td>
                       <td>

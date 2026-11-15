@@ -10,7 +10,14 @@ async function signIn(page: Page, role: Role) {
   await page.addInitScript(() => localStorage.setItem("accessToken", "e2e-token"));
   await page.route("**/api/auth/me", (route) =>
     route.fulfill({
-      json: { id: `e2e-${role}`, email: `${role.toLowerCase()}@e2e.local`, fullName: "Người dùng thử", role, isActive: true, companyId: null },
+      json: {
+        id: `e2e-${role}`,
+        email: `${role.toLowerCase()}@e2e.local`,
+        fullName: "Người dùng thử",
+        role,
+        isActive: true,
+        companyId: null,
+      },
     }),
   );
 }
@@ -54,7 +61,19 @@ test("user sees recommended jobs with the backend's rationale line", async ({ pa
   await offlineBackend(page);
   await signIn(page, "User");
   const calls = await mockRecommended(page, () => ({
-    json: { items: [item("11111111-1111-1111-1111-111111111111", "Lập trình viên React", "Content", "Khớp với kỹ năng React trong hồ sơ của bạn")], total: 1, isCached: false, generatedAt: "2026-11-15T01:00:00Z" },
+    json: {
+      items: [
+        item(
+          "11111111-1111-1111-1111-111111111111",
+          "Lập trình viên React",
+          "Content",
+          "Khớp với kỹ năng React trong hồ sơ của bạn",
+        ),
+      ],
+      total: 1,
+      isCached: false,
+      generatedAt: "2026-11-15T01:00:00Z",
+    },
   }));
   await page.goto("/jobs");
 
@@ -69,7 +88,14 @@ test("cold start: a Popular recommendation renders like any other", async ({ pag
   await offlineBackend(page);
   await signIn(page, "User");
   await mockRecommended(page, () => ({
-    json: { items: [item("11111111-1111-1111-1111-222222222222", "Kỹ sư dữ liệu", "Popular", "Việc làm được nhiều người quan tâm")], total: 1, isCached: false, generatedAt: "2026-11-15T01:00:00Z" },
+    json: {
+      items: [
+        item("11111111-1111-1111-1111-222222222222", "Kỹ sư dữ liệu", "Popular", "Việc làm được nhiều người quan tâm"),
+      ],
+      total: 1,
+      isCached: false,
+      generatedAt: "2026-11-15T01:00:00Z",
+    },
   }));
   await page.goto("/jobs");
 
@@ -80,7 +106,9 @@ test("cold start: a Popular recommendation renders like any other", async ({ pag
 test("empty result hides the section without an error", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page, "User");
-  await mockRecommended(page, () => ({ json: { items: [], total: 0, isCached: false, generatedAt: "2026-11-15T01:00:00Z" } }));
+  await mockRecommended(page, () => ({
+    json: { items: [], total: 0, isCached: false, generatedAt: "2026-11-15T01:00:00Z" },
+  }));
   await page.goto("/jobs");
 
   // The board has loaded (mock jobs) before we assert the section is absent.
@@ -96,7 +124,21 @@ test("a failed call shows the error and retry loads the list", async ({ page }) 
   const calls = await mockRecommended(page, () =>
     fail
       ? { status: 500, json: { title: "Lỗi máy chủ" } }
-      : { json: { items: [item("11111111-1111-1111-1111-333333333333", "Chuyên viên tuyển dụng", "Content", "Khớp với hồ sơ của bạn")], total: 1, isCached: false, generatedAt: "2026-11-15T01:00:00Z" } },
+      : {
+          json: {
+            items: [
+              item(
+                "11111111-1111-1111-1111-333333333333",
+                "Chuyên viên tuyển dụng",
+                "Content",
+                "Khớp với hồ sơ của bạn",
+              ),
+            ],
+            total: 1,
+            isCached: false,
+            generatedAt: "2026-11-15T01:00:00Z",
+          },
+        },
   );
   await page.goto("/jobs");
 
@@ -111,7 +153,14 @@ test("refresh asks the backend to bypass its cache", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page, "User");
   const calls = await mockRecommended(page, () => ({
-    json: { items: [item("11111111-1111-1111-1111-444444444444", "Nhân viên kinh doanh", "Content", "Khớp với hồ sơ của bạn")], total: 1, isCached: true, generatedAt: "2026-11-15T01:00:00Z" },
+    json: {
+      items: [
+        item("11111111-1111-1111-1111-444444444444", "Nhân viên kinh doanh", "Content", "Khớp với hồ sơ của bạn"),
+      ],
+      total: 1,
+      isCached: true,
+      generatedAt: "2026-11-15T01:00:00Z",
+    },
   }));
   await page.goto("/jobs");
   await expect(page.getByText("Khớp với hồ sơ của bạn")).toBeVisible();
@@ -124,7 +173,9 @@ for (const role of ["Recruiter", "Admin"] as const) {
   test(`${role} never requests recommendations and sees no section`, async ({ page }) => {
     await offlineBackend(page);
     await signIn(page, role);
-    const calls = await mockRecommended(page, () => ({ json: { items: [], total: 0, isCached: false, generatedAt: "2026-11-15T01:00:00Z" } }));
+    const calls = await mockRecommended(page, () => ({
+      json: { items: [], total: 0, isCached: false, generatedAt: "2026-11-15T01:00:00Z" },
+    }));
     await page.goto("/jobs");
 
     await expect(page.getByRole("heading", { name: "Việc làm gợi ý cho bạn" })).toHaveCount(0);

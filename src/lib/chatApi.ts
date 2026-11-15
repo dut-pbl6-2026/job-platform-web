@@ -32,8 +32,10 @@ type StoredSession = {
 type Store = { sessions: StoredSession[] };
 
 function statusOf(e: unknown): number | undefined {
-  return (e as { status?: number; response?: { status?: number } })?.status
-    ?? (e as { response?: { status?: number } })?.response?.status;
+  return (
+    (e as { status?: number; response?: { status?: number } })?.status ??
+    (e as { response?: { status?: number } })?.response?.status
+  );
 }
 
 /**
@@ -76,7 +78,9 @@ function loadStore(): Store {
   try {
     const raw = localStorage.getItem(STORE_KEY);
     if (raw) return JSON.parse(raw) as Store;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return { sessions: [] };
 }
 
@@ -116,7 +120,9 @@ function checkRate(userId: string) {
   try {
     const raw = localStorage.getItem(`${RATE_KEY}.${userId}`);
     hits = raw ? (JSON.parse(raw) as number[]) : [];
-  } catch { hits = []; }
+  } catch {
+    hits = [];
+  }
   hits = hits.filter((t) => now - t < 60 * 60 * 1000);
   if (hits.length >= CHAT_RATE_PER_HOUR) {
     const err = new Error("Too many requests") as Error & { status?: number };
@@ -131,7 +137,8 @@ function matchJobs(query: string): ChatJobHint[] {
   const q = query.toLowerCase();
   const tokens = q.split(/[^\p{L}\p{N}]+/u).filter((t) => t.length > 2);
   const scored = MOCK_JOBS.map((job) => {
-    const hay = `${job.title} ${job.company.name} ${job.location} ${job.category.name} ${(job.skills ?? []).join(" ")}`.toLowerCase();
+    const hay =
+      `${job.title} ${job.company.name} ${job.location} ${job.category.name} ${(job.skills ?? []).join(" ")}`.toLowerCase();
     const hits = tokens.reduce((n, t) => n + (hay.includes(t) ? 1 : 0), 0);
     return { job, hits };
   }).filter((row) => row.hits > 0);
@@ -157,9 +164,13 @@ function mockReply(message: string, jobs: ChatJobHint[]) {
     for (const job of jobs) lines.push(`- ${job.title} tại ${job.company}`);
     lines.push("Bạn có thể mở từng tin để xem mô tả và ứng tuyển.");
   } else if (/(cv|resume|hồ sơ)/i.test(lower)) {
-    lines.push("CV nên nêu kỹ năng đúng JD, số liệu cụ thể, và 3–5 dòng tóm tắt mục tiêu. Nêu stack, năm kinh nghiệm và thành quả đo được.");
+    lines.push(
+      "CV nên nêu kỹ năng đúng JD, số liệu cụ thể, và 3–5 dòng tóm tắt mục tiêu. Nêu stack, năm kinh nghiệm và thành quả đo được.",
+    );
   } else if (/(phỏng vấn|interview)/i.test(lower)) {
-    lines.push("Chuẩn bị STAR cho 3 dự án gần nhất, đọc JD để lấy từ khóa, và hỏi lại về team/oncall. Lương thảo luận sau khi hai bên hiểu scope.");
+    lines.push(
+      "Chuẩn bị STAR cho 3 dự án gần nhất, đọc JD để lấy từ khóa, và hỏi lại về team/oncall. Lương thảo luận sau khi hai bên hiểu scope.",
+    );
   } else {
     lines.push("Bạn có thể hỏi theo kỹ năng (React, kế toán…), địa điểm, hoặc mức lương. Mình sẽ gợi ý tin và mẹo CV.");
   }
@@ -179,18 +190,24 @@ async function streamText(text: string, signal: AbortSignal, onToken: (chunk: st
 
 function parseHistory(raw: unknown): ChatMessage[] {
   const body = unwrap<unknown>(raw);
-  const list = Array.isArray(body) ? body : Array.isArray((body as { items?: unknown[] })?.items) ? (body as { items: unknown[] }).items : [];
-  return list.map((item, i) => {
-    const rec = (item ?? {}) as Record<string, unknown>;
-    const roleRaw = (pickStr(rec, "role") || "assistant").toLowerCase();
-    const role: ChatMessage["role"] = roleRaw === "user" ? "user" : roleRaw === "system" ? "system" : "assistant";
-    return {
-      id: pickStr(rec, "id") || `hist-${i}`,
-      role,
-      content: pickStr(rec, "content", "message", "text") || "",
-      createdAt: pickStr(rec, "timestamp", "createdAt", "created_at") || new Date().toISOString(),
-    };
-  }).filter((m) => m.content);
+  const list = Array.isArray(body)
+    ? body
+    : Array.isArray((body as { items?: unknown[] })?.items)
+      ? (body as { items: unknown[] }).items
+      : [];
+  return list
+    .map((item, i) => {
+      const rec = (item ?? {}) as Record<string, unknown>;
+      const roleRaw = (pickStr(rec, "role") || "assistant").toLowerCase();
+      const role: ChatMessage["role"] = roleRaw === "user" ? "user" : roleRaw === "system" ? "system" : "assistant";
+      return {
+        id: pickStr(rec, "id") || `hist-${i}`,
+        role,
+        content: pickStr(rec, "content", "message", "text") || "",
+        createdAt: pickStr(rec, "timestamp", "createdAt", "created_at") || new Date().toISOString(),
+      };
+    })
+    .filter((m) => m.content);
 }
 
 export async function createChatSession(userId: string): Promise<string> {
@@ -254,7 +271,9 @@ function consumeSseBlock(block: string, handlers: ChatStreamHandlers, acc: { ses
     try {
       const jobs = JSON.parse(data) as ChatJobHint[];
       if (Array.isArray(jobs)) handlers.onJobs?.(jobs);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return;
   }
   if (event === "truncated") {
@@ -272,7 +291,12 @@ function consumeSseBlock(block: string, handlers: ChatStreamHandlers, acc: { ses
   }
 }
 
-async function streamFromApi(message: string, sessionId: string | undefined, signal: AbortSignal, handlers: ChatStreamHandlers) {
+async function streamFromApi(
+  message: string,
+  sessionId: string | undefined,
+  signal: AbortSignal,
+  handlers: ChatStreamHandlers,
+) {
   const token = getAccessToken();
   const res = await fetch(`${API_BASE_URL}/ai/chat`, {
     method: "POST",

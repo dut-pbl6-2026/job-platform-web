@@ -43,7 +43,9 @@ function Value({ value }: { value: string | null }) {
   if (value) return <>{value}</>;
   return (
     <>
-      <span aria-hidden="true" className="jp-missing">—</span>
+      <span aria-hidden="true" className="jp-missing">
+        —
+      </span>
       <span className="jp-sr">{MISSING}</span>
     </>
   );
@@ -82,7 +84,11 @@ export function Board({ children, sort, onSalarySort, label = "Bảng việc là
               onClick={() => onSalarySort(salaryState === "desc" ? "salary_asc" : "salary_desc")}
             >
               Lương
-              <Icon name={salaryState === "asc" ? "sortUp" : "sortDown"} size={16} className={salaryState ? "is-on" : undefined} />
+              <Icon
+                name={salaryState === "asc" ? "sortUp" : "sortDown"}
+                size={16}
+                className={salaryState ? "is-on" : undefined}
+              />
             </button>
           ) : (
             "Lương"
@@ -126,7 +132,9 @@ export function JobRow({ job, selected, onOpen, static: isStatic, note }: RowPro
           )}
           {selected && <span className="jp-sr"> (bạn vừa xem)</span>}
         </h3>
-        <p className="jp-row-company" title={company}>{company}</p>
+        <p className="jp-row-company" title={company}>
+          {company}
+        </p>
         {note && <p className="jp-row-reason">{note}</p>}
         <p className="jp-row-sub" aria-hidden="true">
           {[f.type, f.isNew ? "Mới" : f.posted].filter(Boolean).join(" · ")}
@@ -167,12 +175,15 @@ export function FactStrip({ job }: { job: Job }) {
     ["Lương", f.salary, "salary"],
     ["Cấp bậc", f.level ?? MISSING],
     ["Hình thức", f.type ?? MISSING],
-    ["Đăng", f.isNew ? <NewMark /> : f.posted || MISSING],
+    ["Đăng", f.isNew ? <NewMark key="new" /> : f.posted || MISSING],
   ];
   return (
     <dl className="jp-facts">
       {facts.map(([term, value, mod]) => (
-        <div key={term} className={cx("jp-fact", mod && `jp-fact--${mod}`, mod === "salary" && f.salaryNegotiable && "is-negotiable")}>
+        <div
+          key={term}
+          className={cx("jp-fact", mod && `jp-fact--${mod}`, mod === "salary" && f.salaryNegotiable && "is-negotiable")}
+        >
           <dt>{term}</dt>
           <dd>{value}</dd>
         </div>

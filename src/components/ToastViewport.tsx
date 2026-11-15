@@ -19,7 +19,9 @@ export function ToastViewport() {
           onFocus={() => pause(toast.id)}
           onBlur={() => resume(toast.id)}
         >
-          <span className="toast-mark" aria-hidden="true">{toast.kind === "job" ? "JP" : "!"}</span>
+          <span className="toast-mark" aria-hidden="true">
+            {toast.kind === "job" ? "JP" : "!"}
+          </span>
           <div className="toast-copy">
             <p className="toast-title">{toast.title}</p>
             {toast.body ? <p className="toast-body">{toast.body}</p> : null}

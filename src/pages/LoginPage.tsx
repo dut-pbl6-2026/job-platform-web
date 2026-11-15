@@ -54,7 +54,14 @@ export default function LoginPage() {
     <AuthLayout
       title="Đăng nhập"
       lead="Đăng nhập để ứng tuyển và theo dõi đơn của bạn."
-      footer={<>Chưa có tài khoản? <Link className="jp-link" to={`/register${query}`}>Tạo tài khoản</Link></>}
+      footer={
+        <>
+          Chưa có tài khoản?{" "}
+          <Link className="jp-link" to={`/register${query}`}>
+            Tạo tài khoản
+          </Link>
+        </>
+      }
     >
       {typeof notice === "string" && <Alert tone="success">{notice}</Alert>}
       {target !== DEFAULT_AFTER_AUTH && <Alert tone="info">Đăng nhập xong, bạn quay lại trang đang xem.</Alert>}
@@ -62,7 +69,13 @@ export default function LoginPage() {
 
       <form className="jp-form" onSubmit={onSubmit} noValidate>
         <Field id="login-email" label="Email" error={fieldErr.email}>
-          <Input type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Field>
 
         <Field id="login-pwd" label="Mật khẩu" error={fieldErr.pwd}>
@@ -70,8 +83,14 @@ export default function LoginPage() {
         </Field>
 
         <div className="jp-form-row">
-          <Checkbox label="Ghi nhớ tôi (30 ngày)" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
-          <Link className="jp-link" to="/forgot-password">Quên mật khẩu?</Link>
+          <Checkbox
+            label="Ghi nhớ tôi (30 ngày)"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+          />
+          <Link className="jp-link" to="/forgot-password">
+            Quên mật khẩu?
+          </Link>
         </div>
 
         <Button type="submit" size="lg" block loading={loading}>

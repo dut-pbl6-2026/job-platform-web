@@ -103,7 +103,14 @@ export default function RegisterPage() {
     <AuthLayout
       title="Tạo tài khoản"
       lead="Chọn vai trò rồi điền thông tin của bạn."
-      footer={<>Đã có tài khoản? <Link className="jp-link" to={`/login${query}`}>Đăng nhập</Link></>}
+      footer={
+        <>
+          Đã có tài khoản?{" "}
+          <Link className="jp-link" to={`/login${query}`}>
+            Đăng nhập
+          </Link>
+        </>
+      }
     >
       {target !== DEFAULT_AFTER_AUTH && <Alert tone="info">Tạo tài khoản xong, bạn quay lại trang đang xem.</Alert>}
       {err && <Alert tone="error">{err}</Alert>}
@@ -131,7 +138,13 @@ export default function RegisterPage() {
         </fieldset>
 
         {isRecruiter && (
-          <CompanyPicker id="reg-company" label="Công ty bạn tuyển dụng cho" value={company} onChange={setCompany} error={fieldErr.company} />
+          <CompanyPicker
+            id="reg-company"
+            label="Công ty bạn tuyển dụng cho"
+            value={company}
+            onChange={setCompany}
+            error={fieldErr.company}
+          />
         )}
 
         <Field id="reg-name" label="Họ và tên" required error={fieldErr.fullName}>
@@ -139,7 +152,13 @@ export default function RegisterPage() {
         </Field>
 
         <Field id="reg-email" label="Email" required error={fieldErr.email}>
-          <Input type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Field>
 
         <Field id="reg-pwd" label="Mật khẩu" required hint={<PasswordRules value={pwd} />} error={fieldErr.pwd}>

@@ -15,8 +15,20 @@ const EXPERIENCE_LEVELS = ["Entry", "Mid", "Senior", "Lead"] as const;
 const CURRENCIES = ["VND", "USD"] as const;
 
 const flat = (v: string | null | undefined) => (v ?? "").toLowerCase().replace(/[\s_-]+/g, "");
-const EMPLOYMENT_BACK: Record<string, string> = { fulltime: "FullTime", parttime: "PartTime", contract: "Contract", internship: "Internship" };
-const EXPERIENCE_BACK: Record<string, string> = { entry: "Entry", junior: "Entry", mid: "Mid", middle: "Mid", senior: "Senior", lead: "Lead" };
+const EMPLOYMENT_BACK: Record<string, string> = {
+  fulltime: "FullTime",
+  parttime: "PartTime",
+  contract: "Contract",
+  internship: "Internship",
+};
+const EXPERIENCE_BACK: Record<string, string> = {
+  entry: "Entry",
+  junior: "Entry",
+  mid: "Mid",
+  middle: "Mid",
+  senior: "Senior",
+  lead: "Lead",
+};
 
 type Draft = {
   title: string;
@@ -38,7 +50,12 @@ type Errors = Partial<Record<"title" | "companyId" | "location" | "categoryId" |
 function toDraft(job?: PendingJob | null): Draft {
   return {
     title: job?.title ?? "",
-    company: job?.companyId ? { id: job.companyId, name: job.company?.name && job.company.name !== "—" ? job.company.name : "Chưa cập nhật tên công ty" } : null,
+    company: job?.companyId
+      ? {
+          id: job.companyId,
+          name: job.company?.name && job.company.name !== "—" ? job.company.name : "Chưa cập nhật tên công ty",
+        }
+      : null,
     location: job?.location ?? "",
     categoryId: job?.categoryId ?? "",
     employmentType: EMPLOYMENT_BACK[flat(job?.employmentType)] ?? "FullTime",
@@ -64,7 +81,14 @@ function toNumber(raw: string): number | undefined | null {
  * picked by name (never a UUID on screen). Client checks mirror the backend's required fields, and a
  * ValidationProblem from job-svc lands next to the matching field.
  */
-export function AdminJobForm({ idPrefix, initial, submitLabel, busyLabel, onSubmit, onCancel }: {
+export function AdminJobForm({
+  idPrefix,
+  initial,
+  submitLabel,
+  busyLabel,
+  onSubmit,
+  onCancel,
+}: {
   idPrefix: string;
   initial?: PendingJob | null;
   submitLabel: string;
@@ -146,37 +170,62 @@ export function AdminJobForm({ idPrefix, initial, submitLabel, busyLabel, onSubm
         <Field id={id("title")} label="Tiêu đề tin" required error={errors.title} className="jp-field--wide">
           <Input value={draft.title} maxLength={256} onChange={(e) => set("title", e.target.value)} />
         </Field>
-        <CompanyPicker id={id("company")} label="Công ty" value={draft.company} onChange={(c) => set("company", c)} error={errors.companyId} />
+        <CompanyPicker
+          id={id("company")}
+          label="Công ty"
+          value={draft.company}
+          onChange={(c) => set("company", c)}
+          error={errors.companyId}
+        />
         <Field id={id("location")} label="Địa điểm làm việc" required error={errors.location}>
-          <Input value={draft.location} maxLength={256} placeholder="Ví dụ: Đà Nẵng" onChange={(e) => set("location", e.target.value)} />
+          <Input
+            value={draft.location}
+            maxLength={256}
+            placeholder="Ví dụ: Đà Nẵng"
+            onChange={(e) => set("location", e.target.value)}
+          />
         </Field>
         <div className="jp-field--wide jp-jobform-trio">
           <Field id={id("category")} label="Danh mục" error={errors.categoryId}>
             <Select value={draft.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
               <option value="">Chưa phân loại</option>
               {(categories.data ?? []).map((c) => (
-                <option key={c.id} value={c.id}>{categoryLabel(c.name)}</option>
+                <option key={c.id} value={c.id}>
+                  {categoryLabel(c.name)}
+                </option>
               ))}
             </Select>
           </Field>
           <Field id={id("employment")} label="Hình thức làm việc">
             <Select value={draft.employmentType} onChange={(e) => set("employmentType", e.target.value)}>
-              {EMPLOYMENT_TYPES.map((v) => <option key={v} value={v}>{employmentTypeLabel(v)}</option>)}
+              {EMPLOYMENT_TYPES.map((v) => (
+                <option key={v} value={v}>
+                  {employmentTypeLabel(v)}
+                </option>
+              ))}
             </Select>
           </Field>
           <Field id={id("experience")} label="Kinh nghiệm">
             <Select value={draft.experienceLevel} onChange={(e) => set("experienceLevel", e.target.value)}>
-              {EXPERIENCE_LEVELS.map((v) => <option key={v} value={v}>{experienceLevelLabel(v)}</option>)}
+              {EXPERIENCE_LEVELS.map((v) => (
+                <option key={v} value={v}>
+                  {experienceLevelLabel(v)}
+                </option>
+              ))}
             </Select>
           </Field>
         </div>
         <fieldset className="jp-jobform-salary jp-field--wide">
-          <legend className="jp-label">Mức lương <span className="jp-optional">(để trống nếu thỏa thuận)</span></legend>
+          <legend className="jp-label">
+            Mức lương <span className="jp-optional">(để trống nếu thỏa thuận)</span>
+          </legend>
           {/* One error for the pair, so these two inputs are wired by hand rather than through Field. */}
           <div className="jp-jobform-salary-row">
             {(["salaryMin", "salaryMax"] as const).map((key) => (
               <div key={key} className="jp-field">
-                <label className="jp-label" htmlFor={id(key)}>{key === "salaryMin" ? "Từ" : "Đến"}</label>
+                <label className="jp-label" htmlFor={id(key)}>
+                  {key === "salaryMin" ? "Từ" : "Đến"}
+                </label>
                 <Input
                   id={id(key)}
                   type="number"
@@ -192,7 +241,11 @@ export function AdminJobForm({ idPrefix, initial, submitLabel, busyLabel, onSubm
             ))}
             <Field id={id("currency")} label="Tiền tệ">
               <Select value={draft.salaryCurrency} onChange={(e) => set("salaryCurrency", e.target.value)}>
-                {CURRENCIES.map((v) => <option key={v} value={v}>{v}</option>)}
+                {CURRENCIES.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
               </Select>
             </Field>
           </div>
@@ -203,7 +256,13 @@ export function AdminJobForm({ idPrefix, initial, submitLabel, busyLabel, onSubm
             </p>
           )}
         </fieldset>
-        <Field id={id("description")} label="Mô tả công việc" required error={errors.description} className="jp-field--wide">
+        <Field
+          id={id("description")}
+          label="Mô tả công việc"
+          required
+          error={errors.description}
+          className="jp-field--wide"
+        >
           <Textarea rows={6} value={draft.description} onChange={(e) => set("description", e.target.value)} />
         </Field>
         <Field id={id("requirements")} label="Yêu cầu" optional className="jp-field--wide">
@@ -214,8 +273,12 @@ export function AdminJobForm({ idPrefix, initial, submitLabel, busyLabel, onSubm
         </Field>
       </div>
       <div className="jp-form-actions">
-        <Button variant="secondary" disabled={busy} onClick={onCancel}>Hủy</Button>
-        <Button type="submit" loading={busy}>{busy ? busyLabel : submitLabel}</Button>
+        <Button variant="secondary" disabled={busy} onClick={onCancel}>
+          Hủy
+        </Button>
+        <Button type="submit" loading={busy}>
+          {busy ? busyLabel : submitLabel}
+        </Button>
       </div>
     </form>
   );

@@ -19,7 +19,15 @@ import {
   TopBar,
   cx,
 } from "../components/ui";
-import { EMPLOYMENT_OPTIONS, EXPERIENCE_OPTIONS, SORT_OPTIONS, hasActiveFilters, parseSearchParams, splitCsv, toggleCsv } from "../lib/searchFilters";
+import {
+  EMPLOYMENT_OPTIONS,
+  EXPERIENCE_OPTIONS,
+  SORT_OPTIONS,
+  hasActiveFilters,
+  parseSearchParams,
+  splitCsv,
+  toggleCsv,
+} from "../lib/searchFilters";
 import { queryKeys } from "../lib/queryClient";
 import { categoryLabel } from "../lib/labels";
 import { loadErrorMessage } from "../lib/http";
@@ -101,7 +109,11 @@ export default function JobListPage() {
   const chips: { key: string; label: string; clear: Patch }[] = [];
   if (params.category) {
     const name = categories.find((c) => c.id === params.category)?.name;
-    chips.push({ key: "cat", label: name ? categoryLabel(name) : "Ngành nghề đã chọn", clear: { category: undefined } });
+    chips.push({
+      key: "cat",
+      label: name ? categoryLabel(name) : "Ngành nghề đã chọn",
+      clear: { category: undefined },
+    });
   }
   if (params.location) chips.push({ key: "loc", label: params.location, clear: { location: undefined } });
   if (params.minSalary != null || params.maxSalary != null) {
@@ -111,17 +123,23 @@ export default function JobListPage() {
       clear: { minSalary: undefined, maxSalary: undefined },
     });
   }
-  splitCsv(params.experienceLevel).forEach((v) => chips.push({
-    key: `l-${v}`,
-    label: EXPERIENCE_OPTIONS.find((o) => o.value === v)?.label ?? "Cấp bậc đã chọn",
-    clear: { experienceLevel: toggleCsv(params.experienceLevel, v) || undefined },
-  }));
-  splitCsv(params.employmentType).forEach((v) => chips.push({
-    key: `t-${v}`,
-    label: EMPLOYMENT_OPTIONS.find((o) => o.value === v)?.label ?? "Hình thức đã chọn",
-    clear: { employmentType: toggleCsv(params.employmentType, v) || undefined },
-  }));
-  splitCsv(params.skills).forEach((v) => chips.push({ key: `s-${v}`, label: v, clear: { skills: toggleCsv(params.skills, v) || undefined } }));
+  splitCsv(params.experienceLevel).forEach((v) => {
+    chips.push({
+      key: `l-${v}`,
+      label: EXPERIENCE_OPTIONS.find((o) => o.value === v)?.label ?? "Cấp bậc đã chọn",
+      clear: { experienceLevel: toggleCsv(params.experienceLevel, v) || undefined },
+    });
+  });
+  splitCsv(params.employmentType).forEach((v) => {
+    chips.push({
+      key: `t-${v}`,
+      label: EMPLOYMENT_OPTIONS.find((o) => o.value === v)?.label ?? "Hình thức đã chọn",
+      clear: { employmentType: toggleCsv(params.employmentType, v) || undefined },
+    });
+  });
+  splitCsv(params.skills).forEach((v) => {
+    chips.push({ key: `s-${v}`, label: v, clear: { skills: toggleCsv(params.skills, v) || undefined } });
+  });
   // The drawer button counts what lives in the drawer (category and place have their own rows).
   const drawerCount = chips.filter((c) => c.key !== "cat" && c.key !== "loc").length;
 
@@ -160,36 +178,65 @@ export default function JobListPage() {
           <section className="jp-jobs-main" ref={boardRef} aria-labelledby="jp-board-title">
             <div className="jp-boardhead">
               <div className="jp-boardhead-title">
-                <h1 id="jp-board-title" className="jp-h1">Bảng việc làm</h1>
+                <h1 id="jp-board-title" className="jp-h1">
+                  Bảng việc làm
+                </h1>
                 <p className="jp-boardhead-count" aria-live="polite">
                   {data ? `${total.toLocaleString("vi-VN")} việc đang tuyển` : " "}
-                  {data && params.q && <> cho “<strong>{params.q}</strong>”</>}
+                  {data && params.q && (
+                    <>
+                      {" "}
+                      cho “<strong>{params.q}</strong>”
+                    </>
+                  )}
                 </p>
               </div>
               <div className="jp-boardhead-tools">
-                <Button variant="secondary" icon="filter" className="jp-filters-open" aria-haspopup="dialog" onClick={() => setDrawerOpen(true)}>
+                <Button
+                  variant="secondary"
+                  icon="filter"
+                  className="jp-filters-open"
+                  aria-haspopup="dialog"
+                  onClick={() => setDrawerOpen(true)}
+                >
                   Bộ lọc{drawerCount ? ` (${drawerCount})` : ""}
                 </Button>
                 <label className="jp-sort">
                   <span>Sắp xếp</span>
-                  <Select value={params.sortBy || "relevance"} onChange={(e) => update({ sort: e.target.value === "relevance" ? undefined : e.target.value })}>
-                    {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  <Select
+                    value={params.sortBy || "relevance"}
+                    onChange={(e) => update({ sort: e.target.value === "relevance" ? undefined : e.target.value })}
+                  >
+                    {SORT_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
                   </Select>
                 </label>
               </div>
             </div>
 
             {chips.length > 0 && (
-              <div className="jp-active-filters" aria-label="Bộ lọc đang bật">
-                {chips.map((chip) => <RemovableChip key={chip.key} label={chip.label} onRemove={() => update(chip.clear)} />)}
-                <Button variant="ghost" size="sm" onClick={clearFilters}>Xóa bộ lọc</Button>
+              <div className="jp-active-filters" role="group" aria-label="Bộ lọc đang bật">
+                {chips.map((chip) => (
+                  <RemovableChip key={chip.key} label={chip.label} onRemove={() => update(chip.clear)} />
+                ))}
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Xóa bộ lọc
+                </Button>
               </div>
             )}
 
             {err && (
               <Alert
                 action={
-                  <Button variant="secondary" size="sm" loading={jobsQuery.isFetching} onClick={() => void jobsQuery.refetch()}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    loading={jobsQuery.isFetching}
+                    onClick={() => void jobsQuery.refetch()}
+                  >
                     {jobsQuery.isFetching ? "Đang thử lại…" : "Thử lại"}
                   </Button>
                 }
@@ -207,15 +254,31 @@ export default function JobListPage() {
             {data && !err && items.length === 0 && (
               <div className="jp-board">
                 {filtered ? (
-                  <EmptyState title="Không có việc khớp bộ lọc" action={<Button variant="secondary" onClick={clearFilters}>Xóa bộ lọc</Button>}>
+                  <EmptyState
+                    title="Không có việc khớp bộ lọc"
+                    action={
+                      <Button variant="secondary" onClick={clearFilters}>
+                        Xóa bộ lọc
+                      </Button>
+                    }
+                  >
                     Bỏ bớt bộ lọc đang bật ở trên, hoặc xóa hết để xem cả bảng.
                   </EmptyState>
                 ) : params.q ? (
-                  <EmptyState title={`Không có việc nào khớp “${params.q}”`} action={<Button variant="secondary" onClick={() => update({ q: undefined })}>Xóa từ khóa</Button>}>
+                  <EmptyState
+                    title={`Không có việc nào khớp “${params.q}”`}
+                    action={
+                      <Button variant="secondary" onClick={() => update({ q: undefined })}>
+                        Xóa từ khóa
+                      </Button>
+                    }
+                  >
                     Thử từ khóa ngắn hơn, hoặc tên kỹ năng thay vì tên vị trí.
                   </EmptyState>
                 ) : (
-                  <EmptyState title="Chưa có việc làm nào đang tuyển">Khi có tin mới được duyệt, bảng sẽ hiện ở đây.</EmptyState>
+                  <EmptyState title="Chưa có việc làm nào đang tuyển">
+                    Khi có tin mới được duyệt, bảng sẽ hiện ở đây.
+                  </EmptyState>
                 )}
               </div>
             )}
@@ -223,7 +286,10 @@ export default function JobListPage() {
             <RecommendedJobs />
 
             {data && !err && items.length > 0 && (
-              <div className={cx("jp-board-wrap", jobsQuery.isPlaceholderData && "is-stale")} aria-busy={jobsQuery.isPlaceholderData || undefined}>
+              <div
+                className={cx("jp-board-wrap", jobsQuery.isPlaceholderData && "is-stale")}
+                aria-busy={jobsQuery.isPlaceholderData || undefined}
+              >
                 <Board
                   sort={params.sortBy}
                   onSalarySort={(next) => update({ sort: next })}
@@ -234,8 +300,17 @@ export default function JobListPage() {
                   ))}
                 </Board>
                 <div className="jp-board-foot">
-                  <Pagination page={data.page} totalPages={data.totalPages} onPage={goToPage} label="Trang của bảng việc làm" />
-                  {data.totalPages > 1 && <p className="jp-board-pageinfo">Trang {data.page + 1} / {data.totalPages}</p>}
+                  <Pagination
+                    page={data.page}
+                    totalPages={data.totalPages}
+                    onPage={goToPage}
+                    label="Trang của bảng việc làm"
+                  />
+                  {data.totalPages > 1 && (
+                    <p className="jp-board-pageinfo">
+                      Trang {data.page + 1} / {data.totalPages}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -248,13 +323,22 @@ export default function JobListPage() {
         className="jp-drawer"
         aria-labelledby="jp-drawer-title"
         onClose={() => setDrawerOpen(false)}
-        onClick={(e) => { if (e.target === e.currentTarget) setDrawerOpen(false); }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setDrawerOpen(false);
+        }}
       >
         {drawerOpen && (
           <div className="jp-drawer-inner">
             <div className="jp-drawer-head">
-              <h2 id="jp-drawer-title" className="jp-h2">Bộ lọc</h2>
-              <button type="button" className="jp-drawer-close" aria-label="Đóng bộ lọc" onClick={() => setDrawerOpen(false)}>
+              <h2 id="jp-drawer-title" className="jp-h2">
+                Bộ lọc
+              </h2>
+              <button
+                type="button"
+                className="jp-drawer-close"
+                aria-label="Đóng bộ lọc"
+                onClick={() => setDrawerOpen(false)}
+              >
                 <Icon name="x" size={22} />
               </button>
             </div>
@@ -262,7 +346,9 @@ export default function JobListPage() {
               <AdvancedFilters params={params} facets={data?.facets} onChange={update} />
             </div>
             <div className="jp-drawer-foot">
-              <Button variant="secondary" disabled={!filtered} onClick={clearFilters}>Xóa bộ lọc</Button>
+              <Button variant="secondary" disabled={!filtered} onClick={clearFilters}>
+                Xóa bộ lọc
+              </Button>
               <Button onClick={() => setDrawerOpen(false)}>
                 {data ? `Xem ${total.toLocaleString("vi-VN")} việc` : "Xem kết quả"}
               </Button>

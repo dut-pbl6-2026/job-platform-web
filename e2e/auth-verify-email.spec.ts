@@ -67,14 +67,18 @@ test.describe("registration and email verification", () => {
     await expect(page.getByText("This verification link is invalid")).toHaveCount(0);
   });
 
-  test("verify-email with an invalid, expired or used token (400) shows a message and a link back to login", async ({ page }) => {
+  test("verify-email with an invalid, expired or used token (400) shows a message and a link back to login", async ({
+    page,
+  }) => {
     await offlineBackend(page);
     await page.route("**/api/auth/verify-email", (route) =>
       route.fulfill({ status: 400, json: { title: "Bad Request", detail: "Token expired" } }),
     );
     await page.goto("/verify-email?token=expired-e2e");
 
-    await expect(page.getByText("This verification link is invalid, has expired or has already been used.")).toBeVisible();
+    await expect(
+      page.getByText("This verification link is invalid, has expired or has already been used."),
+    ).toBeVisible();
     await expect(page.getByText("Your email has been verified.")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Back to login" }).first()).toHaveAttribute("href", "/login");
   });

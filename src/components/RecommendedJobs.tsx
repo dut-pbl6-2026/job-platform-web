@@ -30,7 +30,9 @@ export function RecommendedJobs() {
     <section className="jp-reco" aria-labelledby="jp-reco-title">
       <div className="jp-reco-head">
         <div>
-          <h2 id="jp-reco-title" className="jp-reco-title">Việc làm gợi ý cho bạn</h2>
+          <h2 id="jp-reco-title" className="jp-reco-title">
+            Việc làm gợi ý cho bạn
+          </h2>
           <p className="jp-reco-lead">Cá nhân hóa theo hồ sơ và kỹ năng của bạn</p>
         </div>
         <Button
@@ -51,7 +53,11 @@ export function RecommendedJobs() {
       {query.isError && (
         <Alert
           tone="error"
-          action={<Button variant="secondary" onClick={() => void query.refetch()}>Thử lại</Button>}
+          action={
+            <Button variant="secondary" onClick={() => void query.refetch()}>
+              Thử lại
+            </Button>
+          }
         >
           {loadErrorMessage(query.error, "việc làm gợi ý")}
         </Alert>

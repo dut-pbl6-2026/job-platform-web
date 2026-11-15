@@ -13,7 +13,13 @@ const ALERT_ICON: Record<Tone, IconName> = { error: "alert", success: "checkCirc
  * A message with icon + text (never color alone). Errors use role="alert" so screen readers read
  * them as they appear; the rest are polite status messages.
  */
-export function Alert({ tone = "error", title, children, action, className }: {
+export function Alert({
+  tone = "error",
+  title,
+  children,
+  action,
+  className,
+}: {
   tone?: Tone;
   title?: ReactNode;
   children?: ReactNode;
@@ -32,7 +38,15 @@ export function Alert({ tone = "error", title, children, action, className }: {
   );
 }
 
-export function EmptyState({ title, children, action }: { title: ReactNode; children?: ReactNode; action?: ReactNode }) {
+export function EmptyState({
+  title,
+  children,
+  action,
+}: {
+  title: ReactNode;
+  children?: ReactNode;
+  action?: ReactNode;
+}) {
   return (
     <div className="jp-empty">
       <h2 className="jp-empty-title">{title}</h2>
@@ -80,8 +94,12 @@ export function StatusMark({ tone, children }: { tone: StatusTone; children: Rea
             <path d="M6 1.75a4.25 4.25 0 0 1 0 8.5z" fill="currentColor" />
           </>
         )}
-        {tone === "danger" && <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />}
-        {tone === "info" && <rect x="1.5" y="1.5" width="9" height="9" rx="1" transform="rotate(45 6 6)" fill="currentColor" />}
+        {tone === "danger" && (
+          <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        )}
+        {tone === "info" && (
+          <rect x="1.5" y="1.5" width="9" height="9" rx="1" transform="rotate(45 6 6)" fill="currentColor" />
+        )}
         {tone === "neutral" && <circle cx="6" cy="6" r="4.25" fill="none" stroke="currentColor" strokeWidth="1.5" />}
       </svg>
       {children}
@@ -111,7 +129,12 @@ function pageItems(page: number, total: number): PageItem[] {
 }
 
 /** The one pager. `page` is 0-based; labels are 1-based. */
-export function Pagination({ page, totalPages, onPage, label = "Phân trang" }: {
+export function Pagination({
+  page,
+  totalPages,
+  onPage,
+  label = "Phân trang",
+}: {
   page: number;
   totalPages: number;
   onPage: (page: number) => void;
@@ -127,7 +150,9 @@ export function Pagination({ page, totalPages, onPage, label = "Phân trang" }: 
       <ol className="jp-pager-list">
         {pageItems(page, totalPages).map((item, i) =>
           item === "gap" ? (
-            <li key={`gap-${i}`} className="jp-pager-gap" aria-hidden="true">…</li>
+            <li key={`gap-${i}`} className="jp-pager-gap" aria-hidden="true">
+              …
+            </li>
           ) : (
             <li key={item}>
               <button
@@ -143,7 +168,12 @@ export function Pagination({ page, totalPages, onPage, label = "Phân trang" }: 
           ),
         )}
       </ol>
-      <button type="button" className="jp-pager-step" disabled={page >= totalPages - 1} onClick={() => onPage(page + 1)}>
+      <button
+        type="button"
+        className="jp-pager-step"
+        disabled={page >= totalPages - 1}
+        onClick={() => onPage(page + 1)}
+      >
         Sau
         <Icon name="chevronRight" size={16} />
       </button>
@@ -161,7 +191,17 @@ export function BackLink({ to, children }: { to: string; children: ReactNode }) 
 }
 
 /** Page title block: optional back link, h1, one line of lead text, optional actions on the right. */
-export function PageHead({ title, lead, back, actions }: { title: ReactNode; lead?: ReactNode; back?: ReactNode; actions?: ReactNode }) {
+export function PageHead({
+  title,
+  lead,
+  back,
+  actions,
+}: {
+  title: ReactNode;
+  lead?: ReactNode;
+  back?: ReactNode;
+  actions?: ReactNode;
+}) {
   return (
     <div className="jp-pagehead">
       {back}
@@ -176,7 +216,13 @@ export function PageHead({ title, lead, back, actions }: { title: ReactNode; lea
   );
 }
 
-export function Panel({ title, actions, children, className, as: Tag = "section" }: {
+export function Panel({
+  title,
+  actions,
+  children,
+  className,
+  as: Tag = "section",
+}: {
   title?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;

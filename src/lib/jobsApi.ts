@@ -30,13 +30,15 @@ export function normalizeJob(raw: any): Job {
     requirements: s("requirements") ?? null,
     benefits: s("benefits") ?? null,
     companyId,
-    company: raw.company && typeof raw.company === "object"
-      ? raw.company
-      : { id: companyId, name: s("companyName", "company_name") ?? "—" },
+    company:
+      raw.company && typeof raw.company === "object"
+        ? raw.company
+        : { id: companyId, name: s("companyName", "company_name") ?? "—" },
     categoryId,
-    category: raw.category && typeof raw.category === "object"
-      ? raw.category
-      : { id: categoryId, name: s("categoryName", "category_name") ?? "" },
+    category:
+      raw.category && typeof raw.category === "object"
+        ? raw.category
+        : { id: categoryId, name: s("categoryName", "category_name") ?? "" },
     salaryMin: n("salaryMin", "salary_min") ?? 0,
     salaryMax: n("salaryMax", "salary_max") ?? 0,
     salaryCurrency: s("salaryCurrency", "salary_currency", "currency") ?? "VND",
@@ -92,16 +94,32 @@ function normalizePaginated(raw: any, fallbackParams: JobSearchParams): Paginate
     if (nested) return nested;
     if (Array.isArray(raw.data)) {
       const items = (raw.data as any[]).map(normalizeJob);
-      return { items, total: items.length, page: fallbackParams.page ?? 0, size: fallbackParams.size ?? 10, totalPages: 1 };
+      return {
+        items,
+        total: items.length,
+        page: fallbackParams.page ?? 0,
+        size: fallbackParams.size ?? 10,
+        totalPages: 1,
+      };
     }
   }
 
   // Spring-style { content: [...], totalElements, number, size, totalPages } or { content: [...] }
   if (Array.isArray(raw.content)) {
     const items = (raw.content as any[]).map(normalizeJob);
-    const total = typeof raw.totalElements === "number" ? raw.totalElements : typeof raw.total === "number" ? raw.total : items.length;
-    const page = typeof raw.number === "number" ? raw.number : typeof raw.page === "number" ? raw.page : fallbackParams.page ?? 0;
-    const size = typeof raw.size === "number" ? raw.size : fallbackParams.size ?? 10;
+    const total =
+      typeof raw.totalElements === "number"
+        ? raw.totalElements
+        : typeof raw.total === "number"
+          ? raw.total
+          : items.length;
+    const page =
+      typeof raw.number === "number"
+        ? raw.number
+        : typeof raw.page === "number"
+          ? raw.page
+          : (fallbackParams.page ?? 0);
+    const size = typeof raw.size === "number" ? raw.size : (fallbackParams.size ?? 10);
     const totalPages = typeof raw.totalPages === "number" ? raw.totalPages : Math.ceil(total / size) || 1;
     return { items, total, page, size, totalPages };
   }
@@ -112,22 +130,40 @@ function normalizePaginated(raw: any, fallbackParams: JobSearchParams): Paginate
     return {
       items,
       total: typeof raw.total === "number" ? raw.total : items.length,
-      page: typeof raw.page === "number" ? raw.page : fallbackParams.page ?? 0,
-      size: typeof raw.size === "number" ? raw.size : fallbackParams.size ?? 10,
-      totalPages: typeof raw.totalPages === "number" ? raw.totalPages : Math.ceil((typeof raw.total === "number" ? raw.total : items.length) / (typeof raw.size === "number" ? raw.size : fallbackParams.size ?? 10)) || 1,
+      page: typeof raw.page === "number" ? raw.page : (fallbackParams.page ?? 0),
+      size: typeof raw.size === "number" ? raw.size : (fallbackParams.size ?? 10),
+      totalPages:
+        typeof raw.totalPages === "number"
+          ? raw.totalPages
+          : Math.ceil(
+              (typeof raw.total === "number" ? raw.total : items.length) /
+                (typeof raw.size === "number" ? raw.size : (fallbackParams.size ?? 10)),
+            ) || 1,
     };
   }
 
   // Plain array at top level
   if (Array.isArray(raw)) {
     const items = (raw as any[]).map(normalizeJob);
-    return { items, total: items.length, page: fallbackParams.page ?? 0, size: fallbackParams.size ?? 10, totalPages: 1 };
+    return {
+      items,
+      total: items.length,
+      page: fallbackParams.page ?? 0,
+      size: fallbackParams.size ?? 10,
+      totalPages: 1,
+    };
   }
 
   // { data: [...] } where data is array (alternative envelope)
   if (Array.isArray(raw.data)) {
     const items = (raw.data as any[]).map(normalizeJob);
-    return { items, total: items.length, page: fallbackParams.page ?? 0, size: fallbackParams.size ?? 10, totalPages: 1 };
+    return {
+      items,
+      total: items.length,
+      page: fallbackParams.page ?? 0,
+      size: fallbackParams.size ?? 10,
+      totalPages: 1,
+    };
   }
 
   return null;
@@ -186,19 +222,30 @@ function mockSearch(params: JobSearchParams): PaginatedJobs {
   const levels = splitCsv(params.experienceLevel);
   const skills = splitCsv(params.skills).map((item) => item.toLowerCase());
   let filtered = MOCK_JOBS.filter((j) => {
-    const hitQ = !q || j.title.toLowerCase().includes(q) || j.description.toLowerCase().includes(q) || j.company.name.toLowerCase().includes(q);
+    const hitQ =
+      !q ||
+      j.title.toLowerCase().includes(q) ||
+      j.description.toLowerCase().includes(q) ||
+      j.company.name.toLowerCase().includes(q);
     const hitLoc = locationMatches(j.location, loc);
     const normalizedCat = normalizeJob(j).category.name.toLowerCase();
-    const hitCat = !cat || normalizedCat === cat || j.categoryId.toLowerCase() === cat || j.category.name.toLowerCase() === cat;
+    const hitCat =
+      !cat || normalizedCat === cat || j.categoryId.toLowerCase() === cat || j.category.name.toLowerCase() === cat;
     const hitType = matchesEmployment(String(j.employmentType || ""), types);
     const hitLevel = matchesExperience(String(j.experienceLevel || ""), levels);
     const jobSkills = (j.skills ?? []).map((item) => item.toLowerCase());
-    const hitSkills = skills.length === 0 || (params.skillOp === "and"
-      ? skills.every((skill) => jobSkills.some((item) => item.includes(skill)))
-      : skills.some((skill) => jobSkills.some((item) => item.includes(skill))));
+    const hitSkills =
+      skills.length === 0 ||
+      (params.skillOp === "and"
+        ? skills.every((skill) => jobSkills.some((item) => item.includes(skill)))
+        : skills.some((skill) => jobSkills.some((item) => item.includes(skill))));
     const hitMin = params.minSalary == null || (j.salaryMax || j.salaryMin) >= params.minSalary;
     const hitMax = params.maxSalary == null || (j.salaryMin || j.salaryMax) <= params.maxSalary;
-    const hitCurrency = !params.salaryCurrency || !j.salaryCurrency || j.salaryCurrency === params.salaryCurrency || params.salaryCurrency === "VND";
+    const hitCurrency =
+      !params.salaryCurrency ||
+      !j.salaryCurrency ||
+      j.salaryCurrency === params.salaryCurrency ||
+      params.salaryCurrency === "VND";
     return hitQ && hitLoc && hitCat && hitType && hitLevel && hitSkills && hitMin && hitMax && hitCurrency;
   });
 
@@ -245,13 +292,16 @@ function unwrapSearch(data: unknown, params: JobSearchParams): PaginatedJobs | n
     const rec = data as Record<string, unknown>;
     const items = Array.isArray(rec.items) ? rec.items.map(normalizeJob) : [];
     if (items.length || rec.total !== undefined) {
-      return withFacets({
-        items,
-        total: typeof rec.total === "number" ? rec.total : items.length,
-        page: typeof rec.page === "number" ? rec.page : params.page ?? 0,
-        size: typeof rec.size === "number" ? rec.size : params.size ?? 10,
-        totalPages: typeof rec.totalPages === "number" ? rec.totalPages : 1,
-      }, data);
+      return withFacets(
+        {
+          items,
+          total: typeof rec.total === "number" ? rec.total : items.length,
+          page: typeof rec.page === "number" ? rec.page : (params.page ?? 0),
+          size: typeof rec.size === "number" ? rec.size : (params.size ?? 10),
+          totalPages: typeof rec.totalPages === "number" ? rec.totalPages : 1,
+        },
+        data,
+      );
     }
   }
   return null;
@@ -275,7 +325,8 @@ export async function fetchJobById(id: string): Promise<Job | null> {
   try {
     const { data } = await api.get(`/jobs/${id}`);
     // API may return { data: Job } envelope
-    const raw = (data && typeof data === "object" && (data as any).data && !(data as any).title) ? (data as any).data : data;
+    const raw =
+      data && typeof data === "object" && (data as any).data && !(data as any).title ? (data as any).data : data;
     return normalizeJob(raw);
   } catch (e) {
     if (httpStatus(e) === 404) return null;
@@ -317,7 +368,9 @@ const MOCK_COMPANIES: CompanyOption[] = [
   ...new Map(MOCK_JOBS.map((job) => [job.company.id, job.company] as const)).values(),
 ]
   // The mock catalogue stores the backend category name as `industry`; show its Vietnamese label.
-  .map((c) => toCompanyOption({ id: c.id, name: c.name, industry: c.industry && categoryLabel(c.industry), address: c.address }))
+  .map((c) =>
+    toCompanyOption({ id: c.id, name: c.name, industry: c.industry && categoryLabel(c.industry), address: c.address }),
+  )
   .filter((c): c is CompanyOption => c !== null);
 
 /**
@@ -350,9 +403,11 @@ export async function fetchSkills(q = ""): Promise<NamedCount[]> {
   const keyword = q.trim().toLowerCase();
   const counts = new Map<string, number>();
   for (const job of MOCK_JOBS) for (const skill of job.skills ?? []) counts.set(skill, (counts.get(skill) ?? 0) + 1);
-  return MOCK_SKILLS
-    .filter((name) => !keyword || name.toLowerCase().includes(keyword))
-    .map((name) => ({ id: name, name, count: counts.get(name) ?? 0 }));
+  return MOCK_SKILLS.filter((name) => !keyword || name.toLowerCase().includes(keyword)).map((name) => ({
+    id: name,
+    name,
+    count: counts.get(name) ?? 0,
+  }));
 }
 
 const COMPANY_PREFIX = /^(c[oô]ng ty|t[aậ]p [dđ]o[aà]n|doanh nghi[eệ]p|tnhh|cp|cổ phần|co\.?|ltd\.?|jsc)$/i;
@@ -367,7 +422,13 @@ export function companyInitials(name: string) {
     else break;
   }
   const picked = rest.length ? rest : words;
-  const letters = picked.length > 1 ? picked.slice(0, 2).map((w) => w[0]).join("") : picked[0].slice(0, 2);
+  const letters =
+    picked.length > 1
+      ? picked
+          .slice(0, 2)
+          .map((w) => w[0])
+          .join("")
+      : picked[0].slice(0, 2);
   return letters.toUpperCase();
 }
 
