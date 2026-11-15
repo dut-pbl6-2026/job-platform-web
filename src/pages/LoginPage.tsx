@@ -10,8 +10,6 @@ import { DEFAULT_AFTER_AUTH } from "../lib/redirect";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
-const LOGIN_FAILED = "Check your credentials or verify your email";
-
 export default function LoginPage() {
   const { t } = useTranslation();
   useDocumentTitle(t("auth.login.title"));
@@ -50,7 +48,7 @@ export default function LoginPage() {
       nav(target, { replace: true });
     } catch (ex: unknown) {
       // auth-svc answers 401 for a wrong password and for an unverified account alike, so the message names both.
-      setErr(httpStatus(ex) === 401 ? LOGIN_FAILED : apiErrorMessage(ex, t("auth.login.failed")));
+      setErr(httpStatus(ex) === 401 ? t("auth.login.credentialsError") : apiErrorMessage(ex, t("auth.login.failed")));
     } finally {
       setLoading(false);
     }

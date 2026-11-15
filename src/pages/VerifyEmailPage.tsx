@@ -9,12 +9,10 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 type Result = { kind: "pending" } | { kind: "success" } | { kind: "invalid" } | { kind: "error"; message: string };
 
-const INVALID_LINK = "This verification link is invalid, has expired or has already been used.";
-
 /** Landing page of the link in the verification email: POST /api/auth/verify-email with the token from the URL. */
 export default function VerifyEmailPage() {
-  useDocumentTitle("Verify email");
   const { t } = useTranslation();
+  useDocumentTitle(t("auth.verifyEmail.documentTitle"));
   const [params] = useSearchParams();
   const token = params.get("token")?.trim() ?? "";
   const [result, setResult] = useState<Result>(token ? { kind: "pending" } : { kind: "invalid" });
@@ -35,28 +33,28 @@ export default function VerifyEmailPage() {
 
   return (
     <AuthLayout
-      title="Verify your email"
+      title={t("auth.verifyEmail.title")}
       footer={
         <Link className="jp-link" to="/login">
-          Back to login
+          {t("auth.verifyEmail.backToLogin")}
         </Link>
       }
     >
-      {result.kind === "pending" && <Alert tone="info">Verifying your email…</Alert>}
+      {result.kind === "pending" && <Alert tone="info">{t("auth.verifyEmail.verifying")}</Alert>}
       {result.kind === "success" && (
         <Alert tone="success">
-          Your email has been verified. You can now{" "}
+          {t("auth.verifyEmail.successBefore")}{" "}
           <Link className="jp-link" to="/login">
-            log in
+            {t("auth.verifyEmail.successLogin")}
           </Link>
-          .
+          {t("auth.verifyEmail.successAfter")}
         </Alert>
       )}
       {result.kind === "invalid" && (
         <Alert tone="error">
-          {INVALID_LINK}{" "}
+          {t("auth.verifyEmail.invalid")}{" "}
           <Link className="jp-link" to="/login">
-            Back to login
+            {t("auth.verifyEmail.backToLogin")}
           </Link>
         </Alert>
       )}

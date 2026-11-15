@@ -9,19 +9,14 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import i18n from "../i18n";
 import { apiErrorMessage } from "../lib/http";
 import { createJob, fetchCategories, type JobCreatePayload } from "../lib/jobsApi";
-import { employmentTypeLabel } from "../lib/labels";
+import { employmentTypeLabel, experienceLevelLabel } from "../lib/labels";
 import { queryKeys } from "../lib/queryClient";
 import { showToast } from "../lib/toastBus";
 
 // Values are the backend enum names (job-svc); labels come from labels.ts.
 const EMPLOYMENT_TYPES = ["FullTime", "PartTime", "Contract", "Internship"] as const;
 
-const EXPERIENCE_LEVELS: { value: string; label: string }[] = [
-  { value: "Entry", label: "Junior" },
-  { value: "Mid", label: "Middle" },
-  { value: "Senior", label: "Senior" },
-  { value: "Lead", label: "Lead" },
-];
+const EXPERIENCE_LEVELS = ["Entry", "Mid", "Senior", "Lead"] as const;
 
 type Form = {
   title: string;
@@ -220,8 +215,8 @@ export default function RecruiterPostJobPage() {
                 onChange={(e) => set("experienceLevel", e.target.value)}
               >
                 {EXPERIENCE_LEVELS.map((level) => (
-                  <option key={level.value} value={level.value}>
-                    {level.label}
+                  <option key={level} value={level}>
+                    {experienceLevelLabel(level)}
                   </option>
                 ))}
               </Select>
