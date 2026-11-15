@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminShell } from "../components/AdminShell";
@@ -38,7 +39,6 @@ import type { PendingJob } from "../types/admin";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const PAGE_SIZE = 8;
-const MISSING = "Chưa cập nhật";
 
 const STATUS_TONE: Record<string, StatusTone> = {
   active: "success",
@@ -52,7 +52,8 @@ const STATUS_TONE: Record<string, StatusTone> = {
 type Open = { id: string; kind: "read" | "edit" | "reject" | "delete" | "purge" };
 
 export default function AdminJobsPage() {
-  useDocumentTitle("Quản trị: Quản lý tin");
+  const { t } = useTranslation();
+  useDocumentTitle(t("admin.documentTitles.jobs"));
   const queryClient = useQueryClient();
   const [sp, setSp] = useSearchParams();
   const q = sp.get("q") || "";
@@ -143,9 +144,9 @@ export default function AdminJobsPage() {
       if (status === 404 || status === 409) void refresh(jobId);
       setActionErr(
         status === 404
-          ? "Tin này không còn tồn tại. Danh sách đã được tải lại."
+          ? t("admin.jobs.gone")
           : status === 409
-            ? "Trạng thái tin vừa thay đổi nên chưa thực hiện được. Danh sách đã được tải lại."
+            ? t("admin.jobs.conflict")
             : apiErrorMessage(e, fallback),
       );
     } finally {
@@ -156,14 +157,14 @@ export default function AdminJobsPage() {
   function decide(job: PendingJob, approved: boolean) {
     // job-svc rejects without a reason (422); stop here instead of sending the request.
     if (!approved && !reason.trim()) {
-      setReasonErr("Nhập lý do từ chối để gửi cho nhà tuyển dụng.");
+      setReasonErr(t("admin.jobs.reasonRequired"));
       return;
     }
     setReasonErr(null);
     void run(
       job.id,
       () => decideJob(job.id, approved, approved ? undefined : reason.trim()),
-      "Chưa cập nhật được tin. Vui lòng thử lại.",
+      t("admin.jobs.decideFailed"),
     );
   }
 
@@ -171,7 +172,7 @@ export default function AdminJobsPage() {
     await createAdminJob(input);
     setCreating(false);
     setActionErr(null);
-    setDone(`Đã đăng tin “${input.title}”.`);
+    setDone(t("admin.jobs.created", { title: input.title }));
     await refresh();
   }
 
@@ -179,7 +180,7 @@ export default function AdminJobsPage() {
     await updateAdminJob(jobId, input);
     setOpen(null);
     setActionErr(null);
-    setDone(`Đã lưu thay đổi cho tin “${input.title}”.`);
+    setDone(t("admin.jobs.saved", { title: input.title }));
     await refresh(jobId);
   }
 
@@ -187,8 +188,8 @@ export default function AdminJobsPage() {
 
   return (
     <AdminShell
-      title="Quản lý tin"
-      lead="Tìm, tạo, sửa và xóa tin tuyển dụng. Tin chờ duyệt được duyệt hoặc từ chối ngay tại đây."
+      title={t("admin.jobs.title")}
+      lead={t("admin.jobs.lead")}
       actions={
         !creating && (
           <Button
@@ -200,31 +201,36 @@ export default function AdminJobsPage() {
               setActionErr(null);
             }}
           >
-            Tạo tin
+            {t("admin.jobs.create")}
           </Button>
         )
       }
     >
       {creating && (
-        <Panel title="Tạo tin mới" className="jp-jobform-panel">
-          <p className="jp-muted jp-jobform-note">Tin do quản trị viên tạo được đăng ngay, không qua bước duyệt.</p>
+        <Panel title={t("admin.jobs.createTitle")} className="jp-jobform-panel">
+          <p className="jp-muted jp-jobform-note">{t("admin.jobs.createNote")}</p>
           <AdminJobForm
             idPrefix="new-job"
-            submitLabel="Đăng tin"
-            busyLabel="Đang đăng…"
+            submitLabel={t("admin.jobs.publish")}
+            busyLabel={t("admin.jobs.publishing")}
             onSubmit={create}
             onCancel={() => setCreating(false)}
           />
         </Panel>
       )}
 
-      <form className="jp-user-filters jp-job-filters" onSubmit={search} role="search" aria-label="Tìm tin tuyển dụng">
-        <Field id="job-q" label="Tiêu đề tin" className="jp-user-filters-q">
+      <form
+        className="jp-user-filters jp-job-filters"
+        onSubmit={search}
+        role="search"
+        aria-label={t("admin.jobs.searchLabel")}
+      >
+        <Field id="job-q" label={t("admin.jobs.titleLabel")} className="jp-user-filters-q">
           <Input type="search" value={draftQ} onChange={(e) => setDraftQ(e.target.value)} autoComplete="off" />
         </Field>
-        <Field id="job-status" label="Trạng thái">
+        <Field id="job-status" label={t("admin.jobs.statusLabel")}>
           <Select value={status} onChange={(e) => patchQuery({ status: e.target.value })}>
-            <option value="">Tất cả (trừ tin đã xóa)</option>
+            <option value="">{t("admin.jobs.allStatuses")}</option>
             {ADMIN_JOB_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {jobStatusLabel(s)}
@@ -233,7 +239,7 @@ export default function AdminJobsPage() {
           </Select>
         </Field>
         <Button type="submit" className="jp-user-filters-go">
-          Tìm
+          {t("admin.jobs.search")}
         </Button>
       </form>
 
@@ -245,23 +251,29 @@ export default function AdminJobsPage() {
           tone="error"
           action={
             <Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>
-              {query.isFetching ? "Đang thử lại…" : "Thử lại"}
+              {query.isFetching ? t("jobs.retrying") : t("jobs.retry")}
             </Button>
           }
         >
-          {loadErrorMessage(query.error, "danh sách tin")}
+          {loadErrorMessage(query.error, t("admin.jobs.loadWhat"))}
         </Alert>
       )}
 
-      {query.isPending && <SkeletonRows rows={4} label="Đang tải danh sách tin" />}
+      {query.isPending && <SkeletonRows rows={4} label={t("admin.jobs.loading")} />}
 
       {data && data.items.length === 0 && page === 0 && (
         <EmptyState
-          title={q ? "Không có tin nào khớp tìm kiếm" : showing ? `Không có tin ${showing}` : "Chưa có tin tuyển dụng"}
+          title={
+            q
+              ? t("admin.jobs.emptySearch")
+              : showing
+                ? t("admin.jobs.emptyStatus", { status: showing })
+                : t("admin.jobs.emptyNone")
+          }
           action={
             filtered ? (
               <Button variant="secondary" onClick={() => patchQuery({ q: "", status: "" })}>
-                Xóa bộ lọc
+                {t("jobs.clearFilters")}
               </Button>
             ) : undefined
           }
@@ -271,17 +283,17 @@ export default function AdminJobsPage() {
       {data && data.items.length > 0 && (
         <>
           <p className="jp-count" aria-live="polite">
-            {data.total.toLocaleString("vi-VN")} tin{showing ? ` ${showing}` : ""}
+            {t("admin.jobs.count", { total: data.total.toLocaleString("vi-VN"), status: showing ? ` ${showing}` : "" })}
           </p>
           <div className="jp-queue jp-queue--manage">
             <div className="jp-queue-head" aria-hidden="true">
-              <span>Vị trí · Công ty</span>
-              <span>Trạng thái</span>
-              <span>Danh mục</span>
-              <span>Đăng</span>
-              <span className="jp-queue-head-actions">Thao tác</span>
+              <span>{t("admin.jobs.colJob")}</span>
+              <span>{t("admin.jobs.colStatus")}</span>
+              <span>{t("admin.jobs.colCategory")}</span>
+              <span>{t("admin.jobs.colPosted")}</span>
+              <span className="jp-queue-head-actions">{t("admin.jobs.colActions")}</span>
             </div>
-            <ol className="jp-queue-rows" aria-label="Tin tuyển dụng">
+            <ol className="jp-queue-rows" aria-label={t("admin.jobs.listLabel")}>
               {data.items.map((job) => {
                 const kind = open?.id === job.id ? open.kind : null;
                 const busy = busyId === job.id;
@@ -293,23 +305,25 @@ export default function AdminJobsPage() {
                       <div className="jp-row-main">
                         <h3 className="jp-row-title">{job.title}</h3>
                         <p className="jp-row-company" title={job.company.name}>
-                          {job.company.name || MISSING}
+                          {job.company.name || t("common.notProvided")}
                         </p>
-                        {job.recruiterName && <p className="jp-queue-by">Người đăng: {job.recruiterName}</p>}
+                        {job.recruiterName && (
+                          <p className="jp-queue-by">{t("admin.jobs.postedBy", { name: job.recruiterName })}</p>
+                        )}
                       </div>
                       <span className="jp-cell">
-                        <span className="jp-sr">Trạng thái: </span>
+                        <span className="jp-sr">{t("admin.jobs.srStatus")}</span>
                         <StatusMark tone={STATUS_TONE[job.status] ?? "neutral"}>
                           {jobStatusLabel(job.status)}
                         </StatusMark>
                       </span>
                       <span className="jp-cell">
-                        <span className="jp-sr">Danh mục: </span>
+                        <span className="jp-sr">{t("admin.jobs.srCategory")}</span>
                         {categoryLabel(job.category.name)}
                       </span>
                       <span className="jp-cell jp-cell--date">
-                        <span className="jp-sr">Đăng: </span>
-                        {timeAgo(job.createdAt) || MISSING}
+                        <span className="jp-sr">{t("admin.jobs.srPosted")}</span>
+                        {timeAgo(job.createdAt) || t("common.notProvided")}
                       </span>
                       <div className="jp-queue-actions">
                         <Button
@@ -317,26 +331,26 @@ export default function AdminJobsPage() {
                           aria-expanded={kind === "read"}
                           onClick={() => toggle(job.id, "read")}
                         >
-                          {kind === "read" ? "Ẩn nội dung" : "Xem nội dung"}
+                          {kind === "read" ? t("admin.jobs.hideContent") : t("admin.jobs.showContent")}
                         </Button>
                         {pending && (
                           <>
                             <Button
                               loading={busy && kind !== "reject"}
                               disabled={busy}
-                              aria-label={`Duyệt tin ${job.title}`}
+                              aria-label={t("admin.jobs.approveLabel", { title: job.title })}
                               onClick={() => decide(job, true)}
                             >
-                              Duyệt
+                              {t("admin.jobs.approve")}
                             </Button>
                             <Button
                               variant="danger"
                               aria-expanded={kind === "reject"}
-                              aria-label={`Từ chối tin ${job.title}`}
+                              aria-label={t("admin.jobs.rejectLabel", { title: job.title })}
                               disabled={busy}
                               onClick={() => toggle(job.id, "reject")}
                             >
-                              Từ chối
+                              {t("admin.jobs.reject")}
                             </Button>
                           </>
                         )}
@@ -346,19 +360,19 @@ export default function AdminJobsPage() {
                               variant="secondary"
                               icon="pencil"
                               aria-expanded={kind === "edit"}
-                              aria-label={`Sửa tin ${job.title}`}
+                              aria-label={t("admin.jobs.editLabel", { title: job.title })}
                               onClick={() => toggle(job.id, "edit")}
                             >
-                              Sửa
+                              {t("admin.jobs.edit")}
                             </Button>
                             <Button
                               variant="danger"
                               icon="trash"
                               aria-expanded={kind === "delete"}
-                              aria-label={`Xóa tin ${job.title}`}
+                              aria-label={t("admin.jobs.deleteLabel", { title: job.title })}
                               onClick={() => toggle(job.id, "delete")}
                             >
-                              Xóa
+                              {t("admin.jobs.delete")}
                             </Button>
                           </>
                         )}
@@ -367,10 +381,10 @@ export default function AdminJobsPage() {
                             variant="danger"
                             icon="trash"
                             aria-expanded={kind === "purge"}
-                            aria-label={`Xóa vĩnh viễn tin ${job.title}`}
+                            aria-label={t("admin.jobs.purgeLabel", { title: job.title })}
                             onClick={() => toggle(job.id, "purge")}
                           >
-                            Xóa vĩnh viễn
+                            {t("admin.jobs.purge")}
                           </Button>
                         )}
                       </div>
@@ -381,10 +395,10 @@ export default function AdminJobsPage() {
                         {pending && (
                           <div className="jp-form-actions jp-queue-more">
                             <Button variant="secondary" icon="pencil" onClick={() => toggle(job.id, "edit")}>
-                              Sửa tin
+                              {t("admin.jobs.editJob")}
                             </Button>
                             <Button variant="danger" icon="trash" onClick={() => toggle(job.id, "delete")}>
-                              Xóa tin
+                              {t("admin.jobs.deleteJob")}
                             </Button>
                           </div>
                         )}
@@ -406,25 +420,25 @@ export default function AdminJobsPage() {
                       >
                         <Field
                           id={`reason-${job.id}`}
-                          label="Lý do từ chối"
+                          label={t("admin.jobs.rejectReason")}
                           required
-                          hint="Nhà tuyển dụng sẽ nhận được nội dung này."
+                          hint={t("admin.jobs.rejectHint")}
                           error={reasonErr}
                         >
                           <Textarea
                             rows={3}
                             maxLength={500}
                             value={reason}
-                            placeholder="Ví dụ: thiếu mô tả công việc"
+                            placeholder={t("admin.jobs.rejectPlaceholder")}
                             onChange={(e) => setReason(e.target.value)}
                           />
                         </Field>
                         <div className="jp-form-actions">
                           <Button variant="secondary" onClick={() => setOpen(null)} disabled={busy}>
-                            Hủy
+                            {t("admin.form.cancel")}
                           </Button>
                           <Button type="submit" variant="danger" loading={busy}>
-                            {busy ? "Đang gửi…" : "Xác nhận từ chối"}
+                            {busy ? t("admin.jobs.rejectSubmitting") : t("admin.jobs.rejectConfirm")}
                           </Button>
                         </div>
                       </form>
@@ -432,19 +446,19 @@ export default function AdminJobsPage() {
 
                     {kind === "delete" && (
                       <ConfirmBlock
-                        label={`Xác nhận xóa tin ${job.title}`}
-                        title="Xóa tin này?"
-                        text="Tin sẽ ẩn khỏi bảng việc làm và ứng viên không mở được nữa. Bạn vẫn xem lại được trong bộ lọc “Đã xóa”."
-                        confirm={busy ? "Đang xóa…" : "Xác nhận xóa"}
+                        label={t("admin.jobs.deleteConfirmLabel", { title: job.title })}
+                        title={t("admin.jobs.deleteTitle")}
+                        text={t("admin.jobs.deleteText")}
+                        confirm={busy ? t("admin.jobs.deleting") : t("admin.jobs.deleteConfirm")}
                         busy={busy}
                         onConfirm={() =>
                           void run(
                             job.id,
                             async () => {
                               await softDeleteAdminJob(job.id);
-                              return `Đã xóa tin “${job.title}”.`;
+                              return t("admin.jobs.deleted", { title: job.title });
                             },
-                            "Chưa xóa được tin. Vui lòng thử lại.",
+                            t("admin.jobs.deleteFailed"),
                           )
                         }
                         onCancel={() => setOpen(null)}
@@ -454,19 +468,19 @@ export default function AdminJobsPage() {
                     {kind === "purge" && (
                       <ConfirmBlock
                         strong
-                        label={`Xác nhận xóa vĩnh viễn tin ${job.title}`}
-                        title="Xóa vĩnh viễn tin này?"
-                        text="Tin sẽ bị xóa hẳn khỏi cơ sở dữ liệu. Thao tác này không thể hoàn tác."
-                        confirm={busy ? "Đang xóa…" : "Xóa vĩnh viễn"}
+                        label={t("admin.jobs.purgeConfirmLabel", { title: job.title })}
+                        title={t("admin.jobs.purgeTitle")}
+                        text={t("admin.jobs.purgeText")}
+                        confirm={busy ? t("admin.jobs.deleting") : t("admin.jobs.purgeConfirm")}
                         busy={busy}
                         onConfirm={() =>
                           void run(
                             job.id,
                             async () => {
                               await hardDeleteAdminJob(job.id);
-                              return `Đã xóa vĩnh viễn tin “${job.title}”.`;
+                              return t("admin.jobs.purged", { title: job.title });
                             },
-                            "Chưa xóa được tin. Vui lòng thử lại.",
+                            t("admin.jobs.deleteFailed"),
                           )
                         }
                         onCancel={() => setOpen(null)}
@@ -494,7 +508,7 @@ function useAdminJob(jobId: string) {
     queryKey: queryKeys.adminJob(jobId),
     queryFn: async () => {
       const job = await fetchAdminJob(jobId);
-      if (!job) throw Object.assign(new Error("Tin không còn tồn tại."), { status: 404 });
+      if (!job) throw Object.assign(new Error("Job no longer exists."), { status: 404 });
       return job;
     },
     staleTime: 0,
@@ -503,27 +517,28 @@ function useAdminJob(jobId: string) {
 }
 
 function JobDetail({ jobId, children }: { jobId: string; children?: ReactNode }) {
+  const { t } = useTranslation();
   const detail = useAdminJob(jobId);
   const job = detail.data;
   return (
     <div className="jp-queue-detail">
       {detail.isPending && (
         <p className="jp-muted" role="status">
-          Đang tải nội dung…
+          {t("admin.jobs.contentLoading")}
         </p>
       )}
-      {detail.isError && <Alert tone="error">{loadErrorMessage(detail.error, "nội dung tin")}</Alert>}
+      {detail.isError && <Alert tone="error">{loadErrorMessage(detail.error, t("admin.jobs.contentWhat"))}</Alert>}
       {job && (
         <>
           {job.status === "rejected" && job.rejectionReason?.trim() && (
-            <Alert tone="warning" title="Lý do từ chối">
+            <Alert tone="warning" title={t("admin.jobs.rejectReason")}>
               {job.rejectionReason}
             </Alert>
           )}
           <FactStrip job={job} />
-          <JobText title="Mô tả công việc" text={job.description} />
-          <JobText title="Yêu cầu" text={job.requirements} />
-          <JobText title="Quyền lợi" text={job.benefits} />
+          <JobText title={t("jobs.detail.sectionDescription")} text={job.description} />
+          <JobText title={t("jobs.detail.sectionRequirements")} text={job.requirements} />
+          <JobText title={t("jobs.detail.sectionBenefits")} text={job.benefits} />
           {children}
         </>
       )}
@@ -540,22 +555,23 @@ function EditJob({
   onSave: (input: AdminJobInput) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const detail = useAdminJob(job.id);
   return (
     <div className="jp-queue-detail jp-queue-edit">
-      <h4 className="jp-h3">Sửa tin</h4>
+      <h4 className="jp-h3">{t("admin.jobs.editTitle")}</h4>
       {detail.isPending && (
         <p className="jp-muted" role="status">
-          Đang tải nội dung tin…
+          {t("admin.jobs.contentLoadingEdit")}
         </p>
       )}
-      {detail.isError && <Alert tone="error">{loadErrorMessage(detail.error, "nội dung tin")}</Alert>}
+      {detail.isError && <Alert tone="error">{loadErrorMessage(detail.error, t("admin.jobs.contentWhat"))}</Alert>}
       {detail.data && (
         <AdminJobForm
           idPrefix={`edit-${job.id}`}
           initial={detail.data}
-          submitLabel="Lưu thay đổi"
-          busyLabel="Đang lưu…"
+          submitLabel={t("admin.jobs.saveChanges")}
+          busyLabel={t("admin.jobs.savingChanges")}
           onSubmit={onSave}
           onCancel={onCancel}
         />
@@ -583,6 +599,7 @@ function ConfirmBlock({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className={strong ? "jp-queue-confirm jp-queue-confirm--strong" : "jp-queue-confirm"}
@@ -595,7 +612,7 @@ function ConfirmBlock({
       </div>
       <div className="jp-form-actions">
         <Button variant="secondary" disabled={busy} onClick={onCancel}>
-          Hủy
+          {t("admin.form.cancel")}
         </Button>
         <Button variant="danger" loading={busy} onClick={onConfirm}>
           {confirm}
@@ -606,10 +623,11 @@ function ConfirmBlock({
 }
 
 function JobText({ title, text }: { title: string; text: string | null | undefined }) {
+  const { t } = useTranslation();
   return (
     <section className="jp-detail-section">
       <h4 className="jp-h3">{title}</h4>
-      {text?.trim() ? <p className="jp-prose">{text}</p> : <p className="jp-muted">{MISSING}</p>}
+      {text?.trim() ? <p className="jp-prose">{text}</p> : <p className="jp-muted">{t("common.notProvided")}</p>}
     </section>
   );
 }

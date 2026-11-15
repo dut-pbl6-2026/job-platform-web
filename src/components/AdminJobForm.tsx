@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Alert, Button, Field, Icon, Input, Select, Textarea } from "./ui";
 import { CompanyPicker } from "./CompanyPicker";
+import i18n from "../i18n";
 import { fetchCategories, type CompanyOption } from "../lib/jobsApi";
 import { validationErrors, type AdminJobInput } from "../lib/adminApi";
 import { apiErrorMessage, httpStatus } from "../lib/http";
@@ -53,7 +55,7 @@ function toDraft(job?: PendingJob | null): Draft {
     company: job?.companyId
       ? {
           id: job.companyId,
-          name: job.company?.name && job.company.name !== "—" ? job.company.name : "Chưa cập nhật tên công ty",
+          name: job.company?.name && job.company.name !== "—" ? job.company.name : i18n.t("admin.form.unnamedCompany"),
         }
       : null,
     location: job?.location ?? "",
@@ -96,6 +98,7 @@ export function AdminJobForm({
   onSubmit: (input: AdminJobInput) => Promise<void>;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<Draft>(() => toDraft(initial));
   const [errors, setErrors] = useState<Errors>({});
   const [formErr, setFormErr] = useState<string | null>(null);
@@ -108,15 +111,15 @@ export function AdminJobForm({
   async function submit(e: FormEvent) {
     e.preventDefault();
     const next: Errors = {};
-    if (!draft.title.trim()) next.title = "Nhập tiêu đề tin.";
-    if (!draft.company) next.companyId = "Chọn công ty đăng tin.";
-    if (!draft.location.trim()) next.location = "Nhập địa điểm làm việc.";
-    if (!draft.description.trim()) next.description = "Nhập mô tả công việc.";
+    if (!draft.title.trim()) next.title = t("admin.form.titleRequired");
+    if (!draft.company) next.companyId = t("admin.form.companyRequired");
+    if (!draft.location.trim()) next.location = t("admin.form.locationRequired");
+    if (!draft.description.trim()) next.description = t("admin.form.descriptionRequired");
     const salaryMin = toNumber(draft.salaryMin);
     const salaryMax = toNumber(draft.salaryMax);
-    if (salaryMin === null || salaryMax === null) next.salary = "Mức lương phải là số không âm.";
+    if (salaryMin === null || salaryMax === null) next.salary = t("admin.form.salaryNotNegative");
     else if (salaryMin !== undefined && salaryMax !== undefined && salaryMin > salaryMax) {
-      next.salary = "Lương tối thiểu không được lớn hơn lương tối đa.";
+      next.salary = t("admin.form.salaryRange");
     }
     setErrors(next);
     setFormErr(null);
@@ -140,23 +143,23 @@ export function AdminJobForm({
       });
     } catch (err: unknown) {
       const fields = validationErrors(err);
-      // job-svc writes validation text in English: mark the field, in Vietnamese, instead of echoing it.
+      // job-svc writes validation text in English: mark the field with our own text instead of echoing it.
       const known: Errors = {};
       for (const key of ["title", "companyId", "location", "categoryId", "description"] as const) {
-        if (fields[key]) known[key] = SERVER_FIELD_MESSAGE[key];
+        if (fields[key]) known[key] = i18n.t(SERVER_FIELD_KEY[key]);
       }
       setErrors(known);
       if (Object.keys(known).length) {
-        setFormErr("Một số thông tin chưa hợp lệ. Kiểm tra các ô được đánh dấu.");
+        setFormErr(t("admin.form.someInvalid"));
       } else if (fields.request) {
-        setFormErr("Thông tin tin tuyển dụng chưa hợp lệ. Kiểm tra lại mức lương và các ô bắt buộc.");
+        setFormErr(t("admin.form.requestInvalid"));
       } else if (httpStatus(err) === 409) {
         // PUT on a job deleted meanwhile; job-svc words it in English.
-        setFormErr("Tin này đã bị xóa nên không sửa được nữa.");
+        setFormErr(t("admin.form.deletedEdit"));
       } else if (httpStatus(err) === 404) {
-        setFormErr("Tin này không còn tồn tại.");
+        setFormErr(t("admin.form.notFoundEdit"));
       } else {
-        setFormErr(apiErrorMessage(err, "Chưa lưu được tin. Vui lòng thử lại."));
+        setFormErr(apiErrorMessage(err, t("admin.form.saveFailed")));
       }
     } finally {
       setBusy(false);
@@ -167,28 +170,34 @@ export function AdminJobForm({
     <form className="jp-jobform" noValidate onSubmit={submit}>
       {formErr && <Alert tone="error">{formErr}</Alert>}
       <div className="jp-form-grid">
-        <Field id={id("title")} label="Tiêu đề tin" required error={errors.title} className="jp-field--wide">
+        <Field
+          id={id("title")}
+          label={t("admin.form.titleLabel")}
+          required
+          error={errors.title}
+          className="jp-field--wide"
+        >
           <Input value={draft.title} maxLength={256} onChange={(e) => set("title", e.target.value)} />
         </Field>
         <CompanyPicker
           id={id("company")}
-          label="Công ty"
+          label={t("admin.form.companyLabel")}
           value={draft.company}
           onChange={(c) => set("company", c)}
           error={errors.companyId}
         />
-        <Field id={id("location")} label="Địa điểm làm việc" required error={errors.location}>
+        <Field id={id("location")} label={t("admin.form.locationLabel")} required error={errors.location}>
           <Input
             value={draft.location}
             maxLength={256}
-            placeholder="Ví dụ: Đà Nẵng"
+            placeholder={t("admin.form.locationPlaceholder")}
             onChange={(e) => set("location", e.target.value)}
           />
         </Field>
         <div className="jp-field--wide jp-jobform-trio">
-          <Field id={id("category")} label="Danh mục" error={errors.categoryId}>
+          <Field id={id("category")} label={t("admin.form.categoryLabel")} error={errors.categoryId}>
             <Select value={draft.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
-              <option value="">Chưa phân loại</option>
+              <option value="">{t("labels.unassigned")}</option>
               {(categories.data ?? []).map((c) => (
                 <option key={c.id} value={c.id}>
                   {categoryLabel(c.name)}
@@ -196,7 +205,7 @@ export function AdminJobForm({
               ))}
             </Select>
           </Field>
-          <Field id={id("employment")} label="Hình thức làm việc">
+          <Field id={id("employment")} label={t("admin.form.employmentLabel")}>
             <Select value={draft.employmentType} onChange={(e) => set("employmentType", e.target.value)}>
               {EMPLOYMENT_TYPES.map((v) => (
                 <option key={v} value={v}>
@@ -205,7 +214,7 @@ export function AdminJobForm({
               ))}
             </Select>
           </Field>
-          <Field id={id("experience")} label="Kinh nghiệm">
+          <Field id={id("experience")} label={t("admin.form.experienceLabel")}>
             <Select value={draft.experienceLevel} onChange={(e) => set("experienceLevel", e.target.value)}>
               {EXPERIENCE_LEVELS.map((v) => (
                 <option key={v} value={v}>
@@ -217,14 +226,14 @@ export function AdminJobForm({
         </div>
         <fieldset className="jp-jobform-salary jp-field--wide">
           <legend className="jp-label">
-            Mức lương <span className="jp-optional">(để trống nếu thỏa thuận)</span>
+            {t("admin.form.salaryLabel")} <span className="jp-optional">{t("admin.form.salaryHint")}</span>
           </legend>
           {/* One error for the pair, so these two inputs are wired by hand rather than through Field. */}
           <div className="jp-jobform-salary-row">
             {(["salaryMin", "salaryMax"] as const).map((key) => (
               <div key={key} className="jp-field">
                 <label className="jp-label" htmlFor={id(key)}>
-                  {key === "salaryMin" ? "Từ" : "Đến"}
+                  {key === "salaryMin" ? t("admin.form.salaryFrom") : t("admin.form.salaryTo")}
                 </label>
                 <Input
                   id={id(key)}
@@ -239,7 +248,7 @@ export function AdminJobForm({
                 />
               </div>
             ))}
-            <Field id={id("currency")} label="Tiền tệ">
+            <Field id={id("currency")} label={t("admin.form.currencyLabel")}>
               <Select value={draft.salaryCurrency} onChange={(e) => set("salaryCurrency", e.target.value)}>
                 {CURRENCIES.map((v) => (
                   <option key={v} value={v}>
@@ -258,23 +267,23 @@ export function AdminJobForm({
         </fieldset>
         <Field
           id={id("description")}
-          label="Mô tả công việc"
+          label={t("admin.form.descriptionLabel")}
           required
           error={errors.description}
           className="jp-field--wide"
         >
           <Textarea rows={6} value={draft.description} onChange={(e) => set("description", e.target.value)} />
         </Field>
-        <Field id={id("requirements")} label="Yêu cầu" optional className="jp-field--wide">
+        <Field id={id("requirements")} label={t("admin.form.requirementsLabel")} optional className="jp-field--wide">
           <Textarea rows={4} value={draft.requirements} onChange={(e) => set("requirements", e.target.value)} />
         </Field>
-        <Field id={id("benefits")} label="Quyền lợi" optional className="jp-field--wide">
+        <Field id={id("benefits")} label={t("admin.form.benefitsLabel")} optional className="jp-field--wide">
           <Textarea rows={4} value={draft.benefits} onChange={(e) => set("benefits", e.target.value)} />
         </Field>
       </div>
       <div className="jp-form-actions">
         <Button variant="secondary" disabled={busy} onClick={onCancel}>
-          Hủy
+          {t("admin.form.cancel")}
         </Button>
         <Button type="submit" loading={busy}>
           {busy ? busyLabel : submitLabel}
@@ -284,11 +293,11 @@ export function AdminJobForm({
   );
 }
 
-const SERVER_FIELD_MESSAGE: Required<Errors> = {
-  title: "Tiêu đề tin chưa hợp lệ.",
-  companyId: "Không tìm thấy công ty này. Chọn lại công ty.",
-  location: "Địa điểm làm việc chưa hợp lệ.",
-  categoryId: "Không tìm thấy danh mục này. Chọn lại danh mục.",
-  salary: "Mức lương chưa hợp lệ.",
-  description: "Mô tả công việc chưa hợp lệ.",
-};
+const SERVER_FIELD_KEY = {
+  title: "admin.form.serverTitle",
+  companyId: "admin.form.serverCompany",
+  location: "admin.form.serverLocation",
+  categoryId: "admin.form.serverCategory",
+  salary: "admin.form.serverSalary",
+  description: "admin.form.serverDescription",
+} as const satisfies Record<keyof Errors, string>;

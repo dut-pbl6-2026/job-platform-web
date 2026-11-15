@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import { api } from "./api";
 import { unwrap, pickNum, pickStr, toOneBased, fromOneBased } from "./http";
 import { normalizeJob } from "./jobsApi";
@@ -239,10 +240,10 @@ export async function fetchAdminJob(jobId: string): Promise<PendingJob | null> {
  */
 export async function decideJob(jobId: string, approved: boolean, reason?: string): Promise<string> {
   const trimmed = reason?.trim() ?? "";
-  if (!approved && !trimmed) throw new Error("Cần nhập lý do từ chối");
+  if (!approved && !trimmed) throw new Error(i18n.t("admin.jobs.reasonRequiredApi"));
   const { data } = approved
     ? await api.post(`/admin/jobs/${jobId}/approve`, { note: trimmed || undefined })
     : await api.post(`/admin/jobs/${jobId}/reject`, { reason: trimmed });
   const body = unwrap<Record<string, unknown>>(data);
-  return pickStr(body, "message") || (approved ? "Đã duyệt tin" : "Đã từ chối tin");
+  return pickStr(body, "message") || (approved ? i18n.t("admin.jobs.approved") : i18n.t("admin.jobs.rejected"));
 }
