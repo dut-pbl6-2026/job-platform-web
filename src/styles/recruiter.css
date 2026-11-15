@@ -39,3 +39,43 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Post-job form: sections stack, and the salary pair sits side by side on wide screens. */
+.jp-recruiter-form {
+  display: grid;
+  gap: var(--sp-6);
+  max-width: 760px;
+}
+
+.jp-recruiter-section {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: var(--sp-4);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+  background: var(--c-surface);
+}
+
+.jp-recruiter-section legend {
+  padding: 0 var(--sp-1);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.jp-recruiter-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+
+.jp-recruiter-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .jp-recruiter-row {
+    grid-template-columns: 1fr;
+  }
+}

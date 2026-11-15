@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
-import { Alert, Button, EmptyState, FilterChip, Pagination, SkeletonRows } from "../components/ui";
+import { Alert, Button, ButtonLink, EmptyState, FilterChip, Pagination, SkeletonRows } from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { formatDate } from "../lib/dates";
 import { loadErrorMessage } from "../lib/http";
@@ -52,7 +52,11 @@ export default function RecruiterJobsPage() {
   const data = list.data;
 
   return (
-    <RecruiterShell title="Quản lý tin tuyển dụng" lead="Các tin bạn đã đăng, theo trạng thái.">
+    <RecruiterShell
+      title="Quản lý tin tuyển dụng"
+      lead="Các tin bạn đã đăng, theo trạng thái."
+      actions={<ButtonLink to="/recruiter/jobs/new">Đăng tin mới</ButtonLink>}
+    >
       <div className="jp-recruiter-filters" role="group" aria-label="Lọc theo trạng thái">
         {FILTERS.map((f) => (
           <FilterChip key={f.value || "all"} pressed={status === f.value} onClick={() => patch({ status: f.value })}>

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { fetchMe, forgotPassword as apiForgot, getAccessToken, login as apiLogin, logoutApi, register as apiRegister, resetPassword as apiReset, setTokens, subscribeTokenChanges } from "../lib/api";
 
-type User = { id: string; email: string; fullName: string; role: string; isActive: boolean };
+type User = { id: string; email: string; fullName: string; role: string; isActive: boolean; companyId?: string | null };
 
 type AuthState = {
   user: User | null;
