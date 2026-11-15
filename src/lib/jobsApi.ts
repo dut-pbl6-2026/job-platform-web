@@ -473,3 +473,36 @@ export async function createJob(payload: JobCreatePayload): Promise<{ id: string
   const { data } = await api.post("/jobs", payload);
   return { id: String(data?.id ?? "") };
 }
+
+/** One recommendation: the job, the backend's Vietnamese rationale, and the strategy (Collaborative | Content | Popular). */
+export type RecommendedJob = { job: Job; reason: string; strategy: string };
+
+/**
+ * job-svc GET /api/jobs/recommended (User only; the gateway returns 403 to other roles, so callers must
+ * not request it for them). Bounded top-N, no paging. `refresh` bypasses the per-user cache.
+ * Items are RecommendedJobDto: nested company/category, no description, no score.
+ */
+export async function fetchRecommendedJobs(params: { refresh?: boolean } = {}): Promise<RecommendedJob[]> {
+  const { data } = await api.get("/jobs/recommended", { params: { refresh: params.refresh ? true : undefined } });
+  const items: unknown[] = Array.isArray(data?.items) ? data.items : [];
+  return items.map((raw) => {
+    const r = raw as Record<string, any>;
+    const job = normalizeJob({
+      id: r.id,
+      title: r.title,
+      location: r.location,
+      companyId: r.companyId,
+      companyName: r.company?.name,
+      categoryId: r.categoryId,
+      categoryName: r.category?.name,
+      salaryMin: r.salaryMin,
+      salaryMax: r.salaryMax,
+      salaryCurrency: r.salaryCurrency,
+      employmentType: r.employmentType,
+      experienceLevel: r.experienceLevel,
+      createdAt: r.createdAt,
+      status: "active",
+    });
+    return { job, reason: String(r.reason ?? ""), strategy: String(r.strategy ?? "") };
+  });
+}

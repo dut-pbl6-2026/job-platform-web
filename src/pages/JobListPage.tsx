@@ -24,6 +24,7 @@ import { queryKeys } from "../lib/queryClient";
 import { categoryLabel } from "../lib/labels";
 import { loadErrorMessage } from "../lib/http";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { RecommendedJobs } from "../components/RecommendedJobs";
 
 // The row the visitor opened last gets the amber "your selection" band when they come back.
 const LAST_JOB_KEY = "jp.lastJob";
@@ -218,6 +219,8 @@ export default function JobListPage() {
                 )}
               </div>
             )}
+
+            <RecommendedJobs />
 
             {data && !err && items.length > 0 && (
               <div className={cx("jp-board-wrap", jobsQuery.isPlaceholderData && "is-stale")} aria-busy={jobsQuery.isPlaceholderData || undefined}>
