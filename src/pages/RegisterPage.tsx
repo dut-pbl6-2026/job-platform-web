@@ -2,18 +2,16 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert, AuthLayout, Button, Field, Icon, Input, PasswordInput, PasswordRules, cx } from "../components/ui";
-import { CompanyPicker } from "../components/CompanyPicker";
 import i18n from "../i18n";
 import { useAuth } from "../contexts/AuthContext";
 import { validateEmail, validateFullName, validatePassword } from "../lib/validation";
 import { toApiRole } from "../lib/roles";
 import { apiErrorMessage, httpStatus } from "../lib/http";
-import type { CompanyOption } from "../lib/jobsApi";
 import { DEFAULT_AFTER_AUTH } from "../lib/redirect";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
-type FieldErrors = Partial<Record<"company" | "fullName" | "email" | "pwd" | "confirm", string>>;
+type FieldErrors = Partial<Record<"inviteCode" | "fullName" | "email" | "pwd" | "confirm", string>>;
 
 /** Shown on the login page after registering; the account cannot log in until the email is verified. */
 const VERIFY_NOTICE = "Check your email to verify your account.";
@@ -24,16 +22,27 @@ const ROLE_OPTIONS = [
   { value: "Recruiter", labelKey: "auth.role.recruiter" },
 ] as const;
 
-/** auth-svc answers 422 for an unknown company and 400 (errors.CompanyId) for a missing one. */
-function companyErrorFrom(e: unknown): string | null {
+const INVITE_CODE_LENGTH = 12;
+
+/** Users paste codes with dashes or lower case; the API takes the 12 characters only. */
+function normalizeInviteCode(raw: string): string {
+  return raw.replace(/[\s-]/g, "").toUpperCase();
+}
+
+/**
+ * auth-svc: 422 = invalid, used or expired code (one message for all three); 400 on errors.InviteCode =
+ * missing; 503 = job-svc could not check the code, so the registration was refused.
+ */
+function inviteErrorFrom(e: unknown): { onField: boolean; message: string } | null {
   const status = httpStatus(e);
-  if (status === 422) return i18n.t("auth.register.companyGone");
+  if (status === 422) return { onField: true, message: i18n.t("auth.register.inviteInvalid") };
   if (status === 400) {
     const errors = (e as { response?: { data?: { errors?: Record<string, unknown> } } })?.response?.data?.errors;
-    if (errors && Object.keys(errors).some((k) => k.toLowerCase() === "companyid")) {
-      return i18n.t("auth.register.needCompany");
+    if (errors && Object.keys(errors).some((k) => k.toLowerCase() === "invitecode")) {
+      return { onField: true, message: i18n.t("auth.register.needInviteCode") };
     }
   }
+  if (status === 503) return { onField: false, message: i18n.t("auth.register.inviteUnavailable") };
   return null;
 }
 
@@ -48,7 +57,7 @@ export default function RegisterPage() {
   const [pwd, setPwd] = useState("");
   const [confirm, setConfirm] = useState("");
   const [role, setRole] = useState("User");
-  const [company, setCompany] = useState<CompanyOption | null>(null);
+  const [inviteCode, setInviteCode] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [fieldErr, setFieldErr] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
@@ -60,7 +69,11 @@ export default function RegisterPage() {
     e.preventDefault();
     setErr(null);
     const fe: FieldErrors = {};
-    if (isRecruiter && !company) fe.company = t("auth.register.needCompany");
+    if (isRecruiter) {
+      const code = normalizeInviteCode(inviteCode);
+      if (!code) fe.inviteCode = t("auth.register.needInviteCode");
+      else if (code.length !== INVITE_CODE_LENGTH) fe.inviteCode = t("auth.register.inviteInvalid");
+    }
     const v1 = validateFullName(fullName);
     if (v1) fe.fullName = v1;
     const v2 = validateEmail(email);
@@ -70,7 +83,7 @@ export default function RegisterPage() {
     if (pwd !== confirm) fe.confirm = t("auth.confirmMismatch");
     setFieldErr(fe);
     const order: [keyof FieldErrors, string][] = [
-      ["company", "reg-company"],
+      ["inviteCode", "reg-invite"],
       ["fullName", "reg-name"],
       ["email", "reg-email"],
       ["pwd", "reg-pwd"],
@@ -89,15 +102,16 @@ export default function RegisterPage() {
         password: pwd,
         fullName: fullName.trim(),
         role: apiRole,
-        ...(isRecruiter && company ? { companyId: company.id } : {}),
+        ...(isRecruiter ? { inviteCode: normalizeInviteCode(inviteCode) } : {}),
       });
       // 202: the account exists but is not verified yet. Send the user to login with the notice.
       nav(`/login${query}`, { replace: true, state: { notice: VERIFY_NOTICE, email: email.trim() } });
     } catch (ex: unknown) {
-      const companyErr = isRecruiter ? companyErrorFrom(ex) : null;
-      if (companyErr) {
-        setFieldErr({ company: companyErr });
-        if (httpStatus(ex) === 422) setCompany(null);
+      const inviteErr = isRecruiter ? inviteErrorFrom(ex) : null;
+      if (inviteErr?.onField) {
+        setFieldErr({ inviteCode: inviteErr.message });
+      } else if (inviteErr) {
+        setErr(inviteErr.message);
       } else if (httpStatus(ex) === 409) {
         setErr(t("auth.register.emailTaken"));
       } else {
@@ -144,13 +158,22 @@ export default function RegisterPage() {
         </fieldset>
 
         {isRecruiter && (
-          <CompanyPicker
-            id="reg-company"
-            label={t("auth.register.company")}
-            value={company}
-            onChange={setCompany}
-            error={fieldErr.company}
-          />
+          <Field
+            id="reg-invite"
+            label={t("auth.register.inviteCode")}
+            required
+            hint={t("auth.register.inviteHint")}
+            error={fieldErr.inviteCode}
+          >
+            <Input
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              placeholder="XXXX-XXXX-XXXX"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+            />
+          </Field>
         )}
 
         <Field id="reg-name" label={t("auth.register.fullName")} required error={fieldErr.fullName}>

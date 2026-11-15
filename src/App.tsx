@@ -32,6 +32,7 @@ import RecruiterDashboardPage from "./pages/RecruiterDashboardPage";
 import RecruiterJobsPage from "./pages/RecruiterJobsPage";
 import RecruiterPostJobPage from "./pages/RecruiterPostJobPage";
 import RecruiterApplicationsPage from "./pages/RecruiterApplicationsPage";
+import RecruiterInviteCodesPage from "./pages/RecruiterInviteCodesPage";
 
 export default function App() {
   const [queryClient] = useState(() => createQueryClient());
@@ -134,6 +135,14 @@ export default function App() {
                     element={
                       <RecruiterRoute>
                         <RecruiterDashboardPage />
+                      </RecruiterRoute>
+                    }
+                  />
+                  <Route
+                    path="/recruiter/invite-codes"
+                    element={
+                      <RecruiterRoute>
+                        <RecruiterInviteCodesPage />
                       </RecruiterRoute>
                     }
                   />

@@ -137,3 +137,21 @@
   gap: var(--sp-2);
   align-items: center;
 }
+
+.jp-invite {
+  display: grid;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.jp-invite-result {
+  display: grid;
+  gap: 12px;
+}
+
+.jp-invite-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+  word-break: break-all;
+}

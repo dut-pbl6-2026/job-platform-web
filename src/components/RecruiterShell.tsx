@@ -54,6 +54,9 @@ export function RecruiterShell({
               {t(link.labelKey)}
             </NavLink>
           ))}
+          <NavLink to="/recruiter/invite-codes" end className="jp-subnav-link">
+            {t("invite.navLabel")}
+          </NavLink>
         </div>
       </nav>
       <main className="jp-page">

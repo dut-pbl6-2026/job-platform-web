@@ -1,4 +1,18 @@
 {
+  "invite": {
+    "title": "Mã mời nhà tuyển dụng",
+    "lead": "Người tạo công ty cấp mã mời để đồng nghiệp đăng ký nhà tuyển dụng cho công ty. Mỗi mã dùng được một lần và hết hạn sau 7 ngày.",
+    "navLabel": "Mã mời",
+    "create": "Tạo mã mời",
+    "codeLabel": "Mã mời mới",
+    "expires": "Hết hạn ngày {{date}}",
+    "copy": "Sao chép mã",
+    "copied": "Đã sao chép",
+    "showOnce": "Mã chỉ hiển thị một lần. Hãy sao chép và gửi cho người cần đăng ký; sau khi rời trang bạn không xem lại được mã này.",
+    "notCreator": "Chỉ người tạo công ty mới được cấp mã mời.",
+    "failed": "Không tạo được mã mời. Vui lòng thử lại.",
+    "noCompany": "Tài khoản của bạn chưa gắn với công ty nên chưa tạo được mã mời."
+  },
   "common": {
     "loading": "Đang tải",
     "new": "Mới",
@@ -217,7 +231,8 @@
       "haveAccount": "Đã có tài khoản?",
       "loginLink": "Đăng nhập",
       "afterAuthNotice": "Tạo tài khoản xong, bạn quay lại trang đang xem.",
-      "company": "Công ty bạn tuyển dụng cho",
+      "inviteCode": "Mã mời của công ty",
+      "inviteHint": "Nhập mã 12 ký tự do người tạo công ty cấp, dạng XXXX-XXXX-XXXX.",
       "fullName": "Họ và tên",
       "emailLabel": "Email",
       "passwordLabel": "Mật khẩu",
@@ -227,8 +242,9 @@
       "submitCandidate": "Đăng ký ứng viên",
       "emailTaken": "Email này đã được đăng ký.",
       "failed": "Đăng ký thất bại. Vui lòng thử lại.",
-      "needCompany": "Hãy chọn công ty bạn tuyển dụng cho.",
-      "companyGone": "Công ty không còn tồn tại, hãy chọn lại."
+      "needInviteCode": "Hãy nhập mã mời của công ty.",
+      "inviteInvalid": "Mã mời không hợp lệ, đã dùng hoặc đã hết hạn.",
+      "inviteUnavailable": "Chưa kiểm tra được mã mời. Vui lòng thử lại sau."
     },
     "forgot": {
       "title": "Quên mật khẩu",
