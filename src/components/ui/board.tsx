@@ -106,9 +106,11 @@ type RowProps = {
   onOpen?: (job: Job) => void;
   /** Render the title as text instead of a link (the apply page already is that job). */
   static?: boolean;
+  /** One line under the company, e.g. the recommendation rationale. Nothing is rendered when absent. */
+  note?: string;
 };
 
-export function JobRow({ job, selected, onOpen, static: isStatic }: RowProps) {
+export function JobRow({ job, selected, onOpen, static: isStatic, note }: RowProps) {
   const f = jobFacts(job);
   const company = job.company?.name || MISSING;
   return (
@@ -125,6 +127,7 @@ export function JobRow({ job, selected, onOpen, static: isStatic }: RowProps) {
           {selected && <span className="jp-sr"> (bạn vừa xem)</span>}
         </h3>
         <p className="jp-row-company" title={company}>{company}</p>
+        {note && <p className="jp-row-reason">{note}</p>}
         <p className="jp-row-sub" aria-hidden="true">
           {[f.type, f.isNew ? "Mới" : f.posted].filter(Boolean).join(" · ")}
         </p>
