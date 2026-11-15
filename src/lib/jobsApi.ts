@@ -9,7 +9,8 @@ import { categoryLabel } from "./labels";
 /**
  * Two backend shapes, each read in exactly one way:
  * - job-svc (JobDetailDto, and the lists built from it) is camelCase and flat (`companyName`, `categoryName`).
- * - search-svc returns its ES JobDocument: snake_case and flat. `fromSearchDocument` maps it onto the job-svc keys.
+ * - search-svc returns camelCase, flat job fields. Only `currency` differs (job-svc calls it `salaryCurrency`);
+   `fromSearchDocument` maps that one key before `normalizeJob`.
  */
 export function normalizeJob(raw: object): Job {
   const o = raw as Record<string, unknown>;
@@ -45,7 +46,7 @@ export function normalizeJob(raw: object): Job {
   } as Job;
 }
 
-/** search-svc JobDocument (snake_case) → the job-svc keys that `normalizeJob` reads. */
+/** search-svc job item (camelCase) → the job-svc keys that `normalizeJob` reads. */
 function fromSearchDocument(doc: unknown): Job {
   const d = doc as Record<string, unknown>;
   return normalizeJob({
@@ -53,19 +54,19 @@ function fromSearchDocument(doc: unknown): Job {
     title: d.title,
     description: d.description,
     location: d.location,
-    companyId: d.company_id,
-    companyName: d.company_name,
-    salaryMin: d.salary_min,
-    salaryMax: d.salary_max,
+    companyId: d.companyId,
+    companyName: d.companyName,
+    salaryMin: d.salaryMin,
+    salaryMax: d.salaryMax,
     salaryCurrency: d.currency,
-    categoryId: d.category_id,
-    categoryName: d.category_name,
-    employmentType: d.employment_type,
-    experienceLevel: d.experience_level,
+    categoryId: d.categoryId,
+    categoryName: d.categoryName,
+    employmentType: d.employmentType,
+    experienceLevel: d.experienceLevel,
     status: d.status,
-    recruiterId: d.recruiter_id,
-    createdAt: d.created_at,
-    updatedAt: d.updated_at,
+    recruiterId: d.recruiterId,
+    createdAt: d.createdAt,
+    updatedAt: d.updatedAt,
     requirements: d.requirements,
     benefits: d.benefits,
     skills: d.skills,
