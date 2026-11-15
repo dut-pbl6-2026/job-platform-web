@@ -158,7 +158,8 @@ function mockSearch(params: JobSearchParams): PaginatedJobs {
       j.company.name.toLowerCase().includes(q);
     const hitLoc = locationMatches(j.location, loc);
     const normalizedCat = j.category.name.toLowerCase();
-    const hitCat = !cat || normalizedCat === cat || j.categoryId.toLowerCase() === cat || j.category.name.toLowerCase() === cat;
+    const hitCat =
+      !cat || normalizedCat === cat || j.categoryId.toLowerCase() === cat || j.category.name.toLowerCase() === cat;
     const hitType = matchesEmployment(String(j.employmentType || ""), types);
     const hitLevel = matchesExperience(String(j.experienceLevel || ""), levels);
     const jobSkills = (j.skills ?? []).map((item) => item.toLowerCase());
