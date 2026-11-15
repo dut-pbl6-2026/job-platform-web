@@ -1,4 +1,4 @@
-import axios, { type InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import { API_BASE_URL } from "./config";
 
 const API_BASE = API_BASE_URL;
@@ -66,6 +66,35 @@ function withRefreshLock(fn: () => Promise<string>): Promise<string> {
   return locks ? (locks.request("jp-auth-refresh", fn) as unknown as Promise<string>) : fn();
 }
 
+/** Refresh retries on 429 (per-IP rate limit): at most this many calls in total, each waiting at most the cap. */
+const REFRESH_MAX_ATTEMPTS = 3;
+const REFRESH_MAX_BACKOFF_MS = 5_000;
+
+/** Retry-After (seconds) when the server sends one, otherwise 1s, 2s, ... always capped. */
+function refreshBackoffMs(res: AxiosResponse | undefined, attempt: number): number {
+  const header = res?.headers?.["retry-after"];
+  const seconds = typeof header === "string" ? Number(header) : Number.NaN;
+  const delay = Number.isFinite(seconds) && seconds >= 0 ? seconds * 1000 : 1000 * 2 ** (attempt - 1);
+  return Math.min(delay, REFRESH_MAX_BACKOFF_MS);
+}
+
+/**
+ * POST /auth/refresh. A 429 is retried after a bounded backoff: the rate limiter rejects the call
+ * before the token family is touched, so the refresh token is still valid for the next attempt.
+ */
+async function postRefresh(refreshToken: string) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await axios.post<{ accessToken: string; refreshToken: string }>(`${API_BASE}/auth/refresh`, {
+        refreshToken,
+      });
+    } catch (e) {
+      if (!axios.isAxiosError(e) || e.response?.status !== 429 || attempt >= REFRESH_MAX_ATTEMPTS) throw e;
+      await new Promise((resolve) => setTimeout(resolve, refreshBackoffMs(e.response, attempt)));
+    }
+  }
+}
+
 /**
  * One refresh at a time: single-flight inside the tab, Web Lock across tabs. Once the lock is
  * held, if the stored access token is no longer the one the failed request carried, another
@@ -78,9 +107,7 @@ function refreshAccessToken(sentAccess: string): Promise<string> {
     if (access && access !== sentAccess) return access;
     const refreshToken = getRefreshToken();
     if (!refreshToken) throw new Error("No refresh token");
-    const res = await axios.post<{ accessToken: string; refreshToken: string }>(`${API_BASE}/auth/refresh`, {
-      refreshToken,
-    });
+    const res = await postRefresh(refreshToken);
     setTokens(res.data.accessToken, res.data.refreshToken);
     return res.data.accessToken;
   }).finally(() => {
@@ -108,11 +135,15 @@ api.interceptors.response.use(
     try {
       access = await refreshAccessToken(sentAccess);
     } catch (e) {
-      // Only a rejected refresh token ends the session. A network error or a 5xx keeps the
-      // tokens so the next request can try again, instead of logging the user out.
-      const status = axios.isAxiosError(e) ? e.response?.status : 401;
-      if (status !== undefined && status < 500) setTokens(null, null);
-      throw error;
+      // Only a rejected refresh (401/403) ends the session. A 429, a 5xx or a network error keeps
+      // the tokens for a later attempt. The refresh error is thrown in that case, not the original
+      // 401, so callers such as AuthContext do not read it as a logout.
+      const status = axios.isAxiosError(e) ? e.response?.status : undefined;
+      if (!axios.isAxiosError(e) || status === 401 || status === 403) {
+        setTokens(null, null);
+        throw error;
+      }
+      throw e;
     }
     original.headers.Authorization = `Bearer ${access}`;
     return api(original);
