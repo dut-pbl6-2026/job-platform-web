@@ -1,4 +1,5 @@
 import React from "react";
+import i18n from "../i18n";
 
 interface Props {
   children: React.ReactNode;
@@ -30,14 +31,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
       return (
         <main className="jp-page jp-page--narrow">
           <div className="jp-panel jp-fatal" role="alert">
-            <h1 className="jp-h2">Đã xảy ra lỗi</h1>
-            <p className="jp-muted">{this.state.error?.message || "Ứng dụng gặp lỗi ngoài dự kiến."}</p>
+            <h1 className="jp-h2">{i18n.t("errorBoundary.title")}</h1>
+            <p className="jp-muted">{this.state.error?.message || i18n.t("errorBoundary.fallback")}</p>
             <div className="jp-fatal-actions">
               <button type="button" className="jp-btn jp-btn--primary" onClick={this.handleReset}>
-                Thử lại
+                {i18n.t("errorBoundary.retry")}
               </button>
               <a className="jp-btn jp-btn--secondary" href="/jobs">
-                Về bảng việc làm
+                {i18n.t("errorBoundary.backToBoard")}
               </a>
             </div>
           </div>

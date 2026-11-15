@@ -1,14 +1,15 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import type { Job } from "../../types/job";
-import { formatSalary, isNewJob, timeAgo } from "../../lib/jobsApi";
+import { formatSalary, isNewJob, isSalaryNegotiable, timeAgo } from "../../lib/jobsApi";
 import { employmentTypeLabel, experienceLevelLabel, locationLabel } from "../../lib/labels";
 import { Icon } from "./Icon";
 import { NewMark } from "./feedback";
 import { cx } from "./controls";
 
 /**
- * The timetable ("Bảng giờ tàu"): every job is one row with fixed columns, read sideways in a second.
+ * The timetable (the "railway timetable" design): every job is one row with fixed columns, read sideways in a second.
  * The board row, the detail fact strip and the apply page all read their facts from `jobFacts`, so the
  * same job never says two different things in two places.
  */
@@ -28,7 +29,7 @@ export function jobFacts(job: Job): JobFacts {
   return {
     location: locationLabel(job.location),
     salary,
-    salaryNegotiable: salary === "Thỏa thuận",
+    salaryNegotiable: isSalaryNegotiable(job.salaryMin, job.salaryMax),
     level: job.experienceLevel ? experienceLevelLabel(job.experienceLevel, "") || null : null,
     type: job.employmentType ? employmentTypeLabel(job.employmentType, "") || null : null,
     isNew: isNewJob(job.createdAt),
@@ -36,17 +37,16 @@ export function jobFacts(job: Job): JobFacts {
   };
 }
 
-const MISSING = "Chưa cập nhật";
-
 /** A missing fact is a dash on the board (the screen-reader text still says it). */
 function Value({ value }: { value: string | null }) {
+  const { t } = useTranslation();
   if (value) return <>{value}</>;
   return (
     <>
       <span aria-hidden="true" className="jp-missing">
         —
       </span>
-      <span className="jp-sr">{MISSING}</span>
+      <span className="jp-sr">{t("common.notProvided")}</span>
     </>
   );
 }
@@ -55,20 +55,21 @@ export type SalarySort = "salary_desc" | "salary_asc" | undefined;
 
 type BoardProps = {
   children: ReactNode;
-  /** Current sort; the Lương header toggles high→low, low→high. Leave out to render a static header. */
+  /** Current sort; the salary header toggles high→low, low→high. Leave out to render a static header. */
   sort?: string;
   onSalarySort?: (next: "salary_desc" | "salary_asc") => void;
   label?: string;
   className?: string;
 };
 
-export function Board({ children, sort, onSalarySort, label = "Bảng việc làm", className }: BoardProps) {
+export function Board({ children, sort, onSalarySort, label, className }: BoardProps) {
+  const { t } = useTranslation();
   const salaryState = sort === "salary_desc" ? "desc" : sort === "salary_asc" ? "asc" : null;
   return (
     <div className={cx("jp-board", className)}>
       <div className="jp-board-head">
-        <span>Vị trí · Công ty</span>
-        <span className="jp-col--loc">Nơi làm</span>
+        <span>{t("board.position")}</span>
+        <span className="jp-col--loc">{t("board.location")}</span>
         <span className="jp-col--salary">
           {onSalarySort ? (
             <button
@@ -76,14 +77,14 @@ export function Board({ children, sort, onSalarySort, label = "Bảng việc là
               className="jp-board-sort"
               aria-label={
                 salaryState === "desc"
-                  ? "Lương, đang xếp cao đến thấp. Bấm để xếp thấp đến cao"
+                  ? t("board.salarySortedDesc")
                   : salaryState === "asc"
-                    ? "Lương, đang xếp thấp đến cao. Bấm để xếp cao đến thấp"
-                    : "Lương. Bấm để xếp cao đến thấp"
+                    ? t("board.salarySortedAsc")
+                    : t("board.salarySortable")
               }
               onClick={() => onSalarySort(salaryState === "desc" ? "salary_asc" : "salary_desc")}
             >
-              Lương
+              {t("board.salary")}
               <Icon
                 name={salaryState === "asc" ? "sortUp" : "sortDown"}
                 size={16}
@@ -91,14 +92,14 @@ export function Board({ children, sort, onSalarySort, label = "Bảng việc là
               />
             </button>
           ) : (
-            "Lương"
+            t("board.salary")
           )}
         </span>
-        <span className="jp-col--level">Cấp bậc</span>
-        <span className="jp-col--type">Hình thức</span>
-        <span className="jp-col--posted">Đăng</span>
+        <span className="jp-col--level">{t("board.level")}</span>
+        <span className="jp-col--type">{t("board.type")}</span>
+        <span className="jp-col--posted">{t("board.posted")}</span>
       </div>
-      <ol className="jp-board-rows" aria-label={label}>
+      <ol className="jp-board-rows" aria-label={label ?? t("board.label")}>
         {children}
       </ol>
     </div>
@@ -117,8 +118,9 @@ type RowProps = {
 };
 
 export function JobRow({ job, selected, onOpen, static: isStatic, note }: RowProps) {
+  const { t } = useTranslation();
   const f = jobFacts(job);
-  const company = job.company?.name || MISSING;
+  const company = job.company?.name || t("common.notProvided");
   return (
     <li className={cx("jp-row", selected && "is-selected", isStatic && "is-static")}>
       <div className="jp-row-main">
@@ -130,34 +132,34 @@ export function JobRow({ job, selected, onOpen, static: isStatic, note }: RowPro
               {job.title}
             </Link>
           )}
-          {selected && <span className="jp-sr"> (bạn vừa xem)</span>}
+          {selected && <span className="jp-sr">{t("board.selected")}</span>}
         </h3>
         <p className="jp-row-company" title={company}>
           {company}
         </p>
         {note && <p className="jp-row-reason">{note}</p>}
         <p className="jp-row-sub" aria-hidden="true">
-          {[f.type, f.isNew ? "Mới" : f.posted].filter(Boolean).join(" · ")}
+          {[f.type, f.isNew ? t("common.new") : f.posted].filter(Boolean).join(" · ")}
         </p>
       </div>
       <span className="jp-cell jp-col--loc" title={f.location}>
-        <span className="jp-sr">Nơi làm: </span>
+        <span className="jp-sr">{t("board.srLocation")}</span>
         {f.location}
       </span>
       <span className={cx("jp-cell jp-col--salary", f.salaryNegotiable && "is-negotiable")}>
-        <span className="jp-sr">Lương: </span>
+        <span className="jp-sr">{t("board.srSalary")}</span>
         {f.salary}
       </span>
       <span className="jp-cell jp-col--level">
-        <span className="jp-sr">Cấp bậc: </span>
+        <span className="jp-sr">{t("board.srLevel")}</span>
         <Value value={f.level} />
       </span>
       <span className="jp-cell jp-col--type">
-        <span className="jp-sr">Hình thức: </span>
+        <span className="jp-sr">{t("board.srType")}</span>
         <Value value={f.type} />
       </span>
       <span className="jp-cell jp-col--posted">
-        <span className="jp-sr">Đăng: </span>
+        <span className="jp-sr">{t("board.srPosted")}</span>
         {f.isNew ? <NewMark /> : f.posted || <Value value={null} />}
       </span>
     </li>
@@ -169,13 +171,14 @@ export function JobRow({ job, selected, onOpen, static: isStatic, note }: RowPro
  * values, so list and detail line up visually and in content.
  */
 export function FactStrip({ job }: { job: Job }) {
+  const { t } = useTranslation();
   const f = jobFacts(job);
   const facts: [string, ReactNode, string?][] = [
-    ["Nơi làm", f.location, "loc"],
-    ["Lương", f.salary, "salary"],
-    ["Cấp bậc", f.level ?? MISSING],
-    ["Hình thức", f.type ?? MISSING],
-    ["Đăng", f.isNew ? <NewMark key="new" /> : f.posted || MISSING],
+    [t("board.location"), f.location, "loc"],
+    [t("board.salary"), f.salary, "salary"],
+    [t("board.level"), f.level ?? t("common.notProvided")],
+    [t("board.type"), f.type ?? t("common.notProvided")],
+    [t("board.posted"), f.isNew ? <NewMark key="new" /> : f.posted || t("common.notProvided")],
   ];
   return (
     <dl className="jp-facts">

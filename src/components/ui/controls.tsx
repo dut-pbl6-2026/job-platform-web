@@ -11,6 +11,7 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, type LinkProps } from "react-router-dom";
 import { Icon, type IconName } from "./Icon";
 
@@ -74,7 +75,8 @@ export function Spinner() {
 
 /** Marks a capability that exists in the UI but is not served yet (PRODUCT.md principle 3). */
 export function DevTag() {
-  return <span className="jp-devtag">đang phát triển</span>;
+  const { t } = useTranslation();
+  return <span className="jp-devtag">{t("common.inDevelopment")}</span>;
 }
 
 /* Form fields ------------------------------------------------------------------------------------ */
@@ -95,6 +97,7 @@ type FieldProps = {
  * `aria-invalid`, so the label, hint and error are announced with the control.
  */
 export function Field({ id, label, hint, error, required, optional, className, children }: FieldProps) {
+  const { t } = useTranslation();
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
@@ -117,7 +120,7 @@ export function Field({ id, label, hint, error, required, optional, className, c
             *
           </span>
         )}
-        {optional && <span className="jp-optional"> (không bắt buộc)</span>}
+        {optional && <span className="jp-optional">{t("common.optional")}</span>}
       </label>
       {control}
       {hint && (
@@ -166,6 +169,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
 /** Password input with a show/hide toggle that keeps the field's own id and description. */
 export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputHTMLAttributes<HTMLInputElement>, "type">>(
   function PasswordInput({ className, ...rest }, ref) {
+    const { t } = useTranslation();
     const [shown, setShown] = useState(false);
     return (
       <span className={cx("jp-password", className)}>
@@ -173,7 +177,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputHTMLAttribut
         <button
           type="button"
           className="jp-password-toggle"
-          aria-label={shown ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+          aria-label={shown ? t("common.hidePassword") : t("common.showPassword")}
           aria-pressed={shown}
           onClick={() => setShown((v) => !v)}
         >
@@ -213,8 +217,14 @@ export function FilterChip({ pressed, count, className, children, ...rest }: Chi
 
 /** "Remove this filter" chip: the label plus an × with an accessible name. */
 export function RemovableChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  const { t } = useTranslation();
   return (
-    <button type="button" className="jp-chip jp-chip--removable" onClick={onRemove} aria-label={`Bỏ lọc ${label}`}>
+    <button
+      type="button"
+      className="jp-chip jp-chip--removable"
+      onClick={onRemove}
+      aria-label={t("common.removeFilter", { label })}
+    >
       <span>{label}</span>
       <Icon name="x" size={14} />
     </button>

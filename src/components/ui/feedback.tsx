@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Icon, type IconName } from "./Icon";
 import { cx } from "./controls";
@@ -59,9 +60,10 @@ export function EmptyState({
 /* Loading ---------------------------------------------------------------------------------------- */
 
 /** Placeholder rows with the same height as real board rows, so nothing jumps when data arrives. */
-export function SkeletonRows({ rows = 6, label = "Đang tải" }: { rows?: number; label?: string }) {
+export function SkeletonRows({ rows = 6, label }: { rows?: number; label?: string }) {
+  const { t } = useTranslation();
   return (
-    <div className="jp-skeleton-rows" role="status" aria-label={label}>
+    <div className="jp-skeleton-rows" role="status" aria-label={label ?? t("common.loading")}>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="jp-skeleton-row" aria-hidden="true">
           <span className="jp-skeleton-bar jp-skeleton-bar--title" />
@@ -74,8 +76,11 @@ export function SkeletonRows({ rows = 6, label = "Đang tải" }: { rows?: numbe
   );
 }
 
-export function SkeletonBlock({ height = 240, label = "Đang tải" }: { height?: number; label?: string }) {
-  return <div className="jp-skeleton-block" style={{ height }} role="status" aria-label={label} />;
+export function SkeletonBlock({ height = 240, label }: { height?: number; label?: string }) {
+  const { t } = useTranslation();
+  return (
+    <div className="jp-skeleton-block" style={{ height }} role="status" aria-label={label ?? t("common.loading")} />
+  );
 }
 
 /* Status ----------------------------------------------------------------------------------------- */
@@ -107,9 +112,10 @@ export function StatusMark({ tone, children }: { tone: StatusTone; children: Rea
   );
 }
 
-/** "Mới": a red square plus the word, for jobs posted in the last 24 hours. */
+/** "New" (Mới): a red square plus the word, for jobs posted in the last 24 hours. */
 export function NewMark() {
-  return <span className="jp-new">Mới</span>;
+  const { t } = useTranslation();
+  return <span className="jp-new">{t("common.new")}</span>;
 }
 
 /* Navigation ------------------------------------------------------------------------------------- */
@@ -133,19 +139,20 @@ export function Pagination({
   page,
   totalPages,
   onPage,
-  label = "Phân trang",
+  label,
 }: {
   page: number;
   totalPages: number;
   onPage: (page: number) => void;
   label?: string;
 }) {
+  const { t } = useTranslation();
   if (totalPages <= 1) return null;
   return (
-    <nav className="jp-pager" aria-label={label}>
+    <nav className="jp-pager" aria-label={label ?? t("common.pagination")}>
       <button type="button" className="jp-pager-step" disabled={page <= 0} onClick={() => onPage(page - 1)}>
         <Icon name="chevronLeft" size={16} />
-        Trước
+        {t("common.previous")}
       </button>
       <ol className="jp-pager-list">
         {pageItems(page, totalPages).map((item, i) =>
@@ -159,7 +166,7 @@ export function Pagination({
                 type="button"
                 className="jp-pager-num"
                 aria-current={item === page ? "page" : undefined}
-                aria-label={`Trang ${item + 1}`}
+                aria-label={t("common.pageNumber", { page: item + 1 })}
                 onClick={() => onPage(item)}
               >
                 {item + 1}
@@ -174,7 +181,7 @@ export function Pagination({
         disabled={page >= totalPages - 1}
         onClick={() => onPage(page + 1)}
       >
-        Sau
+        {t("common.next")}
         <Icon name="chevronRight" size={16} />
       </button>
     </nav>
@@ -243,7 +250,7 @@ export function Panel({
 }
 
 /** What a route guard shows while it waits to learn who is signed in. */
-export function PageLoading({ label = "Đang tải" }: { label?: string }) {
+export function PageLoading({ label }: { label?: string }) {
   return (
     <main className="jp-page">
       <SkeletonBlock height={240} label={label} />

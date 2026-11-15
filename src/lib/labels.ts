@@ -1,6 +1,9 @@
+import i18n from "../i18n";
+
 /**
- * Vietnamese display labels for backend enums. The only place that maps a backend value to user-facing
- * copy: never print a raw enum, an ID or a status code (CLAUDE.md hard rules).
+ * Display labels for backend enums. The only place that maps a backend value to user-facing copy:
+ * never print a raw enum, an ID or a status code (CLAUDE.md hard rules). Each table maps a normalised
+ * value to a translation key in locales/vi.json, and the text is resolved at call time.
  *
  * Lookups ignore case, spaces, "-" and "_" because the same value arrives in several spellings
  * (job-svc and search-svc "FullTime", normalizeJob "Full-time").
@@ -10,7 +13,7 @@ function key(value: string | null | undefined): string {
   return (value ?? "").toLowerCase().replace(/[\s_-]+/g, "");
 }
 
-function lookup(table: Readonly<Record<string, string>>, raw: string | null | undefined): string | undefined {
+function lookup<K extends string>(table: Readonly<Record<string, K>>, raw: string | null | undefined): K | undefined {
   const k = key(raw);
   return k ? table[k] : undefined;
 }
@@ -19,89 +22,99 @@ function lookup(table: Readonly<Record<string, string>>, raw: string | null | un
 
 /**
  * The 9 predefined job-svc categories (SeedData.cs), in display order. `name` is the backend name,
- * which is also what GET /api/categories returns; `label` is its one and only Vietnamese label.
+ * which is also what GET /api/categories returns; `labelKey` is its one and only display label.
  */
 export const JOB_CATEGORIES = [
-  { name: "IT", label: "Công nghệ Thông tin" },
-  { name: "Sales", label: "Kinh doanh/Bán hàng" },
-  { name: "Marketing", label: "Marketing/PR/Quảng cáo" },
-  { name: "Finance", label: "Tài chính/Kế toán/Ngân hàng" },
-  { name: "Healthcare", label: "Y tế/Dược" },
-  { name: "Education", label: "Giáo dục/Đào tạo" },
-  { name: "Engineering", label: "Kỹ thuật/Sản xuất" },
-  { name: "Hospitality", label: "Nhà hàng/Khách sạn/Du lịch" },
-  { name: "Others", label: "Ngành nghề khác" },
+  { name: "IT", labelKey: "labels.category.IT" },
+  { name: "Sales", labelKey: "labels.category.Sales" },
+  { name: "Marketing", labelKey: "labels.category.Marketing" },
+  { name: "Finance", labelKey: "labels.category.Finance" },
+  { name: "Healthcare", labelKey: "labels.category.Healthcare" },
+  { name: "Education", labelKey: "labels.category.Education" },
+  { name: "Engineering", labelKey: "labels.category.Engineering" },
+  { name: "Hospitality", labelKey: "labels.category.Hospitality" },
+  { name: "Others", labelKey: "labels.category.Others" },
 ] as const;
 
 export type JobCategoryName = (typeof JOB_CATEGORIES)[number]["name"];
 
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(JOB_CATEGORIES.map((c) => [key(c.name), c.label]));
+const CATEGORY_LABEL_KEYS = Object.fromEntries(JOB_CATEGORIES.map((c) => [key(c.name), c.labelKey])) as Record<
+  string,
+  (typeof JOB_CATEGORIES)[number]["labelKey"]
+>;
 
 /** Label for a backend category name. A name this client does not know is shown as the backend sent it. */
 export function categoryLabel(name: string | null | undefined): string {
-  return lookup(CATEGORY_LABELS, name) ?? (name?.trim() || "Chưa phân loại");
+  const labelKey = lookup(CATEGORY_LABEL_KEYS, name);
+  if (labelKey) return i18n.t(labelKey);
+  return name?.trim() || i18n.t("labels.unassigned");
 }
 
 /* Employment type ------------------------------------------------------------------------------- */
 
-const EMPLOYMENT_LABELS: Record<string, string> = {
-  fulltime: "Toàn thời gian",
-  parttime: "Bán thời gian",
-  contract: "Hợp đồng",
-  internship: "Thực tập",
-};
+const EMPLOYMENT_LABEL_KEYS = {
+  fulltime: "labels.employmentType.fulltime",
+  parttime: "labels.employmentType.parttime",
+  contract: "labels.employmentType.contract",
+  internship: "labels.employmentType.internship",
+} as const;
 
-export function employmentTypeLabel(raw: string | null | undefined, fallback = "Chưa cập nhật"): string {
-  return lookup(EMPLOYMENT_LABELS, raw) ?? fallback;
+export function employmentTypeLabel(raw: string | null | undefined, fallback?: string): string {
+  const labelKey = lookup(EMPLOYMENT_LABEL_KEYS, raw);
+  return labelKey ? i18n.t(labelKey) : (fallback ?? i18n.t("common.notProvided"));
 }
 
 /* Experience level ------------------------------------------------------------------------------ */
 
 // normalizeJob turns Entry/Mid into Junior/Middle for display, so both spellings are listed.
-const EXPERIENCE_LABELS: Record<string, string> = {
-  entry: "Mới vào nghề",
-  junior: "Mới vào nghề",
-  mid: "Trung cấp",
-  middle: "Trung cấp",
-  senior: "Cấp cao",
-  lead: "Trưởng nhóm",
-};
+const EXPERIENCE_LABEL_KEYS = {
+  entry: "labels.experience.entry",
+  junior: "labels.experience.junior",
+  mid: "labels.experience.mid",
+  middle: "labels.experience.middle",
+  senior: "labels.experience.senior",
+  lead: "labels.experience.lead",
+} as const;
 
-export function experienceLevelLabel(raw: string | null | undefined, fallback = "Chưa cập nhật"): string {
-  return lookup(EXPERIENCE_LABELS, raw) ?? fallback;
+export function experienceLevelLabel(raw: string | null | undefined, fallback?: string): string {
+  const labelKey = lookup(EXPERIENCE_LABEL_KEYS, raw);
+  return labelKey ? i18n.t(labelKey) : (fallback ?? i18n.t("common.notProvided"));
 }
 
 /* Job status ------------------------------------------------------------------------------------ */
 
-const JOB_STATUS_LABELS: Record<string, string> = {
-  active: "Đang tuyển",
-  pending: "Chờ duyệt",
-  closed: "Đã đóng",
-  rejected: "Bị từ chối",
-  deleted: "Đã xóa",
-};
+const JOB_STATUS_LABEL_KEYS = {
+  active: "labels.jobStatus.active",
+  pending: "labels.jobStatus.pending",
+  closed: "labels.jobStatus.closed",
+  rejected: "labels.jobStatus.rejected",
+  deleted: "labels.jobStatus.deleted",
+} as const;
 
 export function jobStatusLabel(raw: string | null | undefined): string {
-  return lookup(JOB_STATUS_LABELS, raw) ?? "Chưa cập nhật";
+  const labelKey = lookup(JOB_STATUS_LABEL_KEYS, raw);
+  return labelKey ? i18n.t(labelKey) : i18n.t("common.notProvided");
 }
 
 /* Location -------------------------------------------------------------------------------------- */
 
 /** job-svc stores remote jobs as the location "Remote". */
-export function locationLabel(raw: string | null | undefined, fallback = "Chưa cập nhật"): string {
+export function locationLabel(raw: string | null | undefined, fallback?: string): string {
   const value = raw?.trim();
-  if (!value) return fallback;
-  return key(value) === "remote" ? "Làm từ xa" : value;
+  if (!value) return fallback ?? i18n.t("common.notProvided");
+  return key(value) === "remote" ? i18n.t("labels.remote") : value;
 }
+
 /* Account role ---------------------------------------------------------------------------------- */
 
-const ROLE_LABELS: Record<string, string> = {
-  user: "Người tìm việc",
-  recruiter: "Nhà tuyển dụng",
-  employer: "Nhà tuyển dụng",
-  admin: "Quản trị viên",
-};
+const ROLE_LABEL_KEYS = {
+  user: "labels.role.user",
+  recruiter: "labels.role.recruiter",
+  employer: "labels.role.employer",
+  admin: "labels.role.admin",
+} as const;
 
 export function roleLabel(raw: string | null | undefined): string {
-  return lookup(ROLE_LABELS, raw) ?? "Chưa cập nhật";
+  const labelKey = lookup(ROLE_LABEL_KEYS, raw);
+  return labelKey ? i18n.t(labelKey) : i18n.t("common.notProvided");
 }

@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useToasts } from "../contexts/ToastContext";
 
 export function ToastViewport() {
+  const { t } = useTranslation();
   const { toasts, dismiss, pause, resume } = useToasts();
   if (toasts.length === 0) {
     return <div className="toast-viewport" aria-live="polite" aria-relevant="additions" />;
@@ -27,11 +29,11 @@ export function ToastViewport() {
             {toast.body ? <p className="toast-body">{toast.body}</p> : null}
             {toast.href ? (
               <Link className="toast-link" to={toast.href} onClick={() => dismiss(toast.id)}>
-                Xem chi tiết
+                {t("toast.viewDetails")}
               </Link>
             ) : null}
           </div>
-          <button type="button" className="toast-close" aria-label="Đóng thông báo" onClick={() => dismiss(toast.id)}>
+          <button type="button" className="toast-close" aria-label={t("toast.close")} onClick={() => dismiss(toast.id)}>
             ×
           </button>
         </article>

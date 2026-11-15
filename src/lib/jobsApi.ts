@@ -4,6 +4,7 @@ import { MOCK_JOBS, MOCK_CATEGORIES } from "../mocks/jobsMock";
 import { normalizeEmploymentType, normalizeExperienceLevel } from "../types/job";
 import { splitCsv, locationMatches } from "./searchFilters";
 import { pickNum, pickStr, shouldUseMock, httpStatus } from "./http";
+import i18n from "../i18n";
 import { categoryLabel } from "./labels";
 
 /**
@@ -317,36 +318,41 @@ const viInteger = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
  * The one salary format, shared by the board row, the detail page and the apply page so the same job
  * never reads differently in two places. A missing bound means "open ended", and no bound at all means
  * the employer did not publish a salary.
- *   VND, whole millions   5 – 10 triệu · Từ 5 triệu · Tới 10 triệu · 7,5 triệu
- *   VND, below 1 million  500.000 – 900.000 đ
- *   other currency        1.000 – 2.000 USD
+ *   VND, whole millions   range, from-only, to-only and single amounts, in millions (triệu)
+ *   VND, below 1 million  amounts in dong (đ), grouped with dots
+ *   other currency        grouped amounts followed by the currency code
  */
+/** True when the employer published no salary bound at all: formatSalary then reads "negotiable". */
+export function isSalaryNegotiable(min: number, max: number) {
+  return !(Number.isFinite(min) && min > 0) && !(Number.isFinite(max) && max > 0);
+}
+
 export function formatSalary(min: number, max: number, currency = "VND") {
   const lo = Number.isFinite(min) && min > 0 ? min : 0;
   const hi = Number.isFinite(max) && max > 0 ? max : 0;
-  if (!lo && !hi) return "Thỏa thuận";
+  if (isSalaryNegotiable(min, max)) return i18n.t("salary.negotiable");
 
   let fmt: (n: number) => string;
   let unit: string;
   if (currency === "VND") {
     if ((!lo || lo >= 1_000_000) && (!hi || hi >= 1_000_000)) {
       fmt = (n) => viNumber.format(n / 1_000_000);
-      unit = "triệu";
+      unit = i18n.t("salary.millionUnit");
     } else {
       fmt = (n) => viInteger.format(n);
-      unit = "đ";
+      unit = i18n.t("salary.dongUnit");
     }
   } else {
     fmt = (n) => viInteger.format(n);
     unit = currency;
   }
 
-  if (lo && hi && lo !== hi) return `${fmt(lo)} – ${fmt(hi)} ${unit}`;
-  if (lo && hi) return `${fmt(lo)} ${unit}`;
-  return lo ? `Từ ${fmt(lo)} ${unit}` : `Tới ${fmt(hi)} ${unit}`;
+  if (lo && hi && lo !== hi) return i18n.t("salary.range", { from: fmt(lo), to: fmt(hi), unit });
+  if (lo && hi) return i18n.t("salary.exact", { amount: fmt(lo), unit });
+  return lo ? i18n.t("salary.from", { amount: fmt(lo), unit }) : i18n.t("salary.to", { amount: fmt(hi), unit });
 }
 
-/** "Mới" marker rule (plan §3.1): posted less than 24 hours ago. */
+/** "New" marker rule (plan §3.1): posted less than 24 hours ago. */
 export function isNewJob(iso: string, now = Date.now()) {
   const t = new Date(iso).getTime();
   return Number.isFinite(t) && now - t >= 0 && now - t < 86_400_000;
@@ -356,11 +362,10 @@ export function timeAgo(iso: string) {
   const d = new Date(iso).getTime();
   if (Number.isNaN(d)) return "";
   const diff = Math.floor((Date.now() - d) / 1000);
-  if (diff < 0) return "vừa xong";
-  if (diff < 60) return "vừa xong";
-  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-  return `${Math.floor(diff / 86400)} ngày trước`;
+  if (diff < 60) return i18n.t("time.justNow");
+  if (diff < 3600) return i18n.t("time.minutesAgo", { minutes: Math.floor(diff / 60) });
+  if (diff < 86400) return i18n.t("time.hoursAgo", { hours: Math.floor(diff / 3600) });
+  return i18n.t("time.daysAgo", { days: Math.floor(diff / 86400) });
 }
 
 /** The job statuses a recruiter can filter by, as job-svc parses them (case-insensitive enum names). */

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { isAdmin, isRecruiter, isUser } from "../../lib/roles";
@@ -10,11 +11,12 @@ type Item = { to: string; label: string; match: (path: string) => boolean; dev?:
 /**
  * The navy shell bar shared by every screen. The active item carries the amber band (amber means
  * "where you are"). Below 768px the nav and account actions fold into a disclosure menu.
- * Recruiters get a "Tuyển dụng" item for the recruiter area. Create-CV is applicant-only, so it is
+ * Recruiters get a "Recruit" item for the recruiter area. Create-CV is applicant-only, so it is
  * shown to guests and Users only, as on mobile.
  */
 export function TopBar() {
   const { isAuthenticated, user, logout } = useAuth();
+  const { t } = useTranslation();
   const nav = useNavigate();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
@@ -26,25 +28,29 @@ export function TopBar() {
     setOpen(false);
   }
 
-  const items: Item[] = [{ to: "/jobs", label: "Việc làm", match: (p) => p === "/jobs" || p.startsWith("/jobs/") }];
+  const items: Item[] = [{ to: "/jobs", label: t("nav.jobs"), match: (p) => p === "/jobs" || p.startsWith("/jobs/") }];
   if (!isAuthenticated || isUser(user?.role)) {
-    items.push({ to: isAuthenticated ? "/profile" : "/register", label: "Tạo CV", match: (p) => p === "/profile" });
+    items.push({
+      to: isAuthenticated ? "/profile" : "/register",
+      label: t("nav.createCv"),
+      match: (p) => p === "/profile",
+    });
   }
   if (isAuthenticated && isRecruiter(user?.role)) {
     items.push({
       to: "/recruiter",
-      label: "Tuyển dụng",
+      label: t("nav.recruit"),
       match: (p) => p === "/recruiter" || p.startsWith("/recruiter/"),
     });
   }
   if (isAuthenticated && isUser(user?.role)) {
-    items.push({ to: "/applications", label: "Đơn của tôi", match: (p) => p.startsWith("/applications") });
+    items.push({ to: "/applications", label: t("nav.myApplications"), match: (p) => p.startsWith("/applications") });
   }
   if (isAuthenticated) {
-    items.push({ to: "/chat", label: "Trợ lý AI", match: (p) => p === "/chat", dev: true });
+    items.push({ to: "/chat", label: t("nav.aiAssistant"), match: (p) => p === "/chat", dev: true });
   }
   if (isAuthenticated && isAdmin(user?.role)) {
-    items.push({ to: "/admin", label: "Quản trị", match: (p) => p.startsWith("/admin") });
+    items.push({ to: "/admin", label: t("nav.admin"), match: (p) => p.startsWith("/admin") });
   }
 
   async function signOut() {
@@ -55,12 +61,12 @@ export function TopBar() {
   return (
     <header className={cx("jp-shell on-navy", open && "is-open")}>
       <div className="jp-shell-bar">
-        <Link to="/jobs" className="jp-mark" aria-label="jobplatform, về bảng việc làm">
+        <Link to="/jobs" className="jp-mark" aria-label={t("nav.homeLabel")}>
           <b aria-hidden="true">jp</b>
           <span aria-hidden="true">jobplatform</span>
         </Link>
 
-        <nav id="jp-nav" className="jp-nav" aria-label="Điều hướng chính">
+        <nav id="jp-nav" className="jp-nav" aria-label={t("nav.mainLabel")}>
           {items.map((item) => (
             <NavLink
               key={item.label}
@@ -78,10 +84,10 @@ export function TopBar() {
           {!isAuthenticated ? (
             <>
               <Link className="jp-shell-btn jp-shell-btn--line" to="/register">
-                Đăng ký
+                {t("nav.register")}
               </Link>
               <Link className="jp-shell-btn jp-shell-btn--fill" to="/login">
-                Đăng nhập
+                {t("nav.login")}
               </Link>
             </>
           ) : (
@@ -90,7 +96,7 @@ export function TopBar() {
                 {user?.fullName}
               </span>
               <button type="button" className="jp-shell-btn jp-shell-btn--line" onClick={signOut}>
-                Đăng xuất
+                {t("nav.logout")}
               </button>
             </>
           )}
@@ -104,7 +110,7 @@ export function TopBar() {
           onClick={() => setOpen((v) => !v)}
         >
           <Icon name={open ? "x" : "menu"} size={22} />
-          <span>Menu</span>
+          <span>{t("nav.menu")}</span>
         </button>
       </div>
     </header>

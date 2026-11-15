@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { PASSWORD_RULES } from "../../lib/validation";
 import { Icon } from "./Icon";
 import { TopBar } from "./TopBar";
@@ -40,9 +41,10 @@ export function AuthLayout({
  * Pass it as the Field `hint` so the rules are read out with the input.
  */
 export function PasswordRules({ value }: { value: string }) {
+  const { t } = useTranslation();
   return (
     <>
-      <span className="jp-rules-title">Mật khẩu cần:</span>
+      <span className="jp-rules-title">{t("auth.passwordRules.title")}</span>
       <ul className="jp-rules">
         {PASSWORD_RULES.map((rule) => {
           const met = rule.test(value);
@@ -51,8 +53,8 @@ export function PasswordRules({ value }: { value: string }) {
               <span className="jp-rule-box" aria-hidden="true">
                 {met && <Icon name="check" size={12} />}
               </span>
-              <span>{rule.label}</span>
-              <span className="jp-sr">{met ? " (đã đạt)" : " (chưa đạt)"}</span>
+              <span>{t(rule.labelKey)}</span>
+              <span className="jp-sr">{met ? t("auth.passwordRules.met") : t("auth.passwordRules.unmet")}</span>
             </li>
           );
         })}
