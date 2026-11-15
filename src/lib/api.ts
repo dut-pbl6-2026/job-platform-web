@@ -132,7 +132,7 @@ export async function login(payload: { email: string; password: string; remember
 }
 export async function fetchMe() {
   const { data } = await api.get("/auth/me");
-  return data as { id: string; email: string; fullName: string; role: string; isActive: boolean };
+  return data as { id: string; email: string; fullName: string; role: string; isActive: boolean; companyId?: string | null };
 }
 export async function logoutApi() {
   const rt = getRefreshToken();

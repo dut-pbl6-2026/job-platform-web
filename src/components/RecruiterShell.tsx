@@ -7,7 +7,8 @@ import { PageHead, PageLoading, TopBar } from "./ui";
 
 const LINKS = [
   { to: "/recruiter", label: "Tổng quan", end: true },
-  { to: "/recruiter/jobs", label: "Tin tuyển dụng", end: false },
+  { to: "/recruiter/jobs", label: "Tin tuyển dụng", end: true },
+  { to: "/recruiter/jobs/new", label: "Đăng tin", end: true },
 ];
 
 /**

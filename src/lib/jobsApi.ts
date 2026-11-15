@@ -448,3 +448,28 @@ export async function fetchRecruiterJobs(
     totalPages: Math.max(1, Math.ceil(total / (Number(data?.size) || size))),
   };
 }
+
+/** Body of POST /api/jobs (job-svc JobCreateDto, camelCase). Optional fields are sent as null. */
+export type JobCreatePayload = {
+  title: string;
+  description: string;
+  companyId: string;
+  location: string;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string;
+  categoryId: string | null;
+  requirements: string | null;
+  benefits: string | null;
+  employmentType: string;
+  experienceLevel: string;
+};
+
+/**
+ * job-svc POST /api/jobs (Recruiter only). Not the admin endpoint: AdminJobForm uses /api/admin/jobs.
+ * Returns the new job id. With the admin-approval flag on, the job starts as Pending.
+ */
+export async function createJob(payload: JobCreatePayload): Promise<{ id: string }> {
+  const { data } = await api.post("/jobs", payload);
+  return { id: String(data?.id ?? "") };
+}
