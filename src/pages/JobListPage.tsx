@@ -123,23 +123,23 @@ export default function JobListPage() {
       clear: { minSalary: undefined, maxSalary: undefined },
     });
   }
-  splitCsv(params.experienceLevel).forEach((v) =>
+  splitCsv(params.experienceLevel).forEach((v) => {
     chips.push({
       key: `l-${v}`,
       label: EXPERIENCE_OPTIONS.find((o) => o.value === v)?.label ?? "Cấp bậc đã chọn",
       clear: { experienceLevel: toggleCsv(params.experienceLevel, v) || undefined },
-    }),
-  );
-  splitCsv(params.employmentType).forEach((v) =>
+    });
+  });
+  splitCsv(params.employmentType).forEach((v) => {
     chips.push({
       key: `t-${v}`,
       label: EMPLOYMENT_OPTIONS.find((o) => o.value === v)?.label ?? "Hình thức đã chọn",
       clear: { employmentType: toggleCsv(params.employmentType, v) || undefined },
-    }),
-  );
-  splitCsv(params.skills).forEach((v) =>
-    chips.push({ key: `s-${v}`, label: v, clear: { skills: toggleCsv(params.skills, v) || undefined } }),
-  );
+    });
+  });
+  splitCsv(params.skills).forEach((v) => {
+    chips.push({ key: `s-${v}`, label: v, clear: { skills: toggleCsv(params.skills, v) || undefined } });
+  });
   // The drawer button counts what lives in the drawer (category and place have their own rows).
   const drawerCount = chips.filter((c) => c.key !== "cat" && c.key !== "loc").length;
 
@@ -218,7 +218,7 @@ export default function JobListPage() {
             </div>
 
             {chips.length > 0 && (
-              <div className="jp-active-filters" aria-label="Bộ lọc đang bật">
+              <div className="jp-active-filters" role="group" aria-label="Bộ lọc đang bật">
                 {chips.map((chip) => (
                   <RemovableChip key={chip.key} label={chip.label} onRemove={() => update(chip.clear)} />
                 ))}

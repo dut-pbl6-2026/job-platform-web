@@ -163,7 +163,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAuthenticated) return;
     setToasts([]);
-    timersRef.current.forEach((timer) => window.clearTimeout(timer));
+    timersRef.current.forEach((timer) => {
+      window.clearTimeout(timer);
+    });
     timersRef.current.clear();
   }, [isAuthenticated]);
 

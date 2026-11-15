@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminShell } from "../components/AdminShell";
@@ -81,20 +81,23 @@ export default function AdminJobsPage() {
   const filtered = !!(q || status);
 
   // Removing the last job of page N > 0 empties that page; step back to one that still has jobs.
+  const patchQuery = useCallback(
+    (next: Record<string, string>) => {
+      const params = new URLSearchParams(sp);
+      for (const [k, value] of Object.entries(next)) {
+        if (value) params.set(k, value);
+        else params.delete(k);
+      }
+      if (!("page" in next)) params.delete("page");
+      setSp(params);
+      setOpen(null);
+    },
+    [sp, setSp],
+  );
+
   useEffect(() => {
     if (data && data.items.length === 0 && page > 0) patchQuery({ page: page > 1 ? String(page - 1) : "" });
-  }, [data, page]);
-
-  function patchQuery(next: Record<string, string>) {
-    const params = new URLSearchParams(sp);
-    for (const [k, value] of Object.entries(next)) {
-      if (value) params.set(k, value);
-      else params.delete(k);
-    }
-    if (!("page" in next)) params.delete("page");
-    setSp(params);
-    setOpen(null);
-  }
+  }, [data, page, patchQuery]);
 
   function search(e: FormEvent) {
     e.preventDefault();

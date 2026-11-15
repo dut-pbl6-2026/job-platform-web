@@ -77,7 +77,7 @@ export function CompanyPicker({
     } else if (e.key === "Enter" && hasList) {
       // Picking from the list must not submit the form behind it.
       e.preventDefault();
-      pick(options[active >= 0 ? active : 0]);
+      pick(options[Math.max(active, 0)]);
     } else if (e.key === "Escape" && open) {
       e.preventDefault();
       setOpen(false);

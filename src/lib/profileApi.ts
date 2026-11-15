@@ -116,7 +116,7 @@ const P = "/profiles";
 
 /** DateOnly fields: send null, never "" (System.Text.Json cannot parse an empty date). */
 const dateOrNull = (v?: string | null) => (v ? v.slice(0, 10) : null);
-const textOrNull = (v?: string | null) => (v && v.trim() ? v.trim() : null);
+const textOrNull = (v?: string | null) => (v?.trim() ? v.trim() : null);
 
 function statusOf(e: unknown): number | undefined {
   return (e as { response?: { status?: number } })?.response?.status;

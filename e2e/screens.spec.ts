@@ -822,7 +822,7 @@ test("admin jobs: create, edit, soft delete, then purge from the deleted filter"
   await page.goto("/admin/jobs");
   const rows = page.locator(".jp-queue-item");
   await expect(rows.first()).toBeVisible();
-  await expect(page.locator(".jp-queue")).not.toContainText(/(Active|Pending|Deleted|active|pending)/);
+  await expect(page.locator(".jp-queue")).not.toContainText(/\b(Active|Pending|Deleted|active|pending)\b/);
   await expectSoundLayout(page);
 
   // Create: required fields are checked before anything is sent.

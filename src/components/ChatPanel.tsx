@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Alert, Button, Textarea } from "./ui";
 import { useChat } from "../contexts/ChatContext";
@@ -11,6 +11,8 @@ export function ChatPanel({ variant = "dock" }: { variant?: "dock" | "page" }) {
   const scroller = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Nothing to scroll to until the first message or a pending reply.
+    if (messages.length === 0 && !sending) return;
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
 

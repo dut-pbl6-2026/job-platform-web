@@ -175,7 +175,7 @@ export function FactStrip({ job }: { job: Job }) {
     ["Lương", f.salary, "salary"],
     ["Cấp bậc", f.level ?? MISSING],
     ["Hình thức", f.type ?? MISSING],
-    ["Đăng", f.isNew ? <NewMark /> : f.posted || MISSING],
+    ["Đăng", f.isNew ? <NewMark key="new" /> : f.posted || MISSING],
   ];
   return (
     <dl className="jp-facts">

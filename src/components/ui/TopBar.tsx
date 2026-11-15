@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { isAdmin, isRecruiter, isUser } from "../../lib/roles";
@@ -18,9 +18,13 @@ export function TopBar() {
   const nav = useNavigate();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
+  const [menuPath, setMenuPath] = useState(pathname);
 
-  // A route change closes the mobile menu.
-  useEffect(() => setOpen(false), [pathname]);
+  // A route change closes the mobile menu. Adjusting state during render avoids an effect.
+  if (pathname !== menuPath) {
+    setMenuPath(pathname);
+    setOpen(false);
+  }
 
   const items: Item[] = [{ to: "/jobs", label: "Việc làm", match: (p) => p === "/jobs" || p.startsWith("/jobs/") }];
   if (!isAuthenticated || isUser(user?.role)) {

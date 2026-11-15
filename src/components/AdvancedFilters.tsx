@@ -246,7 +246,7 @@ export function AdvancedFilters({ params, facets, onChange }: Props) {
           </div>
         )}
         {suggestions.length > 0 && (
-          <div className="jp-filter-chips" aria-label="Gợi ý kỹ năng">
+          <div className="jp-filter-chips" role="group" aria-label="Gợi ý kỹ năng">
             {suggestions.map((skill) => (
               <FilterChip key={skill.id} pressed={false} onClick={() => addSkill(skill.name)}>
                 {skill.name}
