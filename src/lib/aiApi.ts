@@ -33,10 +33,8 @@ export function toScoreError(ex: unknown): ScoreError {
   const code =
     ax.response?.data?.code ??
     (ax.response?.status === 401 ? "unauthorized" : ax.code === "ECONNABORTED" ? "busy" : "network");
-  return {
-    code,
-    message: ERROR_TEXT[code] ?? ax.response?.data?.detail ?? "Không chấm điểm được CV. Vui lòng thử lại.",
-  };
+  // Unknown codes get the generic text: the backend `detail` is English and not meant for users.
+  return { code, message: ERROR_TEXT[code] ?? "Không chấm điểm được CV. Vui lòng thử lại." };
 }
 
 export async function scoreResume(jobId: string, cvFile: File): Promise<ResumeScore> {

@@ -74,12 +74,19 @@ export function pickNum(obj: Record<string, unknown>, ...keys: string[]): number
   return undefined;
 }
 
+/** Vietnamese text for the 4xx statuses that mean the same thing on every screen. */
+const CLIENT_ERROR_TEXT: Record<number, string> = {
+  401: "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.",
+  403: "Bạn không có quyền thực hiện thao tác này.",
+  429: "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau.",
+};
+
 /**
  * Vietnamese text for a failed action (`fallback` names the action: "Không cập nhật được tin").
  * - No response or 5xx: a generic message; a 5xx body may carry internals.
- * - 4xx: the backend's own message, since it says what the user must fix (409, 422). job-svc/app-svc
- *   send { message }, auth-svc/profile-svc/search-svc send ProblemDetails { title, detail }. The
- *   title of a validation ProblemDetails (with `errors`) is .NET's English boilerplate, so skip it.
+ * - 401, 403, 429: the Vietnamese text above.
+ * - Other 4xx: `fallback`. Backend bodies (`message`, ProblemDetails `title`/`detail`) are English and
+ *   are never shown: the status says what happened, the caller's fallback says what failed.
  * - Never axios's own English text ("Network Error", "Request failed with status code 403").
  * - Errors this client throws on purpose keep their (Vietnamese) message; JS runtime errors are bugs,
  *   so they are logged and replaced by `fallback`.
@@ -89,13 +96,7 @@ export function apiErrorMessage(e: unknown, fallback: string): string {
     if (!e.response) return "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.";
     const status = e.response.status;
     if (status >= 500) return `Máy chủ đang gặp sự cố (lỗi ${status}). Vui lòng thử lại sau.`;
-    const data = e.response.data;
-    if (data && typeof data === "object") {
-      const body = data as Record<string, unknown>;
-      const msg = pickStr(body, "message", "detail") ?? ("errors" in body ? undefined : pickStr(body, "title"));
-      if (msg) return msg;
-    }
-    return fallback;
+    return CLIENT_ERROR_TEXT[status] ?? fallback;
   }
   if (e instanceof TypeError || e instanceof SyntaxError || e instanceof RangeError || e instanceof ReferenceError) {
     console.error("[api]", fallback, e);

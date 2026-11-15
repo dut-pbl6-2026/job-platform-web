@@ -27,8 +27,8 @@ export default function ForgotPasswordPage() {
     }
     setLoading(true);
     try {
-      const m = await forgotPassword(email.trim());
-      setMsg(m || "Nếu email tồn tại, liên kết đặt lại đã được gửi.");
+      await forgotPassword(email.trim());
+      setMsg("Nếu email tồn tại, liên kết đặt lại đã được gửi.");
     } catch (ex: unknown) {
       setErr(
         httpStatus(ex) === 429

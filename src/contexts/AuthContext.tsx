@@ -27,8 +27,8 @@ type AuthState = {
   }) => Promise<string>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
-  forgotPassword: (email: string) => Promise<string>;
-  resetPassword: (token: string, newPassword: string) => Promise<string>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
 };
 
 const Ctx = createContext<AuthState | null>(null);
@@ -100,14 +100,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  // The backend message is English and is not shown: the pages say what happened in Vietnamese.
   const forgotPassword = useCallback(async (email: string) => {
-    const res = await apiForgot(email);
-    return res.message;
+    await apiForgot(email);
   }, []);
 
   const resetPassword = useCallback(async (token: string, newPassword: string) => {
-    const res = await apiReset({ token, newPassword });
-    return res.message;
+    await apiReset({ token, newPassword });
   }, []);
 
   const value = useMemo<AuthState>(

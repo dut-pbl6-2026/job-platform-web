@@ -751,10 +751,154 @@ test("admin: a candidate is not let in", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Chỉ quản trị viên mới vào được khu vực này." })).toBeVisible();
 });
 
+type FakeJob = Record<string, unknown> & { id: string; title: string; status: string };
+type FakeUser = { id: string; email: string; fullName: string; role: string; isActive: boolean; createdAt: string };
+
+function fakeJob(id: string, title: string, status: string, input: Record<string, unknown> = {}): FakeJob {
+  const now = new Date().toISOString();
+  return {
+    id,
+    title,
+    description: typeof input.description === "string" ? input.description : "Mô tả công việc thử nghiệm.",
+    companyId: "company-e2e",
+    companyName: "Công ty thử nghiệm",
+    categoryId: "cat-e2e",
+    categoryName: "Công nghệ thông tin",
+    location: typeof input.location === "string" ? input.location : "Hà Nội",
+    salaryMin: typeof input.salaryMin === "number" ? input.salaryMin : 15000000,
+    salaryMax: typeof input.salaryMax === "number" ? input.salaryMax : 25000000,
+    salaryCurrency: "VND",
+    employmentType: "FullTime",
+    experienceLevel: "Mid",
+    skills: [],
+    recruiterName: "Minh Tran",
+    status,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+const FAKE_USERS: FakeUser[] = [
+  ["Lan Nguyen", "lan@example.com", "User", true],
+  ["Minh Tran", "minh@example.com", "Recruiter", true],
+  ["Hoa Pham", "hoa@example.com", "User", true],
+  ["Khoa Le", "khoa@example.com", "Recruiter", false],
+  ["An Do", "an@example.com", "User", true],
+  ["Chi Bao", "bao@example.com", "Admin", true],
+  ["Thanh Vu", "thanh@example.com", "User", true],
+  ["Hoai Nguyen", "hoai@example.com", "Recruiter", true],
+].map(([fullName, email, role, isActive], i) => ({
+  id: `e2e-user-${i + 1}`,
+  email: String(email),
+  fullName: String(fullName),
+  role: String(role),
+  isActive: Boolean(isActive),
+  createdAt: new Date(Date.UTC(2026, 0, 1 + i)).toISOString(),
+}));
+
+/**
+ * Stateful stand-in for the admin job and user endpoints, for the admin specs only. The admin screens
+ * have no offline store, so each test serves these routes from the arrays below, mutated per request.
+ * Routes registered later in a test (the failure cases) still take precedence over this one.
+ */
+async function adminBackend(page: Page) {
+  const jobs: FakeJob[] = [
+    ...Array.from({ length: 8 }, (_, i) => fakeJob(`pending-${i + 1}`, `Tin chờ duyệt ${i + 1}`, "Pending")),
+    ...Array.from({ length: 4 }, (_, i) => fakeJob(`active-${i + 1}`, `Tin đang tuyển ${i + 1}`, "Active")),
+  ];
+  const users: FakeUser[] = FAKE_USERS.map((u) => ({ ...u }));
+
+  await page.route(/\/api\/admin\//, async (route) => {
+    const req = route.request();
+    const url = new URL(req.url());
+    const path = url.pathname.slice(url.pathname.indexOf("/admin/"));
+    const method = req.method();
+    let body: Record<string, unknown> = {};
+    try {
+      body = (req.postDataJSON() ?? {}) as Record<string, unknown>;
+    } catch {
+      body = {};
+    }
+    const size = Math.max(1, Number(url.searchParams.get("size") ?? 8));
+    const current = Math.max(1, Number(url.searchParams.get("page") ?? 1));
+    const paged = <T>(items: T[]) => ({
+      data: items.slice((current - 1) * size, current * size),
+      pagination: {
+        page: current,
+        pageSize: size,
+        totalItems: items.length,
+        totalPages: Math.max(1, Math.ceil(items.length / size)),
+      },
+    });
+    const jobMatch = path.match(/^\/admin\/jobs\/([^/]+)(?:\/(approve|reject|permanent))?$/);
+
+    if (path === "/admin/jobs" && method === "GET") {
+      const status = url.searchParams.get("status");
+      const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
+      let items = jobs.filter((j) =>
+        status ? j.status.toLowerCase() === status.toLowerCase() : j.status !== "Deleted",
+      );
+      if (q) items = items.filter((j) => j.title.toLowerCase().includes(q));
+      return route.fulfill({ json: paged(items) });
+    }
+    if (path === "/admin/jobs" && method === "POST") {
+      const created = fakeJob(`admin-${jobs.length + 1}`, String(body.title ?? ""), "Active", body);
+      jobs.unshift(created);
+      return route.fulfill({ status: 201, json: { id: created.id, message: "Đã tạo tin" } });
+    }
+    if (jobMatch) {
+      const [, id, action] = jobMatch;
+      const job = jobs.find((j) => j.id === id);
+      if (!job) return route.fulfill({ status: 404, json: { message: "not found" } });
+      if (!action && method === "GET") return route.fulfill({ json: job });
+      if (!action && method === "PUT") {
+        Object.assign(job, { ...fakeJob(id, String(body.title ?? job.title), job.status, body), status: job.status });
+        return route.fulfill({ json: { message: "Đã lưu" } });
+      }
+      if (!action && method === "DELETE") {
+        job.status = "Deleted";
+        return route.fulfill({ json: { message: "Đã xóa" } });
+      }
+      if (action === "permanent" && method === "DELETE") {
+        if (job.status !== "Deleted") return route.fulfill({ status: 409, json: { message: "conflict" } });
+        jobs.splice(jobs.indexOf(job), 1);
+        return route.fulfill({ json: { message: "Đã xóa vĩnh viễn" } });
+      }
+      if (action === "approve" && method === "POST") {
+        job.status = "Active";
+        return route.fulfill({ json: { message: "Đã duyệt tin" } });
+      }
+      if (action === "reject" && method === "POST") {
+        job.status = "Rejected";
+        return route.fulfill({ json: { message: "Đã từ chối tin" } });
+      }
+    }
+    if (path === "/admin/users" && method === "GET") {
+      const q = (url.searchParams.get("search") ?? "").trim().toLowerCase();
+      const role = url.searchParams.get("role");
+      const isActive = url.searchParams.get("isActive");
+      let items = users;
+      if (q) items = items.filter((u) => u.fullName.toLowerCase().includes(q) || u.email.includes(q));
+      if (role) items = items.filter((u) => u.role === role);
+      if (isActive) items = items.filter((u) => String(u.isActive) === isActive);
+      return route.fulfill({ json: paged(items) });
+    }
+    const userMatch = path.match(/^\/admin\/users\/([^/]+)\/(activate|deactivate)$/);
+    if (userMatch && method === "PATCH") {
+      const user = users.find((u) => u.id === userMatch[1]);
+      if (!user) return route.fulfill({ status: 404, json: { message: "not found" } });
+      user.isActive = userMatch[2] === "activate";
+      return route.fulfill({ json: {} });
+    }
+    return route.fulfill({ status: 404, json: { message: "not found" } });
+  });
+}
+
 test("admin jobs: read first, reject needs a reason, approve and reject leave the pending filter", async ({
   page,
 }, testInfo) => {
   await offlineBackend(page);
+  await adminBackend(page);
   await signIn(page, "Admin");
   await page.goto("/admin/jobs?status=Pending");
   const rows = page.locator(".jp-queue-item");
@@ -818,6 +962,7 @@ test("admin jobs: a failed list load can be retried", async ({ page }, testInfo)
 
 test("admin jobs: create, edit, soft delete, then purge from the deleted filter", async ({ page }, testInfo) => {
   await offlineBackend(page);
+  await adminBackend(page);
   await signIn(page, "Admin");
   await page.goto("/admin/jobs");
   const rows = page.locator(".jp-queue-item");
@@ -883,6 +1028,7 @@ test("admin users: Vietnamese roles, filters, confirm before deactivating, admin
   page,
 }, testInfo) => {
   await offlineBackend(page);
+  await adminBackend(page);
   await signIn(page, "Admin");
   await page.goto("/admin/users");
   const rows = page.locator(".jp-table--users tbody tr");
@@ -933,17 +1079,22 @@ test("admin users: Vietnamese roles, filters, confirm before deactivating, admin
 
 test("admin users: a failed change keeps the old state and says why", async ({ page }, testInfo) => {
   await offlineBackend(page);
+  await adminBackend(page);
   await signIn(page, "Admin");
   await page.goto("/admin/users");
   const lan = page.locator(".jp-table--users tbody tr").filter({ hasText: "lan@example.com" });
   await expect(lan).toBeVisible();
   // A 4xx is shown, never replaced by mock success.
   await page.route(/\/api\/admin\/users\/.*\/deactivate$/, (route) =>
-    route.fulfill({ status: 409, json: { message: "Không thể vô hiệu hóa tài khoản này." } }),
+    route.fulfill({ status: 409, json: { message: "Cannot deactivate this account." } }),
   );
   await lan.getByRole("button", { name: "Vô hiệu hóa lan@example.com" }).click();
   await lan.getByRole("button", { name: "Xác nhận" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "Không thể vô hiệu hóa tài khoản này." })).toBeVisible();
+  // The backend text is English and is not shown: the page names the action instead.
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Chưa cập nhật được tài khoản. Vui lòng thử lại." }),
+  ).toBeVisible();
+  await expect(page.getByText("Cannot deactivate", { exact: false })).toHaveCount(0);
   await expect(lan).toContainText("Đang hoạt động");
   await shoot(page, testInfo, "admin-users-error");
 });

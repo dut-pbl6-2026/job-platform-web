@@ -21,7 +21,6 @@ export const queryKeys = {
   jobs: (params: unknown) => ["jobs", params] as const,
   job: (id: string) => ["job", id] as const,
   categories: ["categories"] as const,
-  skills: (q: string) => ["skills", q] as const,
   locations: (q: string) => ["locations", q] as const,
   applications: (params: unknown) => ["applications", params] as const,
   application: (id: string) => ["application", id] as const,
