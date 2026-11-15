@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
@@ -9,15 +10,22 @@ import { loadErrorMessage } from "../lib/http";
 import { jobStatusLabel } from "../lib/labels";
 import { fetchRecruiterJobs, type RecruiterJobStatus } from "../lib/jobsApi";
 
-const TILES: { status: RecruiterJobStatus; label: string }[] = [
-  { status: "Active", label: "Tin đang mở" },
-  { status: "Pending", label: "Chờ duyệt" },
-  { status: "Closed", label: "Đã đóng" },
+const TILES: {
+  status: RecruiterJobStatus;
+  labelKey:
+    | "recruiter.dashboard.tiles.active"
+    | "recruiter.dashboard.tiles.pending"
+    | "recruiter.dashboard.tiles.closed";
+}[] = [
+  { status: "Active", labelKey: "recruiter.dashboard.tiles.active" },
+  { status: "Pending", labelKey: "recruiter.dashboard.tiles.pending" },
+  { status: "Closed", labelKey: "recruiter.dashboard.tiles.closed" },
 ];
 
 /** Real counts only: each tile is the `total` of a one-row request, and each row's applicant count is one too. */
 export default function RecruiterDashboardPage() {
-  useDocumentTitle("Nhà tuyển dụng: Tổng quan");
+  const { t } = useTranslation();
+  useDocumentTitle(t("recruiter.documentTitles.dashboard"));
   const counts = useQueries({
     queries: TILES.map((tile) => ({
       queryKey: ["recruiter", "jobs", "count", tile.status],
@@ -42,15 +50,17 @@ export default function RecruiterDashboardPage() {
   const countError = counts.find((q) => q.isError);
 
   return (
-    <RecruiterShell title="Tổng quan tuyển dụng" lead="Đang mở · Chờ duyệt · Đã đóng">
-      {countError && <Alert tone="error">{loadErrorMessage(countError.error, "số liệu tin tuyển dụng")}</Alert>}
+    <RecruiterShell title={t("recruiter.dashboard.title")} lead={t("recruiter.dashboard.lead")}>
+      {countError && (
+        <Alert tone="error">{loadErrorMessage(countError.error, t("recruiter.dashboard.countWhat"))}</Alert>
+      )}
 
-      <div className="jp-recruiter-tiles" role="list" aria-label="Số liệu tin tuyển dụng">
+      <div className="jp-recruiter-tiles" role="list" aria-label={t("recruiter.dashboard.tilesLabel")}>
         {TILES.map((tile, i) => {
           const q = counts[i];
           return (
             <div className="jp-recruiter-tile" role="listitem" key={tile.status}>
-              <span className="jp-recruiter-tile-label">{tile.label}</span>
+              <span className="jp-recruiter-tile-label">{t(tile.labelKey)}</span>
               <strong className="jp-recruiter-tile-value">
                 {q.isError ? "—" : q.data ? q.data.total.toLocaleString("vi-VN") : "…"}
               </strong>
@@ -60,25 +70,27 @@ export default function RecruiterDashboardPage() {
       </div>
 
       <Panel
-        title="Tin đăng gần đây"
+        title={t("recruiter.dashboard.recent")}
         actions={
           <Link className="jp-link" to="/recruiter/jobs">
-            Xem tất cả
+            {t("recruiter.dashboard.viewAll")}
           </Link>
         }
       >
-        {recent.isPending && <SkeletonRows rows={3} label="Đang tải tin đăng" />}
-        {recent.isError && <Alert tone="error">{loadErrorMessage(recent.error, "danh sách tin đăng")}</Alert>}
-        {recent.data && recentJobs.length === 0 && <EmptyState title="Bạn chưa có tin tuyển dụng nào." />}
+        {recent.isPending && <SkeletonRows rows={3} label={t("recruiter.dashboard.loadingRecent")} />}
+        {recent.isError && (
+          <Alert tone="error">{loadErrorMessage(recent.error, t("recruiter.dashboard.recentWhat"))}</Alert>
+        )}
+        {recent.data && recentJobs.length === 0 && <EmptyState title={t("recruiter.dashboard.empty")} />}
         {recentJobs.length > 0 && (
           <div className="jp-table-wrap">
             <table className="jp-table">
               <thead>
                 <tr>
-                  <th scope="col">Tin tuyển dụng</th>
-                  <th scope="col">Trạng thái</th>
-                  <th scope="col">Ngày đăng</th>
-                  <th scope="col">Hồ sơ</th>
+                  <th scope="col">{t("recruiter.dashboard.colJob")}</th>
+                  <th scope="col">{t("recruiter.dashboard.colStatus")}</th>
+                  <th scope="col">{t("recruiter.dashboard.colPosted")}</th>
+                  <th scope="col">{t("recruiter.dashboard.colApplicants")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -92,7 +104,11 @@ export default function RecruiterDashboardPage() {
                       <td>{jobStatusLabel(job.status)}</td>
                       <td>{formatDate(job.createdAt)}</td>
                       <td>
-                        {a?.isError ? "Chưa tải được" : a?.data ? `${a.data.total.toLocaleString("vi-VN")} hồ sơ` : "…"}
+                        {a?.isError
+                          ? t("recruiter.dashboard.applicantsFailed")
+                          : a?.data
+                            ? t("recruiter.dashboard.applicantsCount", { total: a.data.total.toLocaleString("vi-VN") })
+                            : "…"}
                       </td>
                     </tr>
                   );

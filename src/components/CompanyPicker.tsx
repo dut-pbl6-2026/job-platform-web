@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Icon, Spinner, cx } from "./ui";
 import { fetchCompanies, type CompanyOption } from "../lib/jobsApi";
@@ -11,7 +12,7 @@ const DEBOUNCE_MS = 300;
  * Pick a company by name (ARIA 1.2 combobox). The recruiter sign-up needs a company, but a person
  * knows a name, not a UUID: the id never reaches the screen. Typing 2+ characters searches
  * job-svc; ↑/↓ move, Enter picks, Esc closes. Once picked, the field becomes the company's
- * name with a "Đổi" button.
+ * name with a change button.
  */
 export function CompanyPicker({
   id,
@@ -26,6 +27,7 @@ export function CompanyPicker({
   onChange: (company: CompanyOption | null) => void;
   error?: string | null;
 }) {
+  const { t } = useTranslation();
   const listId = useId();
   const [text, setText] = useState("");
   const [term, setTerm] = useState("");
@@ -51,7 +53,7 @@ export function CompanyPicker({
   const waiting = text.trim().length >= MIN_CHARS && (text.trim() !== term || search.isFetching);
   const hasList = open && !waiting && options.length > 0;
 
-  // "Đổi" removes the selection and puts the caret back in the search box.
+  // The change button removes the selection and puts the caret back in the search box.
   useEffect(() => {
     if (!value && refocus.current) {
       refocus.current = false;
@@ -109,8 +111,8 @@ export function CompanyPicker({
               onChange(null);
             }}
           >
-            Đổi
-            <span className="jp-sr"> công ty</span>
+            {t("recruiter.company.change")}
+            <span className="jp-sr">{t("recruiter.company.changeSr")}</span>
           </Button>
         </div>
       </div>
@@ -142,7 +144,7 @@ export function CompanyPicker({
           aria-required="true"
           autoComplete="off"
           spellCheck={false}
-          placeholder="Gõ tên công ty"
+          placeholder={t("recruiter.company.placeholder")}
           value={text}
           onChange={(e) => {
             setText(e.target.value);
@@ -153,7 +155,13 @@ export function CompanyPicker({
           onBlur={() => setOpen(false)}
           onKeyDown={onKeyDown}
         />
-        <ul id={listId} role="listbox" aria-label="Công ty tìm thấy" className="jp-company-list" hidden={!hasList}>
+        <ul
+          id={listId}
+          role="listbox"
+          aria-label={t("recruiter.company.listLabel")}
+          className="jp-company-list"
+          hidden={!hasList}
+        >
           {options.map((company, i) => (
             <li
               key={company.id}
@@ -175,7 +183,7 @@ export function CompanyPicker({
         </ul>
       </div>
       <p id={`${id}-hint`} className="jp-hint">
-        Gõ ít nhất {MIN_CHARS} ký tự, rồi chọn công ty trong danh sách.
+        {t("recruiter.company.hint", { min: MIN_CHARS })}
       </p>
 
       {/* Always mounted, so screen readers announce the text when it changes. */}
@@ -184,22 +192,22 @@ export function CompanyPicker({
           (waiting ? (
             <>
               <Spinner />
-              Đang tìm công ty…
+              {t("recruiter.company.searching")}
             </>
           ) : search.isError ? (
             <>
-              <span>{loadErrorMessage(search.error, "danh sách công ty")}</span>
+              <span>{loadErrorMessage(search.error, t("recruiter.company.listWhat"))}</span>
               <Button
                 variant="secondary"
                 size="sm"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => void search.refetch()}
               >
-                Thử lại
+                {t("jobs.retry")}
               </Button>
             </>
           ) : (
-            <span>Chưa thấy công ty? Liên hệ quản trị viên.</span>
+            <span>{t("recruiter.company.notFound")}</span>
           ))}
       </div>
 
