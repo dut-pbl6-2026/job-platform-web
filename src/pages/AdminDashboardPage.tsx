@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AdminShell } from "../components/AdminShell";
@@ -5,20 +6,20 @@ import { Alert, Button, ButtonLink, SkeletonBlock, StatusMark } from "../compone
 import { fetchAdminHealth, fetchAdminStatistics } from "../lib/adminApi";
 import { loadErrorMessage } from "../lib/http";
 import { queryKeys } from "../lib/queryClient";
-import type { AdminStatistics } from "../types/admin";
 import { STATUS_LABEL } from "../types/application";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
-const SECTION_LABEL: Record<AdminStatistics["unavailable"][number], string> = {
-  users: "người dùng",
-  jobs: "tin đăng",
-  applications: "đơn ứng tuyển",
-};
+const SECTION_KEY = {
+  users: "admin.dashboard.sectionUsers",
+  jobs: "admin.dashboard.sectionJobs",
+  applications: "admin.dashboard.sectionApplications",
+} as const;
 
 type Cell = { label: string; value: number | null; to?: string };
 
 export default function AdminDashboardPage() {
-  useDocumentTitle("Quản trị: Tổng quan");
+  const { t } = useTranslation();
+  useDocumentTitle(t("admin.documentTitles.dashboard"));
   // Two separate requests: a slow health check must not hold back the numbers, nor the reverse.
   const stats = useQuery({ queryKey: queryKeys.adminStats, queryFn: fetchAdminStatistics, staleTime: 0 });
   const health = useQuery({ queryKey: queryKeys.adminHealth, queryFn: fetchAdminHealth, staleTime: 0 });
@@ -27,26 +28,28 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminShell
-      title="Bảng quản trị"
-      lead="Số liệu nền tảng và tình trạng các dịch vụ."
+      title={t("admin.dashboard.title")}
+      lead={t("admin.dashboard.lead")}
       actions={
         pending > 0 ? (
-          <ButtonLink to="/admin/jobs?status=Pending">Duyệt {pending.toLocaleString("vi-VN")} tin chờ duyệt</ButtonLink>
+          <ButtonLink to="/admin/jobs?status=Pending">
+            {t("admin.dashboard.approveCount", { total: pending.toLocaleString("vi-VN") })}
+          </ButtonLink>
         ) : undefined
       }
     >
-      {stats.isPending && <SkeletonBlock height={240} label="Đang tải số liệu" />}
+      {stats.isPending && <SkeletonBlock height={240} label={t("admin.dashboard.loading")} />}
 
       {stats.isError && (
         <Alert
           tone="error"
           action={
             <Button variant="secondary" loading={stats.isFetching} onClick={() => void stats.refetch()}>
-              {stats.isFetching ? "Đang thử lại…" : "Thử lại"}
+              {stats.isFetching ? t("jobs.retrying") : t("jobs.retry")}
             </Button>
           }
         >
-          {loadErrorMessage(stats.error, "số liệu thống kê")}
+          {loadErrorMessage(stats.error, t("admin.dashboard.statsWhat"))}
         </Alert>
       )}
 
@@ -54,33 +57,35 @@ export default function AdminDashboardPage() {
         <>
           {s.unavailable.length > 0 && (
             <Alert tone="warning">
-              Chưa lấy được số liệu {s.unavailable.map((key) => SECTION_LABEL[key]).join(", ")}: dịch vụ không phản hồi.
+              {t("admin.dashboard.unavailable", {
+                sections: s.unavailable.map((key) => t(SECTION_KEY[key])).join(", "),
+              })}
             </Alert>
           )}
           <div className="jp-stat-groups">
             <StatGroup
-              title="Người dùng"
+              title={t("admin.dashboard.groupUsers")}
               className="jp-statgroup--wide"
               cells={[
-                { label: "Tổng số", value: s.totalUsers },
-                { label: "Người tìm việc", value: s.totalJobSeekers },
-                { label: "Nhà tuyển dụng", value: s.totalRecruiters },
-                { label: "Đang hoạt động", value: s.activeUsers },
-                { label: "Mới tháng này", value: s.newUsersThisMonth },
+                { label: t("admin.dashboard.total"), value: s.totalUsers },
+                { label: t("admin.dashboard.seekers"), value: s.totalJobSeekers },
+                { label: t("admin.dashboard.recruiters"), value: s.totalRecruiters },
+                { label: t("admin.dashboard.activeUsers"), value: s.activeUsers },
+                { label: t("admin.dashboard.newThisMonth"), value: s.newUsersThisMonth },
               ]}
             />
             <StatGroup
-              title="Tin đăng"
+              title={t("admin.dashboard.groupJobs")}
               cells={[
-                { label: "Tổng số", value: s.totalJobs },
-                { label: "Đang hiển thị", value: s.activeJobs },
-                { label: "Chờ duyệt", value: s.pendingJobs, to: "/admin/jobs?status=Pending" },
+                { label: t("admin.dashboard.total"), value: s.totalJobs },
+                { label: t("admin.dashboard.visible"), value: s.activeJobs },
+                { label: t("admin.dashboard.pendingJobs"), value: s.pendingJobs, to: "/admin/jobs?status=Pending" },
               ]}
             />
             <StatGroup
-              title="Đơn ứng tuyển"
+              title={t("admin.dashboard.groupApplications")}
               cells={[
-                { label: "Tổng số", value: s.totalApplications },
+                { label: t("admin.dashboard.total"), value: s.totalApplications },
                 { label: STATUS_LABEL.pending, value: s.applicationStatus?.pending ?? null },
                 { label: STATUS_LABEL.accepted, value: s.applicationStatus?.accepted ?? null },
                 { label: STATUS_LABEL.rejected, value: s.applicationStatus?.rejected ?? null },
@@ -92,19 +97,19 @@ export default function AdminDashboardPage() {
 
       <section className="jp-health" aria-labelledby="health-title">
         <h2 className="jp-h2" id="health-title">
-          Tình trạng dịch vụ
+          {t("admin.dashboard.healthTitle")}
         </h2>
-        {health.isPending && <SkeletonBlock height={120} label="Đang kiểm tra dịch vụ" />}
+        {health.isPending && <SkeletonBlock height={120} label={t("admin.dashboard.checkingHealth")} />}
         {health.isError && (
           <Alert
             tone="error"
             action={
               <Button variant="secondary" loading={health.isFetching} onClick={() => void health.refetch()}>
-                {health.isFetching ? "Đang thử lại…" : "Thử lại"}
+                {health.isFetching ? t("jobs.retrying") : t("jobs.retry")}
               </Button>
             }
           >
-            {loadErrorMessage(health.error, "tình trạng dịch vụ")}
+            {loadErrorMessage(health.error, t("admin.dashboard.healthWhat"))}
           </Alert>
         )}
         {health.data && (
@@ -112,10 +117,10 @@ export default function AdminDashboardPage() {
             <table className="jp-table">
               <thead>
                 <tr>
-                  <th scope="col">Dịch vụ</th>
-                  <th scope="col">Trạng thái</th>
+                  <th scope="col">{t("admin.dashboard.colService")}</th>
+                  <th scope="col">{t("admin.dashboard.colStatus")}</th>
                   <th scope="col" className="jp-num">
-                    Độ trễ
+                    {t("admin.dashboard.colLatency")}
                   </th>
                 </tr>
               </thead>
@@ -125,11 +130,15 @@ export default function AdminDashboardPage() {
                     <th scope="row">{svc.name}</th>
                     <td>
                       <StatusMark tone={svc.status === "online" ? "success" : "danger"}>
-                        {svc.status === "online" ? "Hoạt động" : "Không phản hồi"}
+                        {svc.status === "online" ? t("admin.dashboard.online") : t("admin.dashboard.offline")}
                       </StatusMark>
                     </td>
                     <td className="jp-num">
-                      {svc.latencyMs == null ? <Dash /> : `${svc.latencyMs.toLocaleString("vi-VN")} ms`}
+                      {svc.latencyMs == null ? (
+                        <Dash />
+                      ) : (
+                        t("admin.dashboard.latency", { ms: svc.latencyMs.toLocaleString("vi-VN") })
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -143,12 +152,13 @@ export default function AdminDashboardPage() {
 }
 
 function Dash() {
+  const { t } = useTranslation();
   return (
     <>
       <span aria-hidden="true" className="jp-missing">
         —
       </span>
-      <span className="jp-sr">Chưa có số liệu</span>
+      <span className="jp-sr">{t("admin.dashboard.noData")}</span>
     </>
   );
 }

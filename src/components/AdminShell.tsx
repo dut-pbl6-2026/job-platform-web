@@ -1,19 +1,21 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Navigate, NavLink, useLocation } from "react-router-dom";
 import { ButtonLink, EmptyState, PageHead, PageLoading, TopBar } from "./ui";
 import { useAuth } from "../contexts/AuthContext";
 import { isAdmin } from "../lib/roles";
 
 const LINKS = [
-  { to: "/admin", label: "Tổng quan", end: true },
-  { to: "/admin/jobs", label: "Quản lý tin", end: false },
-  { to: "/admin/users", label: "Người dùng", end: false },
-];
+  { to: "/admin", labelKey: "admin.nav.overview", end: true },
+  { to: "/admin/jobs", labelKey: "admin.nav.jobs", end: false },
+  { to: "/admin/users", labelKey: "admin.nav.users", end: false },
+] as const;
 
 export function AdminRoute({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const { isAuthenticated, loading, user } = useAuth();
   const location = useLocation();
-  if (loading) return <PageLoading label="Đang kiểm tra quyền truy cập" />;
+  if (loading) return <PageLoading label={t("admin.checkingAccess")} />;
   if (!isAuthenticated)
     return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   if (!isAdmin(user?.role)) {
@@ -22,8 +24,8 @@ export function AdminRoute({ children }: { children: ReactNode }) {
         <TopBar />
         <main className="jp-page jp-page--narrow">
           <EmptyState
-            title="Chỉ quản trị viên mới vào được khu vực này."
-            action={<ButtonLink to="/jobs">Xem bảng việc làm</ButtonLink>}
+            title={t("admin.accessNotice")}
+            action={<ButtonLink to="/jobs">{t("jobs.detail.viewBoard")}</ButtonLink>}
           />
         </main>
       </>
@@ -47,14 +49,15 @@ export function AdminShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <TopBar />
-      <nav className="jp-subnav" aria-label="Điều hướng quản trị">
+      <nav className="jp-subnav" aria-label={t("admin.nav.label")}>
         <div className="jp-subnav-inner">
           {LINKS.map((link) => (
             <NavLink key={link.to} to={link.to} end={link.end} className="jp-subnav-link">
-              {link.label}
+              {t(link.labelKey)}
             </NavLink>
           ))}
         </div>

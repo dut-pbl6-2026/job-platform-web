@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AdminShell } from "../components/AdminShell";
@@ -24,7 +25,8 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 const PAGE_SIZE = 8;
 
 export default function AdminUsersPage() {
-  useDocumentTitle("Quản trị: Người dùng");
+  const { t } = useTranslation();
+  useDocumentTitle(t("admin.documentTitles.users"));
   const queryClient = useQueryClient();
   const [sp, setSp] = useSearchParams();
   const q = sp.get("q") || "";
@@ -76,37 +78,41 @@ export default function AdminUsersPage() {
         prev ? { ...prev, items: prev.items.map((u) => (u.id === user.id ? { ...u, isActive } : u)) } : prev,
       );
       setConfirmId(null);
-      setDone(`Đã ${isActive ? "kích hoạt" : "vô hiệu hóa"} tài khoản ${user.email}.`);
+      setDone(
+        isActive
+          ? t("admin.users.doneActivated", { email: user.email })
+          : t("admin.users.doneDeactivated", { email: user.email }),
+      );
     } catch (e: unknown) {
-      setActionErr(apiErrorMessage(e, "Chưa cập nhật được tài khoản. Vui lòng thử lại."));
+      setActionErr(apiErrorMessage(e, t("admin.users.updateFailed")));
     } finally {
       setBusyId(null);
     }
   }
 
   return (
-    <AdminShell title="Người dùng" lead="Tìm, lọc, kích hoạt hoặc vô hiệu hóa tài khoản.">
-      <form className="jp-user-filters" onSubmit={search} role="search" aria-label="Tìm người dùng">
-        <Field id="user-q" label="Tên hoặc email" className="jp-user-filters-q">
+    <AdminShell title={t("admin.users.title")} lead={t("admin.users.lead")}>
+      <form className="jp-user-filters" onSubmit={search} role="search" aria-label={t("admin.users.searchLabel")}>
+        <Field id="user-q" label={t("admin.users.nameOrEmail")} className="jp-user-filters-q">
           <Input type="search" value={draftQ} onChange={(e) => setDraftQ(e.target.value)} autoComplete="off" />
         </Field>
-        <Field id="user-role" label="Vai trò">
+        <Field id="user-role" label={t("admin.users.role")}>
           <Select value={role} onChange={(e) => patchQuery({ role: e.target.value })}>
-            <option value="">Mọi vai trò</option>
+            <option value="">{t("admin.users.allRoles")}</option>
             <option value="User">{roleLabel("User")}</option>
             <option value="Recruiter">{roleLabel("Recruiter")}</option>
             <option value="Admin">{roleLabel("Admin")}</option>
           </Select>
         </Field>
-        <Field id="user-status" label="Trạng thái">
+        <Field id="user-status" label={t("admin.users.status")}>
           <Select value={status} onChange={(e) => patchQuery({ status: e.target.value })}>
-            <option value="">Mọi trạng thái</option>
-            <option value="active">Đang hoạt động</option>
-            <option value="inactive">Đã vô hiệu hóa</option>
+            <option value="">{t("admin.users.allStatuses")}</option>
+            <option value="active">{t("admin.users.statusActive")}</option>
+            <option value="inactive">{t("admin.users.statusInactive")}</option>
           </Select>
         </Field>
         <Button type="submit" className="jp-user-filters-go">
-          Tìm
+          {t("admin.users.search")}
         </Button>
       </form>
 
@@ -118,23 +124,23 @@ export default function AdminUsersPage() {
           tone="error"
           action={
             <Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>
-              {query.isFetching ? "Đang thử lại…" : "Thử lại"}
+              {query.isFetching ? t("jobs.retrying") : t("jobs.retry")}
             </Button>
           }
         >
-          {loadErrorMessage(query.error, "danh sách người dùng")}
+          {loadErrorMessage(query.error, t("admin.users.loadWhat"))}
         </Alert>
       )}
 
-      {query.isPending && <SkeletonRows rows={5} label="Đang tải người dùng" />}
+      {query.isPending && <SkeletonRows rows={5} label={t("admin.users.loading")} />}
 
       {data && data.items.length === 0 && (
         <EmptyState
-          title={filtered ? "Không có người dùng nào khớp bộ lọc" : "Chưa có người dùng"}
+          title={filtered ? t("admin.users.filteredEmpty") : t("admin.users.empty")}
           action={
             filtered ? (
               <Button variant="secondary" onClick={() => setSp(new URLSearchParams())}>
-                Xóa bộ lọc
+                {t("admin.users.clearFilters")}
               </Button>
             ) : undefined
           }
@@ -144,18 +150,18 @@ export default function AdminUsersPage() {
       {data && data.items.length > 0 && (
         <>
           <p className="jp-count" aria-live="polite">
-            {data.total.toLocaleString("vi-VN")} người dùng
+            {t("admin.users.count", { total: data.total.toLocaleString("vi-VN") })}
           </p>
           <div className="jp-table-wrap">
             <table className="jp-table jp-table--users">
               <thead>
                 <tr>
-                  <th scope="col">Người dùng</th>
-                  <th scope="col">Vai trò</th>
-                  <th scope="col">Trạng thái</th>
-                  <th scope="col">Ngày tạo</th>
+                  <th scope="col">{t("admin.users.colUser")}</th>
+                  <th scope="col">{t("admin.users.colRole")}</th>
+                  <th scope="col">{t("admin.users.colStatus")}</th>
+                  <th scope="col">{t("admin.users.colCreated")}</th>
                   <th scope="col" className="jp-table-actions">
-                    Thao tác
+                    {t("admin.users.colActions")}
                   </th>
                 </tr>
               </thead>
@@ -163,7 +169,7 @@ export default function AdminUsersPage() {
                 {data.items.map((user) => {
                   const confirming = confirmId === user.id;
                   const busy = busyId === user.id;
-                  const verb = user.isActive ? "Vô hiệu hóa" : "Kích hoạt";
+                  const verb = user.isActive ? t("admin.users.verbDeactivate") : t("admin.users.verbActivate");
                   return (
                     <tr key={user.id}>
                       <th scope="row" className="jp-user-name">
@@ -172,44 +178,44 @@ export default function AdminUsersPage() {
                       </th>
                       {/* auth-svc has no change-role endpoint yet: role is read-only here. */}
                       <td>
-                        <span className="jp-sr">Vai trò: </span>
+                        <span className="jp-sr">{t("admin.users.srRole")}</span>
                         {roleLabel(user.role)}
                       </td>
                       <td>
-                        <span className="jp-sr">Trạng thái: </span>
+                        <span className="jp-sr">{t("admin.users.srStatus")}</span>
                         <StatusMark tone={user.isActive ? "success" : "neutral"}>
-                          {user.isActive ? "Đang hoạt động" : "Đã vô hiệu hóa"}
+                          {user.isActive ? t("admin.users.statusActive") : t("admin.users.statusInactive")}
                         </StatusMark>
                       </td>
                       <td className="jp-muted">
-                        <span className="jp-sr">Ngày tạo: </span>
+                        <span className="jp-sr">{t("admin.users.srCreated")}</span>
                         {formatDate(user.createdAt)}
                       </td>
                       <td className="jp-table-actions">
                         {user.role === "Admin" ? (
-                          <span className="jp-muted">Không áp dụng cho quản trị viên</span>
+                          <span className="jp-muted">{t("admin.users.adminNoAction")}</span>
                         ) : confirming ? (
                           <div
                             className="jp-confirm"
                             role="group"
-                            aria-label={`Xác nhận ${verb.toLowerCase()} ${user.email}`}
+                            aria-label={t("admin.users.confirmGroup", { verb: verb.toLowerCase(), email: user.email })}
                           >
-                            <span className="jp-confirm-text">{verb} tài khoản này?</span>
+                            <span className="jp-confirm-text">{t("admin.users.confirmQuestion", { verb })}</span>
                             <Button
                               variant={user.isActive ? "danger" : "primary"}
                               loading={busy}
                               onClick={() => void toggleActive(user)}
                             >
-                              {busy ? "Đang lưu…" : "Xác nhận"}
+                              {busy ? t("admin.users.saving") : t("admin.users.confirm")}
                             </Button>
                             <Button variant="secondary" disabled={busy} onClick={() => setConfirmId(null)}>
-                              Hủy
+                              {t("admin.users.cancel")}
                             </Button>
                           </div>
                         ) : (
                           <Button
                             variant="secondary"
-                            aria-label={`${verb} ${user.email}`}
+                            aria-label={t("admin.users.actionLabel", { verb, email: user.email })}
                             onClick={() => {
                               setConfirmId(user.id);
                               setDone(null);
