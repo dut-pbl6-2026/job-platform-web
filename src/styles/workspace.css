@@ -111,6 +111,7 @@
 .jp-workspace-link {
   display: flex;
   align-items: center;
+  gap: 10px;
   min-height: var(--tap);
   padding: 0 var(--sp-3);
   border-left: 3px solid transparent;
@@ -126,6 +127,19 @@
   border-left-color: var(--c-amber);
   color: var(--c-navy);
   font-weight: 700;
+}
+
+.jp-workspace-icon { color: var(--c-muted); }
+.jp-workspace-link.is-active .jp-workspace-icon { color: var(--c-navy); }
+
+.jp-workspace-section {
+  margin: var(--sp-6) 0 var(--sp-1);
+  padding: 0 var(--sp-3);
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .jp-workspace-main {

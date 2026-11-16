@@ -91,6 +91,59 @@ const PATHS = {
     </>
   ),
   pencil: <path d="M4.5 19.5l1-4.2L15.8 5a1.8 1.8 0 0 1 2.6 0l.6.6a1.8 1.8 0 0 1 0 2.6L8.7 18.5z" />,
+  dashboard: (
+    <>
+      <rect x="4" y="4" width="7" height="7" rx="1.2" />
+      <rect x="13" y="4" width="7" height="7" rx="1.2" />
+      <rect x="4" y="13" width="7" height="7" rx="1.2" />
+      <rect x="13" y="13" width="7" height="7" rx="1.2" />
+    </>
+  ),
+  briefcase: (
+    <>
+      <rect x="3.5" y="8" width="17" height="11" rx="1.6" />
+      <path d="M9 8V6.2A1.2 1.2 0 0 1 10.2 5h3.6A1.2 1.2 0 0 1 15 6.2V8" />
+      <path d="M3.5 12.5h17" />
+    </>
+  ),
+  building: (
+    <>
+      <path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h7A1.5 1.5 0 0 1 15 5.5V20" />
+      <path d="M15 9h2.5A1.5 1.5 0 0 1 19 10.5V20" />
+      <path d="M3 20h18" />
+      <path d="M8 8h.1M8 12h.1M11.5 8h.1M11.5 12h.1" />
+    </>
+  ),
+  users: (
+    <>
+      <circle cx="9" cy="8.5" r="3" />
+      <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
+      <path d="M16 6.2a2.8 2.8 0 0 1 0 5.6" />
+      <path d="M17.5 13.5a5.5 5.5 0 0 1 3 4.9" />
+    </>
+  ),
+  mail: (
+    <>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="1.6" />
+      <path d="M4 7l8 6 8-6" />
+    </>
+  ),
+  inbox: (
+    <>
+      <path d="M4 13.5l2.2-6A1.6 1.6 0 0 1 7.7 6.5h8.6a1.6 1.6 0 0 1 1.5 1l2.2 6" />
+      <path d="M4 13.5h4.5l1 2h5l1-2H20" />
+      <path d="M4 13.5V18a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 18v-4.5" />
+    </>
+  ),
+  chart: (
+    <>
+      <path d="M4 19.5V4.5" />
+      <path d="M4 19.5h16" />
+      <rect x="7" y="12" width="3" height="5" rx="0.4" />
+      <rect x="12" y="9" width="3" height="8" rx="0.4" />
+      <rect x="17" y="6" width="3" height="11" rx="0.4" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof PATHS;

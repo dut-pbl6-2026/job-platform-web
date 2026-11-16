@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
 import { Alert, Button, EmptyState, Field, Input, Panel, SkeletonBlock, Textarea } from "../components/ui";
@@ -98,22 +97,6 @@ export default function RecruiterCompanyPage() {
           ) : (
             <MemberView company={data.company} />
           )}
-
-          <Panel title={t("company.teamTitle")}>
-            <p className="jp-muted">
-              {data.isCompanyAdmin ? t("company.teamLead") : t("company.teamMembersLead")}
-            </p>
-            {data.isCompanyAdmin && (
-              <div className="jp-company-links">
-                <Link className="jp-link" to="/recruiter/invite-codes">
-                  {t("invite.navLabel")}
-                </Link>
-                <Link className="jp-link" to="/recruiter/join-requests">
-                  {t("joinRequest.admin.navLabel")}
-                </Link>
-              </div>
-            )}
-          </Panel>
         </div>
       )}
     </RecruiterShell>

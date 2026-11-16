@@ -16,6 +16,7 @@ import "./styles/admin.css";
 import "./styles/recruiter.css";
 import "./styles/home.css";
 import "./styles/workspace.css";
+import "./styles/dashboard.css";
 import "./styles/company.css";
 import "./styles/recommended.css";
 import "./styles/chat.css";
