@@ -814,7 +814,8 @@
       "tiles": {
         "active": "Tin đang mở",
         "pending": "Chờ duyệt",
-        "closed": "Đã đóng"
+        "closed": "Đã đóng",
+        "total": "Tổng tin"
       },
       "tilesLabel": "Số liệu tin tuyển dụng",
       "recent": "Tin đăng gần đây",
@@ -827,7 +828,14 @@
       "colPosted": "Ngày đăng",
       "colApplicants": "Hồ sơ",
       "applicantsFailed": "Chưa tải được",
-      "applicantsCount": "{{total}} hồ sơ"
+      "applicantsCount": "{{total}} hồ sơ",
+      "chartTitle": "Hồ sơ theo tin",
+      "chartLead": "Số hồ sơ đã nhận cho các tin gần nhất.",
+      "chartEmpty": "Chưa có tin nào để thống kê.",
+      "quickTitle": "Việc cần làm",
+      "chartNoData": "Chưa có hồ sơ nào cho các tin này.",
+      "companyTitle": "Công ty của bạn",
+      "companyLink": "Xem hồ sơ công ty"
     },
     "jobs": {
       "title": "Quản lý tin tuyển dụng",
@@ -975,7 +983,20 @@
       "online": "Hoạt động",
       "offline": "Không phản hồi",
       "latency": "{{ms}} ms",
-      "noData": "Chưa có số liệu"
+      "noData": "Chưa có số liệu",
+      "tileUsers": "Người dùng",
+      "tileUsersSub": "{{seekers}} ứng viên · {{recruiters}} nhà tuyển dụng",
+      "tileJobs": "Tin đang hiển thị",
+      "tileJobsSub": "trong {{total}} tin",
+      "tileApplications": "Đơn ứng tuyển",
+      "tileApplicationsSub": "tổng cộng",
+      "tileServices": "Dịch vụ",
+      "tileServicesSub": "đang trực tuyến",
+      "other": "Khác",
+      "statusPending": "Chờ duyệt",
+      "statusAccepted": "Đã nhận",
+      "statusRejected": "Từ chối",
+      "notVisible": "Không hiển thị"
     },
     "users": {
       "title": "Người dùng",
@@ -1238,7 +1259,8 @@
     "home": "Về trang chủ",
     "adminRole": "Quản trị",
     "recruiterRole": "Nhà tuyển dụng",
-    "navLabel": "Điều hướng khu vực làm việc"
+    "navLabel": "Điều hướng khu vực làm việc",
+    "companyAdmin": "Quản trị công ty"
   },
   "notFound": {
     "title": "Không tìm thấy trang này.",
