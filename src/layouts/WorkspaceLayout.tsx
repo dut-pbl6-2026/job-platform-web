@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -48,8 +48,14 @@ export function WorkspaceLayout() {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [menuPath, setMenuPath] = useState(pathname);
+  const mainRef = useRef<HTMLDivElement>(null);
   const admin = isAdmin(user?.role);
   const items = admin ? ADMIN_NAV : RECRUITER_NAV;
+
+  // Only the content pane scrolls, so the shell must reset it on navigation.
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, left: 0 });
+  }, [pathname]);
 
   if (pathname !== menuPath) {
     setMenuPath(pathname);
@@ -101,7 +107,7 @@ export function WorkspaceLayout() {
         </Link>
       </aside>
 
-      <div className="jp-workspace-main">
+      <div className="jp-workspace-main" ref={mainRef}>
         <Outlet />
       </div>
     </div>
