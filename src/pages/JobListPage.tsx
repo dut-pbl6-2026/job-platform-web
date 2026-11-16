@@ -286,8 +286,6 @@ export default function JobListPage() {
               </div>
             )}
 
-            <RecommendedJobs />
-
             {data && !err && items.length > 0 && (
               <div
                 className={cx("jp-board-wrap", jobsQuery.isPlaceholderData && "is-stale")}
@@ -317,6 +315,9 @@ export default function JobListPage() {
                 </div>
               </div>
             )}
+
+            {/* Below the board: results are what the visitor came for, suggestions must not push them down. */}
+            <RecommendedJobs />
           </section>
         </div>
       </main>
