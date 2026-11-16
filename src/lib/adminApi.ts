@@ -151,7 +151,7 @@ export async function setAdminUserActive(userId: string, isActive: boolean, reas
 }
 
 /** job-svc JobStatus values the admin list filters on. Omitting the status lists every job except Deleted. */
-export const ADMIN_JOB_STATUSES = ["Active", "Pending", "Rejected", "Closed", "Deleted"] as const;
+export const ADMIN_JOB_STATUSES = ["Active", "Closed", "Deleted"] as const;
 export type AdminJobStatus = (typeof ADMIN_JOB_STATUSES)[number];
 
 export function isAdminJobStatus(value: string): value is AdminJobStatus {
