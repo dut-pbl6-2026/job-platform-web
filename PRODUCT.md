@@ -14,7 +14,7 @@ The audience that decides success comes first: **course graders and demo-day vie
 
 - **Candidates (User):** Vietnamese job seekers. They search and filter jobs, read a job, apply with a CV, keep a profile, and track their applications.
 - **Admins:** they review pending job posts (read, then approve or reject with a reason), activate or deactivate users, and check platform stats and service health.
-- **Recruiters:** they have a dashboard (`/recruiter`) with real counts of their jobs and recent postings, and a job list (`/recruiter/jobs`) with status filters. They can still edit their own job from the job detail page. Posting a job and reviewing candidates are not on the web yet.
+- **Recruiters:** they have a dashboard (`/recruiter`) with real counts of their jobs and recent postings, a job list (`/recruiter/jobs`) with status filters, a post-a-job form (`/recruiter/jobs/new`), and an applicant list per job (`/recruiter/jobs/:jobId/applications`) where they can move an application through its status flow. They can also issue invite codes bound to one email (`/recruiter/invite-codes`) and approve or reject join requests (`/recruiter/join-requests`). They can still edit their own job from the job detail page.
 
 ## Product Purpose
 
@@ -33,16 +33,15 @@ Undecided, and deliberately so. The user said the "WOW" features (AI Job Copilot
 
 ## Capabilities and Constraints
 
-- **Built:** auth (register, login, refresh, logout, forgot and reset password); job list with keyword, location, and advanced filters (salary, skills, employment type, experience, category, sort), with the query string as the source of truth; job detail; apply with CV (PDF/DOC/DOCX ≤ 5 MB; duplicate application returns 409); profile with skills, experience, and education; application history and detail; admin dashboard, pending-job review, and user management; realtime new-job toasts (WebSocket plus 30 s poll).
-- **Built but deferred, not a priority:** the AI chat at `/chat` and the floating dock (ai-svc does not serve them yet, so the UI says the feature is in development), and resume scoring at `/resume-score`.
+- **Built:** auth (register with email verification, login, refresh, logout, forgot and reset password); company self-serve sign-up with work-email verification, recruiter invite codes bound to one email, and join requests with admin approve/reject and the escalate action; job list with keyword, location, and advanced filters (salary, skills, employment type, experience, category, sort), with the query string as the source of truth; job detail; apply with CV (PDF/DOC/DOCX ≤ 5 MB; duplicate application returns 409); profile with skills, experience, and education; application history and detail; recruiter dashboard, job posting, applicant review and status changes; admin dashboard, pending-job review, and user management; realtime new-job toasts (WebSocket plus 30 s poll); AI chat at `/chat` and resume scoring at `/resume-score`.
 - **Contract rules:** the client follows backend contracts exactly. Search pages are 0-based; admin lists are 1-based and the client converts. Admins have no change-role endpoint, and search-svc has no facets or suggestion API.
 - **Validation (SRS AUTH-01):** passwords need 8+ characters with at least one uppercase letter and one digit; email is at most 256 characters and full name 2–128. Forgot-password always returns 200 so it can't reveal which accounts exist.
-- **Open:** the recruiter web flows (posting, applicant management) are unscoped. Dark mode and i18n are master-plan nice-to-haves with no commitment.
+- **Open:** company admin tooling beyond invite codes and join requests is unscoped. Dark mode and a second UI language are master-plan nice-to-haves with no commitment.
 
 ## Brand Commitments
 
 - **Name:** Vietnam Job Platform. The header wordmark is `jobplatform`.
-- **Language:** Vietnamese only. All user-facing copy is Vietnamese (`<html lang="vi">`) and no English UI is planned. Developer docs and code comments may stay in English.
+- **Language:** Vietnamese only. All user-facing copy lives in `src/i18n/locales/vi.json` (English keys) and renders as Vietnamese (`<html lang="vi">`); no English UI is planned. Developer docs and code comments stay in English.
 
 ## Evidence on Hand
 

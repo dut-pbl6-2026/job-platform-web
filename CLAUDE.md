@@ -23,7 +23,7 @@ React 19 · Vite 8 · TypeScript 7 (strict) · React Router 7 · TanStack Query 
 ## Hard rules
 - **Never hide real errors.** Mock fallback only with `VITE_ENABLE_MOCKS=true` and only on no response or 5xx, never on 4xx.
 - **Follow backend contracts exactly.** Search pages are 0-based; admin lists are 1-based (the client converts). Don't change API calls during UI work.
-- **Vietnamese-only user-facing copy.** Code and comments may be English.
+- **i18n: all user-facing copy lives in `src/i18n/locales/vi.json`.** Keys are English and grouped by feature; the app ships `vi` only, so it is both the language and the fallback. Read copy through `t()`; never hard-code a user-facing string in a component. Code and comments are English.
 - **No invented data.** Every badge or label must trace to a backend field. No fake counts, testimonials, logos or "Top/HOT" tags.
 - **Never show internal IDs** (company ID, UUIDs) or raw enums (`Full-time`, `active`) to users. Map them to Vietnamese labels.
 - Don't add dependencies without asking. Don't commit `.env`.
