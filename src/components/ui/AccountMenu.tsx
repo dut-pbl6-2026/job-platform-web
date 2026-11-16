@@ -7,7 +7,6 @@ import { isAdmin, isRecruiter, isUser } from "../../lib/roles";
 import { fetchMyProfile } from "../../lib/profileApi";
 import { queryKeys } from "../../lib/queryClient";
 import { safeHttpUrl } from "../../lib/safeUrl";
-import { Icon } from "./Icon";
 import { cx } from "./controls";
 
 function initials(name: string): string {
@@ -111,7 +110,6 @@ export function AccountMenu({ onNavy = false }: { onNavy?: boolean }) {
             {initials(name)}
           </span>
         )}
-        <Icon name="chevronDown" size={16} className="jp-avatar-chevron" />
       </button>
 
       {open && (

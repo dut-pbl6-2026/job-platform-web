@@ -48,11 +48,14 @@
 }
 
 .jp-workspace-home {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
   min-height: var(--tap);
-  padding: 0 var(--sp-2);
+  margin-top: auto;
+  padding: var(--sp-3) var(--sp-3) 0;
+  border-top: 1px solid var(--c-rule);
   color: var(--c-muted);
   font-weight: 600;
   text-decoration: none;
@@ -79,6 +82,8 @@
 .jp-workspace-side {
   grid-column: 1;
   grid-row: 2;
+  display: flex;
+  flex-direction: column;
   padding: var(--sp-6) var(--sp-3);
   background: var(--c-surface);
   border-right: 1px solid var(--c-rule);
@@ -147,13 +152,15 @@
   .jp-workspace-menu { display: inline-flex; }
   .jp-workspace-side {
     display: none;
+    flex-direction: column;
     grid-column: 1;
     grid-row: 2;
     padding: var(--sp-2) var(--sp-2) var(--sp-3);
     border-right: 0;
     border-bottom: 1px solid var(--c-rule);
   }
-  .jp-workspace.is-open .jp-workspace-side { display: block; }
+  .jp-workspace.is-open .jp-workspace-side { display: flex; }
+  .jp-workspace.is-open .jp-workspace-home { display: flex; margin-top: var(--sp-3); }
   .jp-workspace-link { min-height: 48px; }
   .jp-workspace-main { grid-column: 1; grid-row: 3; }
 }

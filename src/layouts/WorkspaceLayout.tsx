@@ -63,10 +63,6 @@ export function WorkspaceLayout() {
           <b aria-hidden="true">jp</b>
           <span aria-hidden="true">jobplatform</span>
         </Link>
-        <Link to="/" className="jp-workspace-home">
-          <Icon name="arrowLeft" size={16} />
-          {t("workspace.home")}
-        </Link>
         <div className="jp-workspace-account">
           <AccountMenu />
         </div>
@@ -99,6 +95,10 @@ export function WorkspaceLayout() {
             );
           })}
         </nav>
+        <Link to="/" className="jp-workspace-home">
+          <Icon name="arrowLeft" size={16} />
+          {t("workspace.home")}
+        </Link>
       </aside>
 
       <div className="jp-workspace-main">
