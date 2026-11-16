@@ -38,6 +38,15 @@ export function loadErrorMessage(e: unknown, what: string): string {
   return i18n.t("httpError.loadUnknown", { what });
 }
 
+/**
+ * Stable machine-readable `errorCode` from a problem body (job-svc and auth-svc company sign-up
+ * endpoints use one). Never shown to users: the page maps it to its own copy.
+ */
+export function apiErrorCode(e: unknown): string | undefined {
+  const code = (e as { response?: { data?: { errorCode?: unknown } } })?.response?.data?.errorCode;
+  return typeof code === "string" ? code : undefined;
+}
+
 /** Unwrap common API envelopes used across services. */
 export function unwrap<T>(raw: unknown): T {
   if (raw && typeof raw === "object" && "data" in (raw as object) && (raw as { data: unknown }).data != null) {

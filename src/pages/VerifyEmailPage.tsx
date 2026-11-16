@@ -26,7 +26,8 @@ export default function VerifyEmailPage() {
     verifyEmail(token)
       .then(() => setResult({ kind: "success" }))
       .catch((ex: unknown) => {
-        if (httpStatus(ex) === 400) setResult({ kind: "invalid" });
+        // A bad, expired or already used token is 422 VERIFICATION_TOKEN_INVALID (auth-svc).
+        if (httpStatus(ex) === 422) setResult({ kind: "invalid" });
         else setResult({ kind: "error", message: apiErrorMessage(ex, t("auth.verify.failed")) });
       });
   }, [token, t]);

@@ -57,7 +57,7 @@ test.describe("registration and email verification", () => {
     let calls = 0;
     await page.route("**/api/auth/verify-email", (route) => {
       calls += 1;
-      route.fulfill({ status: calls === 1 ? 200 : 400, json: { message: "x" } });
+      route.fulfill({ status: calls === 1 ? 200 : 422, json: { message: "x" } });
     });
     await page.goto("/verify-email?token=once-e2e");
 
@@ -67,12 +67,15 @@ test.describe("registration and email verification", () => {
     await expect(page.getByText("Liên kết xác minh này không hợp lệ")).toHaveCount(0);
   });
 
-  test("verify-email with an invalid, expired or used token (400) shows a message and a link back to login", async ({
+  test("verify-email with an invalid, expired or used token (422) shows a message and a link back to login", async ({
     page,
   }) => {
     await offlineBackend(page);
     await page.route("**/api/auth/verify-email", (route) =>
-      route.fulfill({ status: 400, json: { title: "Bad Request", detail: "Token expired" } }),
+      route.fulfill({
+        status: 422,
+        json: { title: "Invalid verification token", detail: "Token expired", errorCode: "VERIFICATION_TOKEN_INVALID" },
+      }),
     );
     await page.goto("/verify-email?token=expired-e2e");
 
@@ -86,7 +89,7 @@ test.describe("registration and email verification", () => {
     let calls = 0;
     await page.route("**/api/auth/verify-email", (route) => {
       calls += 1;
-      route.fulfill({ status: 400, json: {} });
+      route.fulfill({ status: 422, json: {} });
     });
     await page.goto("/verify-email");
 

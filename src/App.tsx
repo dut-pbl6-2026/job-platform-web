@@ -14,6 +14,7 @@ import { AppFooter } from "./components/AppFooter";
 import { createQueryClient } from "./lib/queryClient";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import RegisterCompanyPage from "./pages/RegisterCompanyPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
@@ -33,6 +34,8 @@ import RecruiterJobsPage from "./pages/RecruiterJobsPage";
 import RecruiterPostJobPage from "./pages/RecruiterPostJobPage";
 import RecruiterApplicationsPage from "./pages/RecruiterApplicationsPage";
 import RecruiterInviteCodesPage from "./pages/RecruiterInviteCodesPage";
+import RecruiterJoinRequestsPage from "./pages/RecruiterJoinRequestsPage";
+import JoinRequestPage from "./pages/JoinRequestPage";
 
 export default function App() {
   const [queryClient] = useState(() => createQueryClient());
@@ -60,6 +63,14 @@ export default function App() {
                     element={
                       <GuestOnly>
                         <RegisterPage />
+                      </GuestOnly>
+                    }
+                  />
+                  <Route
+                    path="/register-company"
+                    element={
+                      <GuestOnly>
+                        <RegisterCompanyPage />
                       </GuestOnly>
                     }
                   />
@@ -123,6 +134,14 @@ export default function App() {
                     }
                   />
                   <Route
+                    path="/join-request"
+                    element={
+                      <ProtectedRoute>
+                        <JoinRequestPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/chat"
                     element={
                       <ProtectedRoute>
@@ -143,6 +162,14 @@ export default function App() {
                     element={
                       <RecruiterRoute>
                         <RecruiterInviteCodesPage />
+                      </RecruiterRoute>
+                    }
+                  />
+                  <Route
+                    path="/recruiter/join-requests"
+                    element={
+                      <RecruiterRoute>
+                        <RecruiterJoinRequestsPage />
                       </RecruiterRoute>
                     }
                   />

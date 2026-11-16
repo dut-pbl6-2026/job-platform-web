@@ -45,6 +45,11 @@ export function TopBar() {
   }
   if (isAuthenticated && isUser(user?.role)) {
     items.push({ to: "/applications", label: t("nav.myApplications"), match: (p) => p.startsWith("/applications") });
+    items.push({
+      to: "/join-request",
+      label: t("nav.joinRequest"),
+      match: (p) => p === "/join-request",
+    });
   }
   if (isAuthenticated) {
     items.push({ to: "/chat", label: t("nav.aiAssistant"), match: (p) => p === "/chat", dev: true });

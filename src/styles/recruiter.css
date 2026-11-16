@@ -155,3 +155,52 @@
   letter-spacing: 0.1em;
   word-break: break-all;
 }
+
+/* Company join requests: one card per request. The list view has no applicant identity, so a card
+   shows the state and the dates only. */
+.jp-join-requests {
+  list-style: none;
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.jp-join-request {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+}
+
+.jp-join-request-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.jp-join-request-meta {
+  margin: 0;
+  font-size: 14px;
+  color: var(--c-muted);
+}
+
+.jp-join-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.jp-join-request-note {
+  margin: var(--sp-4) 0 0;
+}
+
+.jp-join-request-escalate {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}

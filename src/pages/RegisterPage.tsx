@@ -101,8 +101,14 @@ export default function RegisterPage() {
         role: apiRole,
         ...(isRecruiter ? { inviteCode: normalizeInviteCode(inviteCode) } : {}),
       });
-      // 202: the account exists but is not verified yet. Send the user to login with the notice.
-      nav(`/login${query}`, { replace: true, state: { notice: t("auth.register.verifyNotice"), email: email.trim() } });
+      // 202 either way. An invited Recruiter account is active at once and gets no verification
+      // email (AUTH-01-15), so the notice must not ask for one; a User still has to verify.
+      nav(`/login${query}`, {
+        replace: true,
+        state: isRecruiter
+          ? { notice: t("auth.register.recruiterReadyNotice") }
+          : { notice: t("auth.register.verifyNotice"), email: email.trim() },
+      });
     } catch (ex: unknown) {
       const inviteErr = isRecruiter ? inviteErrorFrom(ex) : null;
       if (inviteErr?.onField) {
@@ -128,6 +134,11 @@ export default function RegisterPage() {
           {t("auth.register.haveAccount")}{" "}
           <Link className="jp-link" to={`/login${query}`}>
             {t("auth.register.loginLink")}
+          </Link>
+          <br />
+          {t("auth.register.companyPrompt")}{" "}
+          <Link className="jp-link" to="/register-company">
+            {t("auth.register.companyLink")}
           </Link>
         </>
       }
@@ -177,7 +188,15 @@ export default function RegisterPage() {
           <Input autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
         </Field>
 
-        <Field id="reg-email" label={t("auth.register.emailLabel")} required error={fieldErr.email}>
+        {/* A recruiter signs up with the address its invite code is bound to: auth-svc forwards this
+            same email to job-svc check and redeem, so the two can never differ (AUTH-01-15). */}
+        <Field
+          id="reg-email"
+          label={isRecruiter ? t("auth.register.inviteEmailLabel") : t("auth.register.emailLabel")}
+          required
+          hint={isRecruiter ? t("auth.register.inviteEmailHint") : undefined}
+          error={fieldErr.email}
+        >
           <Input
             type="email"
             inputMode="email"

@@ -162,6 +162,22 @@ export async function register(payload: {
   const { data } = await api.post("/auth/register", payload);
   return data as { message: string };
 }
+/**
+ * Company self-serve sign-up (SRS AUTH-01-10). Anonymous, and the server answers 202 with one fixed
+ * message for every business outcome (new sign-up, existing email, taken name or tax code, or a
+ * domain that routes to a join request), so the client never learns which case applied. 422 is a
+ * free public email domain; 503 means a job-svc lookup failed and nothing was stored.
+ */
+export async function registerCompany(payload: {
+  companyName: string;
+  taxCode?: string;
+  email: string;
+  password: string;
+  fullName: string;
+}) {
+  const { data } = await api.post("/auth/register-company", payload);
+  return data as { message: string };
+}
 export async function verifyEmail(token: string) {
   const { data } = await api.post("/auth/verify-email", { token });
   return data as { message: string };
