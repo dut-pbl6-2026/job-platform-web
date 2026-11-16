@@ -1,6 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useToasts } from "../contexts/ToastContext";
+import { Icon, type IconName } from "./ui/Icon";
+
+const TOAST_ICON: Record<string, IconName> = {
+  success: "check",
+  error: "alert",
+  warning: "alert",
+  info: "info",
+};
 
 export function ToastViewport() {
   const { t } = useTranslation();
@@ -22,7 +30,7 @@ export function ToastViewport() {
           onBlur={() => resume(toast.id)}
         >
           <span className="toast-mark" aria-hidden="true">
-            {toast.kind === "job" ? "JP" : "!"}
+            {toast.kind === "job" ? "JP" : <Icon name={TOAST_ICON[toast.kind ?? "info"]} size={16} />}
           </span>
           <div className="toast-copy">
             <p className="toast-title">{toast.title}</p>
