@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 import { useParams, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
@@ -17,6 +18,21 @@ const PAGE_SIZE = 20;
 
 function parseStatus(raw: string | null): ApplicationStatus | "" {
   return (APPLICATION_STATUSES as string[]).includes(raw ?? "") ? (raw as ApplicationStatus) : "";
+}
+
+/** Null scores read by scoringStatus; never invent a number for an applicant who has none yet. */
+function scoreText(app: { score?: number | null; scoringStatus?: string | null }): {
+  value: string;
+  muted: boolean;
+} {
+  if (typeof app.score === "number" && Number.isFinite(app.score)) {
+    return { value: String(Math.round(app.score)), muted: false };
+  }
+  const status = (app.scoringStatus ?? "").toLowerCase();
+  if (status === "pending" || status === "processing")
+    return { value: i18n.t("recruiter.applications.scorePending"), muted: true };
+  if (status === "failed") return { value: i18n.t("recruiter.applications.scoreFailed"), muted: true };
+  return { value: i18n.t("recruiter.applications.scoreNone"), muted: true };
 }
 
 /**
@@ -105,6 +121,8 @@ export default function RecruiterApplicationsPage() {
         ))}
       </div>
 
+      <p className="jp-muted jp-score-note">{t("recruiter.applications.scoreNote")}</p>
+
       {cvError && <Alert tone="error">{cvError}</Alert>}
       {update.isError && <Alert tone="error">{errorFor(update.error)}</Alert>}
 
@@ -134,6 +152,7 @@ export default function RecruiterApplicationsPage() {
           <ul className="jp-recruiter-apps" aria-label={t("recruiter.applications.listLabel")}>
             {data.items.map((app) => {
               const next = (flowMap[app.status] ?? []) as ApplicationStatus[];
+              const score = scoreText(app);
               return (
                 <li className="jp-recruiter-app" key={app.id}>
                   <div className="jp-recruiter-app-head">
@@ -142,6 +161,12 @@ export default function RecruiterApplicationsPage() {
                     </span>
                     <span className="jp-recruiter-app-status">{STATUS_LABEL[app.status]}</span>
                   </div>
+                  <p className="jp-match-score">
+                    <span className="jp-match-score-label">{t("recruiter.applications.scoreLabel")}</span>
+                    <span className={score.muted ? "jp-match-score-value is-muted" : "jp-match-score-value"}>
+                      {score.value}
+                    </span>
+                  </p>
                   {app.coverLetter && (
                     <details className="jp-recruiter-app-letter">
                       <summary>{t("recruiter.applications.letter")}</summary>

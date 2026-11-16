@@ -28,7 +28,7 @@ export function AppFooter() {
     <footer className="jp-footer on-navy">
       <div className="jp-footer-inner">
         <div className="jp-footer-brand">
-          <Link to="/jobs" className="jp-footer-wordmark">
+          <Link to="/" className="jp-footer-wordmark">
             jobplatform
           </Link>
           <p>{t("footer.about")}</p>
@@ -37,7 +37,6 @@ export function AppFooter() {
         <nav className="jp-footer-col" aria-label={t("footer.forCandidates")}>
           <h2 className="jp-footer-title">{t("footer.forCandidates")}</h2>
           <Link to="/jobs">{t("footer.latestJobs")}</Link>
-          <Link to={isAuthenticated ? "/profile" : "/register"}>{t("footer.profileAndCv")}</Link>
           {(!isAuthenticated || isUser(user?.role)) && <Link to="/applications">{t("footer.myApplications")}</Link>}
           {isAuthenticated && <Link to="/chat">{t("footer.aiAssistant")}</Link>}
           {!isAuthenticated && <Link to="/login">{t("footer.login")}</Link>}

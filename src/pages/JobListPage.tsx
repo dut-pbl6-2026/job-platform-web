@@ -17,7 +17,6 @@ import {
   RemovableChip,
   Select,
   SkeletonRows,
-  TopBar,
   cx,
 } from "../components/ui";
 import {
@@ -152,7 +151,6 @@ export default function JobListPage() {
 
   return (
     <>
-      <TopBar />
       <div className="jp-searchband">
         <div className="jp-searchband-inner">
           <SearchBar

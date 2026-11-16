@@ -252,7 +252,14 @@ export async function fetchCategories(): Promise<{ id: string; name: string }[]>
 }
 
 /** What the recruiter sign-up needs from a company: an id to send, and a name plus a line to tell similar names apart. */
-export type CompanyOption = { id: string; name: string; industry?: string; address?: string };
+export type CompanyOption = {
+  id: string;
+  name: string;
+  industry?: string;
+  address?: string;
+  logoUrl?: string;
+  verified?: boolean;
+};
 
 function toCompanyOption(raw: unknown): CompanyOption | null {
   if (!raw || typeof raw !== "object") return null;
@@ -260,7 +267,14 @@ function toCompanyOption(raw: unknown): CompanyOption | null {
   const id = pickStr(o, "id");
   const name = pickStr(o, "name");
   if (!id || !name) return null;
-  return { id, name, industry: pickStr(o, "industry"), address: pickStr(o, "address") };
+  return {
+    id,
+    name,
+    industry: pickStr(o, "industry"),
+    address: pickStr(o, "address"),
+    logoUrl: pickStr(o, "logoUrl", "logo_url"),
+    verified: o.verified === true,
+  };
 }
 
 const MOCK_COMPANIES: CompanyOption[] = [
@@ -368,8 +382,11 @@ export function timeAgo(iso: string) {
   return i18n.t("time.daysAgo", { days: Math.floor(diff / 86400) });
 }
 
-/** The job statuses a recruiter can filter by, as job-svc parses them (case-insensitive enum names). */
-export type RecruiterJobStatus = "Active" | "Pending" | "Closed";
+/**
+ * The job statuses a recruiter can filter by. Jobs publish instantly, so there is no Pending filter;
+ * legacy Pending/Rejected values are still rendered read-only if the API returns them.
+ */
+export type RecruiterJobStatus = "Active" | "Closed";
 
 /**
  * job-svc GET /api/jobs/recruiter: the signed-in recruiter's own jobs, newest first. Pages start at 1
@@ -411,7 +428,7 @@ export type JobCreatePayload = {
 
 /**
  * job-svc POST /api/jobs (Recruiter only). Not the admin endpoint: AdminJobForm uses /api/admin/jobs.
- * Returns the new job id. With the admin-approval flag on, the job starts as Pending.
+ * Jobs publish instantly: the response is the new Active job id.
  */
 export async function createJob(payload: JobCreatePayload): Promise<{ id: string }> {
   const { data } = await api.post("/jobs", payload);

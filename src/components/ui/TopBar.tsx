@@ -1,23 +1,22 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { isAdmin, isRecruiter, isUser } from "../../lib/roles";
+import { AccountMenu } from "./AccountMenu";
 import { Icon } from "./Icon";
 import { DevTag, cx } from "./controls";
 
 type Item = { to: string; label: string; match: (path: string) => boolean; dev?: boolean };
 
 /**
- * The navy shell bar shared by every screen. The active item carries the amber band (amber means
- * "where you are"). Below 768px the nav and account actions fold into a disclosure menu.
- * Recruiters get a "Recruit" item for the recruiter area. Create-CV is applicant-only, so it is
- * shown to guests and Users only, as on mobile.
+ * The navy public shell bar. The active item carries the amber band (amber means "where you are").
+ * Below 768px the nav and account actions fold into a disclosure menu. Profile is reached from the
+ * avatar menu, never from this nav. `compact` is the signed-in candidate header: no register CTA.
  */
-export function TopBar() {
-  const { isAuthenticated, user, logout } = useAuth();
+export function TopBar({ compact = false }: { compact?: boolean }) {
+  const { isAuthenticated, user } = useAuth();
   const { t } = useTranslation();
-  const nav = useNavigate();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [menuPath, setMenuPath] = useState(pathname);
@@ -29,13 +28,6 @@ export function TopBar() {
   }
 
   const items: Item[] = [{ to: "/jobs", label: t("nav.jobs"), match: (p) => p === "/jobs" || p.startsWith("/jobs/") }];
-  if (!isAuthenticated || isUser(user?.role)) {
-    items.push({
-      to: isAuthenticated ? "/profile" : "/register",
-      label: t("nav.createCv"),
-      match: (p) => p === "/profile",
-    });
-  }
   if (isAuthenticated && isRecruiter(user?.role)) {
     items.push({
       to: "/recruiter",
@@ -45,11 +37,6 @@ export function TopBar() {
   }
   if (isAuthenticated && isUser(user?.role)) {
     items.push({ to: "/applications", label: t("nav.myApplications"), match: (p) => p.startsWith("/applications") });
-    items.push({
-      to: "/join-request",
-      label: t("nav.joinRequest"),
-      match: (p) => p === "/join-request",
-    });
   }
   if (isAuthenticated) {
     items.push({ to: "/chat", label: t("nav.aiAssistant"), match: (p) => p === "/chat", dev: true });
@@ -58,15 +45,17 @@ export function TopBar() {
     items.push({ to: "/admin", label: t("nav.admin"), match: (p) => p.startsWith("/admin") });
   }
 
-  async function signOut() {
-    await logout();
-    nav("/login");
-  }
-
   return (
-    <header className={cx("jp-shell on-navy", open && "is-open")}>
+    <header
+      className={cx(
+        "jp-shell on-navy",
+        open && "is-open",
+        compact && "jp-shell--compact",
+        isAuthenticated && "jp-shell--authed",
+      )}
+    >
       <div className="jp-shell-bar">
-        <Link to="/jobs" className="jp-mark" aria-label={t("nav.homeLabel")}>
+        <Link to="/" className="jp-mark" aria-label={t("nav.homeLabel")}>
           <b aria-hidden="true">jp</b>
           <span aria-hidden="true">jobplatform</span>
         </Link>
@@ -96,14 +85,7 @@ export function TopBar() {
               </Link>
             </>
           ) : (
-            <>
-              <span className="jp-shell-user" title={user?.email}>
-                {user?.fullName}
-              </span>
-              <button type="button" className="jp-shell-btn jp-shell-btn--line" onClick={signOut}>
-                {t("nav.logout")}
-              </button>
-            </>
+            <AccountMenu onNavy />
           )}
         </div>
 

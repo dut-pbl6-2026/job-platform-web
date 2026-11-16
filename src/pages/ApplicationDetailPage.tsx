@@ -12,7 +12,6 @@ import {
   PageHead,
   Panel,
   SkeletonBlock,
-  TopBar,
 } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { downloadCv, fetchApplicationById } from "../lib/applicationsApi";
@@ -70,7 +69,6 @@ export default function ApplicationDetailPage() {
   if (query.isPending) {
     return (
       <>
-        <TopBar />
         <main className="jp-page">
           <BackLink to="/applications">{t("nav.myApplications")}</BackLink>
           <SkeletonBlock height={360} label={t("applications.loading")} />
@@ -82,7 +80,6 @@ export default function ApplicationDetailPage() {
   if (notFound) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-page--narrow">
           <EmptyState
             title={t("applications.detail.notFound")}
@@ -96,7 +93,6 @@ export default function ApplicationDetailPage() {
   if (failure || !app) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-page--narrow">
           <BackLink to="/applications">{t("nav.myApplications")}</BackLink>
           <Alert
@@ -122,7 +118,6 @@ export default function ApplicationDetailPage() {
 
   return (
     <>
-      <TopBar />
       <main className="jp-page">
         <PageHead
           back={<BackLink to="/applications">{t("nav.myApplications")}</BackLink>}

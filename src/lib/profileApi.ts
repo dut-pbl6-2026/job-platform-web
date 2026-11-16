@@ -146,6 +146,7 @@ export async function updateMyProfile(payload: ProfileUpdate, userId: string): P
       summary: textOrNull(payload.summary),
       phone: textOrNull(payload.phone),
       address: textOrNull(payload.address),
+      avatarUrl: textOrNull(payload.avatarUrl),
       dateOfBirth: dateOrNull(payload.dateOfBirth),
     });
   } catch (e) {

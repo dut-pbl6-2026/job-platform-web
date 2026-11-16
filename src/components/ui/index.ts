@@ -30,5 +30,6 @@ export {
 } from "./feedback";
 export { Board, FactStrip, JobRow, jobFacts, type JobFacts } from "./board";
 export { ApplicationStatusMark } from "./account";
+export { AccountMenu } from "./AccountMenu";
 export { TopBar } from "./TopBar";
 export { AuthLayout, PasswordRules } from "./AuthLayout";

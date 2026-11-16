@@ -121,10 +121,12 @@
     "pageNumber": "Trang {{page}}",
     "showPassword": "Hiện mật khẩu",
     "hidePassword": "Ẩn mật khẩu",
-    "removeFilter": "Bỏ lọc {{label}}"
+    "removeFilter": "Bỏ lọc {{label}}",
+    "openMenu": "Mở menu",
+    "closeMenu": "Đóng menu"
   },
   "nav": {
-    "homeLabel": "jobplatform, về bảng việc làm",
+    "homeLabel": "jobplatform, về trang chủ",
     "mainLabel": "Điều hướng chính",
     "jobs": "Việc làm",
     "createCv": "Tạo CV",
@@ -306,7 +308,9 @@
   },
   "route": {
     "checkingSession": "Đang kiểm tra phiên đăng nhập",
-    "applicantOnly": "Trang này chỉ dành cho ứng viên."
+    "applicantOnly": "Trang này chỉ dành cho ứng viên.",
+    "recruiterOnly": "Khu vực này chỉ dành cho nhà tuyển dụng.",
+    "adminOnly": "Khu vực này chỉ dành cho quản trị viên."
   },
   "auth": {
     "confirmMismatch": "Xác nhận mật khẩu không khớp",
@@ -642,7 +646,10 @@
       "headlinePlaceholder": "Ví dụ: Lập trình viên Frontend",
       "cancel": "Hủy",
       "save": "Lưu hồ sơ",
-      "saveFailed": "Chưa lưu được hồ sơ. Vui lòng thử lại."
+      "saveFailed": "Chưa lưu được hồ sơ. Vui lòng thử lại.",
+      "avatar": "Ảnh đại diện",
+      "avatarHint": "Dán URL ảnh http(s). Để trống để dùng chữ viết tắt của họ tên.",
+      "avatarInvalid": "URL ảnh cần bắt đầu bằng http:// hoặc https://."
     },
     "skills": {
       "title": "Kỹ năng",
@@ -696,6 +703,14 @@
       "addFailed": "Chưa thêm được học vấn. Vui lòng thử lại.",
       "deleteFailed": "Chưa xóa được học vấn. Vui lòng thử lại.",
       "deleteLabel": "Xóa học vấn {{school}}"
+    },
+    "leadAdmin": "Thông tin cá nhân và tài khoản quản trị của bạn.",
+    "cvOptional": "Kỹ năng, kinh nghiệm và học vấn không bắt buộc với nhà tuyển dụng; chỉ điền nếu bạn muốn.",
+    "account": {
+      "title": "Tài khoản",
+      "email": "Email",
+      "role": "Vai trò",
+      "company": "Công ty"
     }
   },
   "resumeScore": {
@@ -776,7 +791,8 @@
       "label": "Điều hướng nhà tuyển dụng",
       "overview": "Tổng quan",
       "jobs": "Tin tuyển dụng",
-      "post": "Đăng tin"
+      "post": "Đăng tin",
+      "company": "Công ty"
     },
     "accessNotice": "Khu vực này chỉ dành cho nhà tuyển dụng.",
     "checkingAccess": "Đang kiểm tra quyền truy cập",
@@ -792,7 +808,7 @@
     },
     "dashboard": {
       "title": "Tổng quan tuyển dụng",
-      "lead": "Đang mở · Chờ duyệt · Đã đóng",
+      "lead": "Đang mở · Đã đóng",
       "countWhat": "số liệu tin tuyển dụng",
       "tiles": {
         "active": "Tin đang mở",
@@ -834,7 +850,7 @@
     },
     "post": {
       "title": "Đăng tin tuyển dụng",
-      "lead": "Điền thông tin vị trí. Tin sẽ đăng dưới công ty của tài khoản bạn.",
+      "lead": "Điền thông tin vị trí. Tin sẽ hiển thị công khai ngay sau khi đăng, dưới công ty của tài khoản bạn.",
       "noCompany": "Tài khoản của bạn chưa gắn với công ty nên chưa đăng tin được. Hãy liên hệ quản trị viên.",
       "sectionJob": "Mô tả công việc & Yêu cầu",
       "sectionCompany": "Công ty & Địa điểm làm việc",
@@ -859,7 +875,7 @@
       "submitFailed": "Không gửi được tin tuyển dụng. Vui lòng thử lại.",
       "publishing": "Đang đăng…",
       "publish": "Xuất bản",
-      "published": "Tin tuyển dụng đã được gửi duyệt thành công!",
+      "published": "Tin đã được đăng và hiển thị công khai.",
       "validation": {
         "titleRequired": "Vui lòng nhập tiêu đề",
         "descriptionRequired": "Vui lòng nhập mô tả",
@@ -889,7 +905,12 @@
       "chooseNext": "Chọn trạng thái mới",
       "update": "Cập nhật",
       "ended": "Đã kết thúc quy trình",
-      "statusToast": "Đã cập nhật trạng thái ứng viên thành: {{status}}"
+      "statusToast": "Đã cập nhật trạng thái ứng viên thành: {{status}}",
+      "scoreLabel": "Điểm phù hợp AI",
+      "scoreNote": "Điểm do AI chấm từ CV so với yêu cầu tin tuyển dụng; chỉ nhà tuyển dụng thấy.",
+      "scorePending": "Đang tính",
+      "scoreNone": "Chưa có điểm",
+      "scoreFailed": "Không tính được"
     }
   },
   "admin": {
@@ -978,7 +999,7 @@
     },
     "jobs": {
       "title": "Quản lý tin",
-      "lead": "Tìm, tạo, sửa và xóa tin tuyển dụng. Tin chờ duyệt được duyệt hoặc từ chối ngay tại đây.",
+      "lead": "Tìm, đọc và sửa tin tuyển dụng; gỡ tin vi phạm kèm lý do và khôi phục khi cần.",
       "create": "Tạo tin",
       "createTitle": "Tạo tin mới",
       "createNote": "Tin do quản trị viên tạo được đăng ngay, không qua bước duyệt.",
@@ -1050,7 +1071,32 @@
       "contentLoadingEdit": "Đang tải nội dung tin…",
       "contentWhat": "nội dung tin",
       "saveChanges": "Lưu thay đổi",
-      "savingChanges": "Đang lưu…"
+      "savingChanges": "Đang lưu…",
+      "takedown": "Gỡ tin",
+      "takedownLabel": "Gỡ tin {{title}}",
+      "takedownGroup": "Gỡ tin {{title}}",
+      "takedownTitle": "Gỡ tin này khỏi bảng công khai?",
+      "takedownText": "Tin sẽ biến mất khỏi tìm kiếm và bảng việc làm công khai. Công ty vẫn thấy tin trong khu vực quản lý, và bạn có thể khôi phục sau.",
+      "takedownReason": "Lý do gỡ tin",
+      "takedownReasonRequired": "Nhập lý do gỡ tin để lưu vào lịch sử kiểm duyệt.",
+      "takedownHint": "Tối đa {{max}} ký tự. Lý do được lưu cùng tin và hiển thị cho quản trị viên.",
+      "takedownPlaceholder": "Ví dụ: nội dung vi phạm quy định đăng tin",
+      "takedownSubmitting": "Đang gỡ…",
+      "takedownConfirm": "Xác nhận gỡ tin",
+      "takenDown": "Đã gỡ tin “{{title}}” khỏi bảng công khai.",
+      "takedownFailed": "Chưa gỡ được tin. Vui lòng thử lại.",
+      "moderation": "Đã gỡ: {{reason}} · {{date}}",
+      "moderationTitle": "Lịch sử kiểm duyệt",
+      "moderationDetail": "Đã gỡ lúc {{date}} với lý do: {{reason}}",
+      "restore": "Khôi phục",
+      "restoreLabel": "Khôi phục tin {{title}}",
+      "restoreConfirmLabel": "Xác nhận khôi phục tin {{title}}",
+      "restoreTitle": "Khôi phục tin này?",
+      "restoreText": "Tin sẽ trở lại bảng việc làm công khai nếu chưa bị xóa vĩnh viễn. Lý do gỡ trước đó vẫn được giữ trong lịch sử.",
+      "restoring": "Đang khôi phục…",
+      "restoreConfirm": "Xác nhận khôi phục",
+      "restored": "Đã khôi phục tin “{{title}}”.",
+      "restoreFailed": "Chưa khôi phục được tin. Vui lòng thử lại."
     },
     "form": {
       "titleLabel": "Tiêu đề tin",
@@ -1128,5 +1174,104 @@
       "fallback": "Bạn có thể hỏi theo kỹ năng (React, kế toán…), địa điểm, hoặc mức lương. Mình sẽ gợi ý tin và mẹo CV.",
       "disclaimer": "Nội dung do AI tạo, hãy kiểm tra lại tin tuyển dụng trước khi ứng tuyển."
     }
+  },
+  "accountMenu": {
+    "trigger": "Tài khoản của {{name}}",
+    "label": "Menu tài khoản",
+    "profile": "Hồ sơ",
+    "applications": "Đơn ứng tuyển",
+    "chat": "Trợ lý AI",
+    "company": "Công ty",
+    "admin": "Quản trị"
+  },
+  "home": {
+    "documentTitle": "Tìm việc làm",
+    "kicker": "Việc làm trên toàn quốc",
+    "title": "Tìm việc phù hợp, tuyển người đúng.",
+    "lead": "Tìm việc theo vị trí, kỹ năng và địa điểm; nhà tuyển dụng đăng tin và quản lý hồ sơ ứng viên trên cùng một nền tảng.",
+    "ctaBrowse": "Xem tất cả việc làm",
+    "ctaPostJob": "Đăng tuyển miễn phí",
+    "ctaRecruiterDashboard": "Vào bảng điều khiển",
+    "ctaAdmin": "Vào quản trị",
+    "ctaMyApplications": "Đơn ứng tuyển của tôi",
+    "categories": "Ngành nghề",
+    "categoriesUnavailable": "Chưa tải được danh mục ngành nghề; các nút vẫn mở bảng việc làm theo tên ngành.",
+    "latest": "Việc làm mới nhất",
+    "latestLabel": "Việc làm mới nhất",
+    "loadingJobs": "Đang tải việc làm mới nhất",
+    "jobsWhat": "việc làm mới nhất",
+    "emptyJobs": "Chưa có việc làm nào đang tuyển",
+    "viewAll": "Xem tất cả",
+    "companies": "Công ty trên nền tảng",
+    "loadingCompanies": "Đang tải danh sách công ty",
+    "companiesUnavailable": "Chưa tải được danh sách công ty.",
+    "emptyCompanies": "Chưa có công ty nào để hiển thị.",
+    "companyNoIndustry": "Chưa cập nhật ngành",
+    "recruiterTitle": "Dành cho nhà tuyển dụng",
+    "recruiterLead": "Đăng tin công khai ngay sau khi gửi, theo dõi hồ sơ ứng viên và giới thiệu công ty của bạn.",
+    "recruiterFactPost": "Đăng tin miễn phí",
+    "recruiterFactApplicants": "Quản lý hồ sơ ứng viên",
+    "recruiterFactCompany": "Hồ sơ công ty công khai",
+    "ctaManageJobs": "Quản lý tin tuyển dụng",
+    "recruiterCandidateNote": "Tài khoản ứng viên không đăng tin được. Nhà tuyển dụng đăng ký riêng bằng email công ty, sau khi đăng xuất khỏi tài khoản này."
+  },
+  "workspace": {
+    "home": "Về trang chủ",
+    "adminRole": "Quản trị",
+    "recruiterRole": "Nhà tuyển dụng",
+    "navLabel": "Điều hướng khu vực làm việc"
+  },
+  "notFound": {
+    "title": "Không tìm thấy trang này.",
+    "text": "Địa chỉ có thể đã thay đổi hoặc trang không còn tồn tại. Bạn có thể tiếp tục từ bảng việc làm.",
+    "browseJobs": "Xem bảng việc làm",
+    "home": "Về trang chủ"
+  },
+  "company": {
+    "documentTitle": "Công ty",
+    "loading": "Đang tải thông tin công ty",
+    "loadWhat": "thông tin công ty",
+    "notFound": "Không tìm thấy công ty.",
+    "backToBoard": "Quay lại bảng việc làm",
+    "verified": "Đã xác minh",
+    "about": "Giới thiệu",
+    "noDescription": "Công ty chưa cập nhật phần giới thiệu.",
+    "facts": "Thông tin công ty",
+    "industry": "Ngành",
+    "size": "Quy mô",
+    "address": "Địa chỉ",
+    "website": "Website",
+    "jobsTitle": "Tin đang tuyển",
+    "jobsLabel": "Tin đang tuyển của công ty",
+    "loadingJobs": "Đang tải tin của công ty",
+    "jobsWhat": "danh sách tin của công ty",
+    "jobsUnavailable": "Chưa tải được danh sách tin riêng của công ty.",
+    "emptyJobs": "Công ty chưa có tin đang tuyển.",
+    "findOnBoard": "Tìm trên bảng việc làm",
+    "recruiterDocumentTitle": "Nhà tuyển dụng: Công ty",
+    "recruiterTitle": "Công ty của bạn",
+    "recruiterLead": "Thông tin công ty hiển thị công khai cùng các tin tuyển dụng.",
+    "mineWhat": "thông tin công ty của bạn",
+    "noCompanyTitle": "Chưa có thông tin công ty",
+    "noCompanyText": "Tài khoản của bạn chưa gắn với công ty nào, nên chưa xem được hồ sơ công ty.",
+    "noFacts": "Chưa cập nhật ngành, quy mô và địa chỉ.",
+    "infoTitle": "Thông tin công ty",
+    "name": "Tên công ty",
+    "taxCode": "Mã số thuế",
+    "description": "Giới thiệu công ty",
+    "logoUrl": "URL logo",
+    "urlHint": "Địa chỉ http(s), ví dụ https://congty.vn/logo.png.",
+    "urlInvalid": "Địa chỉ cần bắt đầu bằng http:// hoặc https://.",
+    "nameRequired": "Nhập tên công ty.",
+    "save": "Lưu thông tin công ty",
+    "saving": "Đang lưu…",
+    "saved": "Đã lưu thông tin công ty.",
+    "saveFailed": "Chưa lưu được thông tin công ty. Nội dung bạn nhập vẫn được giữ.",
+    "memberReason": "Chỉ quản trị viên công ty được sửa thông tin công ty.",
+    "memberReadOnly": "Thông tin công ty chỉ đọc",
+    "teamTitle": "Cộng tác",
+    "teamLead": "Quản lý mã mời và yêu cầu tham gia công ty.",
+    "logoHint": "Địa chỉ http(s), ví dụ https://congty.vn/logo.png.",
+    "websiteHint": "Địa chỉ http(s), ví dụ https://congty.vn."
   }
 }

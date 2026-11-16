@@ -4,9 +4,11 @@
  * paths are accepted: an absolute URL or `//host` would turn the login page into an open redirect.
  */
 
+import { isAdmin, isRecruiter } from "./roles";
+
 export const DEFAULT_AFTER_AUTH = "/jobs";
 
-// Landing back on an auth page after signing in would loop, so these are never valid targets.
+/** Landing back on an auth page after signing in would loop, so these are never valid targets. */
 const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
 
 /** Returns `pathname + search + hash` when `raw` is a safe in-app path, otherwise null. */
@@ -24,12 +26,23 @@ export function safeInternalPath(raw: unknown): string | null {
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
-/** `?next=` first (explicit link), then router state, then the default. */
-export function resolveAfterAuth(search: string, state: unknown): string {
+/** The explicit destination from `?next=` or router state, if there is one. */
+export function explicitAfterAuth(search: string, state: unknown): string | null {
   const fromQuery = safeInternalPath(new URLSearchParams(search).get("next"));
   if (fromQuery) return fromQuery;
-  const from = (state as { from?: unknown } | null)?.from;
-  return safeInternalPath(from) ?? DEFAULT_AFTER_AUTH;
+  return safeInternalPath((state as { from?: unknown } | null)?.from);
+}
+
+/** Each role lands in its own workspace when nothing else was asked for. */
+export function defaultAfterAuth(role?: string | null): string {
+  if (isRecruiter(role)) return "/recruiter";
+  if (isAdmin(role)) return "/admin";
+  return DEFAULT_AFTER_AUTH;
+}
+
+/** `?next=` first (explicit link), then router state, then the role default. */
+export function resolveAfterAuth(search: string, state: unknown, fallback = DEFAULT_AFTER_AUTH): string {
+  return explicitAfterAuth(search, state) ?? fallback;
 }
 
 /** Query string that carries `target` to the next auth page; empty for the default so URLs stay clean. */

@@ -1,0 +1,159 @@
+/* Workspace console: slim top bar + persistent left sidebar for Recruiter and Admin. */
+
+.jp-workspace {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  grid-template-rows: 64px minmax(0, 1fr);
+  background: var(--c-ground);
+}
+
+.jp-workspace-bar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  padding: 0 24px;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-rule);
+  color: var(--c-ink);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.jp-workspace-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap);
+  color: var(--c-navy);
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  line-height: 1;
+}
+.jp-workspace-mark:hover { text-decoration: none; color: var(--c-navy); }
+.jp-workspace-mark b {
+  display: inline-grid;
+  place-items: center;
+  height: 28px;
+  padding: 0 6px;
+  background: var(--c-amber);
+  color: var(--c-navy);
+  border-radius: 2px;
+  font-weight: 800;
+}
+
+.jp-workspace-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap);
+  padding: 0 var(--sp-2);
+  color: var(--c-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+.jp-workspace-home:hover { color: var(--c-navy); text-decoration: none; }
+
+.jp-workspace-account { margin-left: auto; }
+
+.jp-workspace-menu {
+  display: none;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--c-surface);
+  border: 1px solid var(--c-control);
+  border-radius: var(--radius-control);
+  color: var(--c-navy);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.jp-workspace-side {
+  grid-column: 1;
+  grid-row: 2;
+  padding: var(--sp-6) var(--sp-3);
+  background: var(--c-surface);
+  border-right: 1px solid var(--c-rule);
+}
+
+.jp-workspace-role {
+  margin: 0 0 var(--sp-3);
+  padding: 0 var(--sp-3);
+  color: var(--c-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.jp-workspace-nav {
+  display: grid;
+  gap: 2px;
+}
+
+.jp-workspace-link {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border-left: 3px solid transparent;
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  color: var(--c-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+.jp-workspace-link:hover { background: var(--c-hover); color: var(--c-ink); text-decoration: none; }
+/* Amber marker means "where you are"; the surface stays white and the ink navy. */
+.jp-workspace-link.is-active {
+  background: var(--c-amber-soft);
+  border-left-color: var(--c-amber);
+  color: var(--c-navy);
+  font-weight: 700;
+}
+
+.jp-workspace-main {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+}
+
+@media (max-width: 1099px) {
+  .jp-workspace { grid-template-columns: 220px minmax(0, 1fr); }
+  .jp-workspace-bar { gap: var(--sp-4); padding-inline: var(--sp-4); }
+}
+
+@media (max-width: 767px) {
+  .jp-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+  .jp-workspace-bar {
+    grid-column: 1;
+    flex-wrap: wrap;
+    min-height: 60px;
+    padding: var(--sp-2) var(--sp-4);
+    gap: var(--sp-2);
+  }
+  .jp-workspace-home { display: none; }
+  .jp-workspace-account { margin-left: auto; }
+  .jp-workspace-menu { display: inline-flex; }
+  .jp-workspace-side {
+    display: none;
+    grid-column: 1;
+    grid-row: 2;
+    padding: var(--sp-2) var(--sp-2) var(--sp-3);
+    border-right: 0;
+    border-bottom: 1px solid var(--c-rule);
+  }
+  .jp-workspace.is-open .jp-workspace-side { display: block; }
+  .jp-workspace-link { min-height: 48px; }
+  .jp-workspace-main { grid-column: 1; grid-row: 3; }
+}

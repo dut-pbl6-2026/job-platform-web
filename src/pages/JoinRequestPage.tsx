@@ -9,7 +9,6 @@ import {
   Panel,
   SkeletonBlock,
   StatusMark,
-  TopBar,
   type StatusTone,
 } from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
@@ -89,7 +88,6 @@ export default function JoinRequestPage() {
 
   return (
     <>
-      <TopBar />
       <main className="jp-page">
         <PageHead title={t("joinRequest.mine.title")} lead={t("joinRequest.mine.lead")} />
 

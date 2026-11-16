@@ -11,11 +11,10 @@ import { fetchRecruiterJobs, type RecruiterJobStatus } from "../lib/jobsApi";
 
 const FILTERS: {
   value: RecruiterJobStatus | "";
-  labelKey: "recruiter.jobs.all" | "recruiter.jobs.active" | "recruiter.jobs.pending" | "recruiter.jobs.closed";
+  labelKey: "recruiter.jobs.all" | "recruiter.jobs.active" | "recruiter.jobs.closed";
 }[] = [
   { value: "", labelKey: "recruiter.jobs.all" },
   { value: "Active", labelKey: "recruiter.jobs.active" },
-  { value: "Pending", labelKey: "recruiter.jobs.pending" },
   { value: "Closed", labelKey: "recruiter.jobs.closed" },
 ];
 
@@ -92,7 +91,7 @@ export default function RecruiterJobsPage() {
       {data && data.items.length > 0 && (
         <>
           <div className="jp-table-wrap">
-            <table className="jp-table">
+            <table className="jp-table jp-recruiter-table">
               <thead>
                 <tr>
                   <th scope="col">{t("recruiter.jobs.colJob")}</th>
@@ -110,10 +109,10 @@ export default function RecruiterJobsPage() {
                     <td>
                       <Link to={`/jobs/${job.id}`}>{job.title}</Link>
                     </td>
-                    <td>{locationLabel(job.location)}</td>
-                    <td>{jobStatusLabel(job.status)}</td>
-                    <td>{formatDate(job.createdAt)}</td>
-                    <td>
+                    <td data-label={t("recruiter.jobs.colLocation")}>{locationLabel(job.location)}</td>
+                    <td data-label={t("recruiter.jobs.colStatus")}>{jobStatusLabel(job.status)}</td>
+                    <td data-label={t("recruiter.jobs.colPosted")}>{formatDate(job.createdAt)}</td>
+                    <td data-label={t("recruiter.jobs.applicantsSr")}>
                       <Link to={`/recruiter/jobs/${job.id}/applications`}>{t("recruiter.jobs.viewApplicants")}</Link>
                     </td>
                   </tr>

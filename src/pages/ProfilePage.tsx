@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import i18n from "../i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -13,7 +14,6 @@ import {
   Select,
   SkeletonBlock,
   Textarea,
-  TopBar,
 } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -26,6 +26,10 @@ import {
   fetchMyProfile,
   updateMyProfile,
 } from "../lib/profileApi";
+import { fetchMyCompany } from "../lib/companyApi";
+import { isAdmin, isRecruiter } from "../lib/roles";
+import { roleLabel } from "../lib/labels";
+import { safeHttpUrl } from "../lib/safeUrl";
 import type { Education, Profile, Skill, WorkExperience } from "../types/profile";
 import { formatDate } from "../lib/dates";
 import { apiErrorMessage, loadErrorMessage } from "../lib/http";
@@ -34,17 +38,32 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 type Errors = Record<string, string>;
 
+function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+}
+
 export default function ProfilePage() {
   const { t } = useTranslation();
   useDocumentTitle(t("profile.title"));
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const admin = isAdmin(user?.role);
+  const recruiter = isRecruiter(user?.role);
   const query = useQuery({
     queryKey: queryKeys.profile(user?.id ?? ""),
     queryFn: () => fetchMyProfile(user!.id, user!.fullName),
     enabled: !!user,
     // Edits go through this page, so never show a cached copy from before them.
     staleTime: 0,
+  });
+  const company = useQuery({
+    queryKey: ["company", "mine", user?.id],
+    queryFn: () => fetchMyCompany(user?.companyId),
+    enabled: !!user && recruiter,
+    staleTime: 60_000,
   });
 
   const profile = query.data;
@@ -56,40 +75,91 @@ export default function ProfilePage() {
   }
 
   return (
-    <>
-      <TopBar />
-      <main className="jp-page">
-        <PageHead title={t("profile.title")} lead={t("profile.lead")} />
+    <main className="jp-page">
+      <PageHead title={t("profile.title")} lead={admin ? t("profile.leadAdmin") : t("profile.lead")} />
 
-        {query.isPending && <SkeletonBlock height={360} label={t("profile.loading")} />}
+      {query.isPending && <SkeletonBlock height={360} label={t("profile.loading")} />}
 
-        {failure && (
-          <Alert
-            tone="error"
-            action={
-              <Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>
-                {query.isFetching ? t("jobs.retrying") : t("jobs.retry")}
-              </Button>
-            }
-          >
-            {failure}
-          </Alert>
-        )}
+      {failure && (
+        <Alert
+          tone="error"
+          action={
+            <Button variant="secondary" loading={query.isFetching} onClick={() => void query.refetch()}>
+              {query.isFetching ? t("jobs.retrying") : t("jobs.retry")}
+            </Button>
+          }
+        >
+          {failure}
+        </Alert>
+      )}
 
-        {profile && user && (
-          <div className="jp-profile-grid">
-            <div className="jp-profile-main">
-              <InfoPanel profile={profile} userId={user.id} fallbackName={user.fullName} onSaved={refresh} />
-              <ExperiencePanel userId={user.id} items={profile.experiences} onChange={refresh} />
-              <EducationPanel userId={user.id} items={profile.education} onChange={refresh} />
-            </div>
-            <div className="jp-profile-side">
-              <SkillPanel userId={user.id} skills={profile.skills} onChange={refresh} />
-            </div>
+      {profile && user && (
+        <div className="jp-profile-grid">
+          <div className="jp-profile-main">
+            <InfoPanel profile={profile} userId={user.id} fallbackName={user.fullName} onSaved={refresh} />
+            {!admin && (
+              <>
+                {recruiter && <p className="jp-profile-note jp-muted">{t("profile.cvOptional")}</p>}
+                <ExperiencePanel userId={user.id} items={profile.experiences} onChange={refresh} />
+                <EducationPanel userId={user.id} items={profile.education} onChange={refresh} />
+              </>
+            )}
+          </div>
+          <div className="jp-profile-side">
+            <AccountPanel
+              email={user.email}
+              role={user.role}
+              companyName={company.data?.company.name}
+              showCompany={recruiter}
+            />
+            {!admin && <SkillPanel userId={user.id} skills={profile.skills} onChange={refresh} />}
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}
+
+/** Email, role and (for recruiters) the company, all read-only. */
+function AccountPanel({
+  email,
+  role,
+  companyName,
+  showCompany,
+}: {
+  email: string;
+  role: string;
+  companyName?: string;
+  showCompany: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Panel title={t("profile.account.title")}>
+      <dl className="jp-kv">
+        <div>
+          <dt>{t("profile.account.email")}</dt>
+          <dd>{email}</dd>
+        </div>
+        <div>
+          <dt>{t("profile.account.role")}</dt>
+          <dd>{roleLabel(role)}</dd>
+        </div>
+        {showCompany && (
+          <div>
+            <dt>{t("profile.account.company")}</dt>
+            <dd>
+              {companyName ? (
+                <Link className="jp-link" to="/recruiter/company">
+                  {companyName}
+                </Link>
+              ) : (
+                <span className="jp-muted">{t("common.notProvided")}</span>
+              )}
+            </dd>
           </div>
         )}
-      </main>
-    </>
+      </dl>
+    </Panel>
   );
 }
 
@@ -120,6 +190,7 @@ function InfoPanel({
       headline: p.headline || "",
       phone: p.phone || "",
       address: p.address || "",
+      avatarUrl: p.avatarUrl || "",
       dateOfBirth: (p.dateOfBirth || "").slice(0, 10),
       summary: p.summary || "",
     };
@@ -143,11 +214,15 @@ function InfoPanel({
       setErrors({ fullName: t("profile.info.nameTooShort") });
       return;
     }
+    if (form.avatarUrl.trim() && !safeHttpUrl(form.avatarUrl)) {
+      setErrors({ avatarUrl: t("profile.info.avatarInvalid") });
+      return;
+    }
     setErrors({});
     setSaving(true);
     setServerErr(null);
     try {
-      await updateMyProfile({ ...form, fullName: name }, userId);
+      await updateMyProfile({ ...form, fullName: name, avatarUrl: form.avatarUrl.trim() }, userId);
       await onSaved();
       setEditing(false);
       setSaved(true);
@@ -158,8 +233,10 @@ function InfoPanel({
     }
   }
 
+  const avatar = safeHttpUrl(profile.avatarUrl);
+  const editAvatar = safeHttpUrl(form.avatarUrl);
+
   const rows: [string, ReactNode][] = [
-    [t("profile.info.fullName"), profile.fullName || fallbackName],
     [t("profile.info.headline"), profile.headline],
     [t("profile.info.phone"), profile.phone],
     [t("profile.info.address"), profile.address],
@@ -185,6 +262,19 @@ function InfoPanel({
 
       {!editing ? (
         <>
+          <div className="jp-profile-identity">
+            <span className="jp-profile-avatar" aria-hidden="true">
+              {avatar ? (
+                <img src={avatar} alt="" referrerPolicy="no-referrer" />
+              ) : (
+                initials(profile.fullName || fallbackName)
+              )}
+            </span>
+            <div>
+              <strong>{profile.fullName || fallbackName}</strong>
+              {profile.headline && <span className="jp-muted">{profile.headline}</span>}
+            </div>
+          </div>
           <dl className="jp-kv">
             {rows.map(([term, value]) => (
               <div key={term}>
@@ -209,6 +299,31 @@ function InfoPanel({
               {serverErr}
             </Alert>
           )}
+          <div className="jp-profile-avatar-edit jp-field--wide">
+            <span className="jp-profile-avatar" aria-hidden="true">
+              {editAvatar ? (
+                <img src={editAvatar} alt="" referrerPolicy="no-referrer" />
+              ) : (
+                initials(form.fullName || fallbackName)
+              )}
+            </span>
+            <Field
+              id="profile-avatar"
+              label={t("profile.info.avatar")}
+              optional
+              error={errors.avatarUrl}
+              hint={t("profile.info.avatarHint")}
+              className="jp-profile-avatar-field"
+            >
+              <Input
+                value={form.avatarUrl}
+                inputMode="url"
+                placeholder="https://"
+                maxLength={2048}
+                onChange={set("avatarUrl")}
+              />
+            </Field>
+          </div>
           <Field id="profile-name" label={t("profile.info.fullName")} required error={errors.fullName}>
             <Input value={form.fullName} maxLength={128} autoComplete="name" onChange={set("fullName")} />
           </Field>

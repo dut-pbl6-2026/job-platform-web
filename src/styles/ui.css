@@ -866,3 +866,127 @@
 .jp-fatal { display: grid; gap: var(--sp-3); }
 .jp-fatal p { margin: 0; }
 .jp-fatal-actions { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-2); }
+
+/* Account menu ---------------------------------------------------------------------------------- */
+
+.jp-account {
+  position: relative;
+  display: inline-flex;
+}
+
+.jp-avatar-btn {
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1px solid var(--c-control);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-navy);
+  font: inherit;
+  cursor: pointer;
+}
+.jp-avatar-btn:hover { border-color: var(--c-navy); }
+.jp-account.on-navy .jp-avatar-btn {
+  border-color: var(--c-navy-line);
+  background: var(--c-navy-strong);
+  color: #fff;
+}
+.jp-account.on-navy .jp-avatar-btn:hover { border-color: var(--c-amber); }
+
+.jp-avatar-img,
+.jp-avatar-initials {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  flex: none;
+}
+.jp-avatar-img { object-fit: cover; }
+.jp-avatar-initials {
+  display: inline-grid;
+  place-items: center;
+  background: var(--c-amber);
+  color: var(--c-navy);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.jp-avatar-chevron { opacity: 0.65; }
+
+.jp-account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 60;
+  width: 248px;
+  padding: var(--sp-2);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+  box-shadow: 0 12px 32px rgb(20 32 46 / 16%);
+}
+
+.jp-account-who {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  border-bottom: 1px solid var(--c-rule);
+  margin-bottom: var(--sp-1);
+}
+.jp-account-who strong,
+.jp-account-who span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jp-account-who span { color: var(--c-muted); font-size: 13px; }
+
+.jp-account-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--c-ink);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.jp-account-item:hover {
+  background: var(--c-hover);
+  color: var(--c-navy);
+  text-decoration: none;
+}
+.jp-account-signout {
+  margin-top: var(--sp-1);
+  border-top: 1px solid var(--c-rule);
+  border-radius: 0 0 var(--radius-control) var(--radius-control);
+  color: var(--c-danger);
+}
+
+@media (max-width: 767px) {
+  .jp-account-menu { right: 0; width: min(280px, calc(100vw - 32px)); }
+}
+
+
+@media (max-width: 767px) {
+  /* Signed in on a phone: the avatar stays in the bar, the nav is one more tap behind Menu. */
+  .jp-shell--authed .jp-shell-actions,
+  .jp-shell--authed.is-open .jp-shell-actions {
+    display: flex;
+    order: 2;
+    width: auto;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border-top: 0;
+  }
+  .jp-shell--authed .jp-shell-menu { order: 3; margin-left: var(--sp-2); }
+}

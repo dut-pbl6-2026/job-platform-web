@@ -16,7 +16,6 @@ import {
   Panel,
   SkeletonBlock,
   Textarea,
-  TopBar,
   cx,
 } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
@@ -89,7 +88,6 @@ export default function ApplyPage() {
   if (!isUser(user?.role)) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-page--narrow">
           <BackLink to={jobHref}>{t("apply.backToJobShort")}</BackLink>
           <Alert tone="error">{t("apply.notCandidate")}</Alert>
@@ -101,7 +99,6 @@ export default function ApplyPage() {
   if (jobQuery.isPending) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-apply">
           <BackLink to={jobHref}>{t("apply.backToJob")}</BackLink>
           <SkeletonBlock height={420} label={t("apply.loading")} />
@@ -113,7 +110,6 @@ export default function ApplyPage() {
   if (notFound) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-page--narrow">
           <EmptyState
             title={t("jobs.detail.notFound")}
@@ -127,7 +123,6 @@ export default function ApplyPage() {
   if (loadErr || !job) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-page--narrow">
           <BackLink to={jobHref}>{t("apply.backToJob")}</BackLink>
           <Alert
@@ -192,7 +187,6 @@ export default function ApplyPage() {
   if (sent) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-page--narrow">
           <Panel className="jp-apply-done">
             <Icon name="checkCircle" size={32} className="jp-apply-done-icon" />
@@ -228,7 +222,6 @@ export default function ApplyPage() {
 
   return (
     <>
-      <TopBar />
       <main className="jp-page jp-apply">
         <PageHead
           back={<BackLink to={jobHref}>{t("apply.backToJob")}</BackLink>}

@@ -2,7 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 /**
  * Token refresh on 401 (src/lib/api.ts). The access token "old-access" is rejected by /auth/me, so
- * the interceptor refreshes. Only a rejected refresh (401/403) may end the session.
+ * the interceptor refreshes. Only a rejected refresh (401/403) may end the session. The page is
+ * /verify-email without a token: it makes no data request, so /auth/me is the only 401 in flight.
  */
 
 const ME = {
@@ -46,7 +47,7 @@ test.describe("refresh failures", () => {
       }
     });
 
-    await page.goto("/");
+    await page.goto("/verify-email");
 
     await expect.poll(() => authHeaders.includes("Bearer new-access")).toBe(true);
     expect(refreshCalls).toBe(2);
@@ -68,7 +69,7 @@ test.describe("refresh failures", () => {
       route.fulfill({ status: 429, headers: { "Retry-After": "0" }, json: { message: "rate limited" } });
     });
 
-    await page.goto("/");
+    await page.goto("/verify-email");
 
     await expect.poll(() => refreshCalls).toBe(3);
     const stored = await page.evaluate(() => ({
@@ -87,7 +88,7 @@ test.describe("refresh failures", () => {
       route.fulfill({ status: 401, json: { message: "invalid refresh token" } });
     });
 
-    await page.goto("/");
+    await page.goto("/verify-email");
 
     await expect.poll(() => refreshCalls).toBe(1);
     await expect
