@@ -19,7 +19,6 @@ import "./styles/workspace.css";
 import "./styles/dashboard.css";
 import "./styles/company.css";
 import "./styles/recommended.css";
-import "./styles/chat.css";
 import "./styles/toast.css";
 import "./styles/footer.css";
 

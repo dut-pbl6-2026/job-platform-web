@@ -38,7 +38,6 @@ export function AppFooter() {
           <h2 className="jp-footer-title">{t("footer.forCandidates")}</h2>
           <Link to="/jobs">{t("footer.latestJobs")}</Link>
           {(!isAuthenticated || isUser(user?.role)) && <Link to="/applications">{t("footer.myApplications")}</Link>}
-          {isAuthenticated && <Link to="/chat">{t("footer.aiAssistant")}</Link>}
           {!isAuthenticated && <Link to="/login">{t("footer.login")}</Link>}
           {!isAuthenticated && <Link to="/register">{t("footer.register")}</Link>}
         </nav>

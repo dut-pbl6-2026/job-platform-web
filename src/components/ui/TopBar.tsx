@@ -38,9 +38,6 @@ export function TopBar({ compact = false }: { compact?: boolean }) {
   if (isAuthenticated && isUser(user?.role)) {
     items.push({ to: "/applications", label: t("nav.myApplications"), match: (p) => p.startsWith("/applications") });
   }
-  if (isAuthenticated) {
-    items.push({ to: "/chat", label: t("nav.aiAssistant"), match: (p) => p === "/chat", dev: true });
-  }
   if (isAuthenticated && isAdmin(user?.role)) {
     items.push({ to: "/admin", label: t("nav.admin"), match: (p) => p.startsWith("/admin") });
   }
