@@ -877,11 +877,10 @@
 .jp-avatar-btn {
   width: var(--tap);
   height: var(--tap);
-  padding: 0;
+  padding: 5px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
   border: 1px solid var(--c-control);
   border-radius: 999px;
   background: var(--c-surface);
@@ -899,8 +898,8 @@
 
 .jp-avatar-img,
 .jp-avatar-initials {
-  width: 32px;
-  height: 32px;
+  width: 100%;
+  height: 100%;
   border-radius: 999px;
   flex: none;
 }
@@ -914,7 +913,6 @@
   font-weight: 800;
   letter-spacing: 0.02em;
 }
-.jp-avatar-chevron { opacity: 0.65; }
 
 .jp-account-menu {
   position: absolute;
