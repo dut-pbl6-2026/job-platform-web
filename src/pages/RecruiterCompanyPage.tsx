@@ -100,15 +100,19 @@ export default function RecruiterCompanyPage() {
           )}
 
           <Panel title={t("company.teamTitle")}>
-            <p className="jp-muted">{t("company.teamLead")}</p>
-            <div className="jp-company-links">
-              <Link className="jp-link" to="/recruiter/invite-codes">
-                {t("invite.navLabel")}
-              </Link>
-              <Link className="jp-link" to="/recruiter/join-requests">
-                {t("joinRequest.admin.navLabel")}
-              </Link>
-            </div>
+            <p className="jp-muted">
+              {data.isCompanyAdmin ? t("company.teamLead") : t("company.teamMembersLead")}
+            </p>
+            {data.isCompanyAdmin && (
+              <div className="jp-company-links">
+                <Link className="jp-link" to="/recruiter/invite-codes">
+                  {t("invite.navLabel")}
+                </Link>
+                <Link className="jp-link" to="/recruiter/join-requests">
+                  {t("joinRequest.admin.navLabel")}
+                </Link>
+              </div>
+            )}
           </Panel>
         </div>
       )}
