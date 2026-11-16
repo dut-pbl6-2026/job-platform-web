@@ -1,8 +1,7 @@
 FROM node:26-alpine AS build
 WORKDIR /app
-ARG VITE_API_URL=http://localhost:5000
+# The app reads VITE_API_BASE_URL only (src/lib/config.ts); Vite inlines it at build time.
 ARG VITE_API_BASE_URL=/api
-ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 COPY package.json package-lock.json ./
 RUN npm ci
