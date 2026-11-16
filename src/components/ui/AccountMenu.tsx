@@ -75,7 +75,6 @@ export function AccountMenu({ onNavy = false }: { onNavy?: boolean }) {
   const avatar = imageFailed ? null : safeHttpUrl(profile.data?.avatarUrl);
   const items: Item[] = [{ to: "/profile", label: t("accountMenu.profile") }];
   if (isUser(user.role)) items.push({ to: "/applications", label: t("accountMenu.applications") });
-  items.push({ to: "/chat", label: t("accountMenu.chat") });
   if (isRecruiter(user.role)) items.push({ to: "/recruiter/company", label: t("accountMenu.company") });
   if (isAdmin(user.role)) items.push({ to: "/admin", label: t("accountMenu.admin") });
 

@@ -238,6 +238,16 @@ test("candidate score page is gone: /resume-score is the public 404", async ({ p
   await expect(page.getByText("Điểm phù hợp AI")).toHaveCount(0);
 });
 
+test("AI assistant is gone: no dock, no links, /chat is the public 404", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await page.goto("/jobs");
+  await expect(page.getByRole("button", { name: "Mở trợ lý việc làm" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Trợ lý AI" })).toHaveCount(0);
+  await page.goto("/chat");
+  await expect(page.getByRole("heading", { name: "Không tìm thấy trang này." })).toBeVisible();
+});
+
 for (const [role, landing] of [
   ["Recruiter", "/recruiter"],
   ["Admin", "/admin"],

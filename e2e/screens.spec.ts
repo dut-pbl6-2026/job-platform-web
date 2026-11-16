@@ -640,8 +640,8 @@ test("admin dashboard: number groups, no approval shortcut, service down", async
   await page.goto("/admin");
   await expect(page.getByRole("heading", { level: 1, name: "Bảng quản trị" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Duyệt .* tin chờ duyệt/ })).toHaveCount(0);
-  await expect(page.locator(".jp-stat", { hasText: "Nhà tuyển dụng" })).toContainText("27");
-  await expect(page.locator(".jp-stat", { hasText: "Nhận việc" })).toContainText("12");
+  await expect(page.locator(".jp-dash-tile", { hasText: "Người dùng" })).toContainText("27");
+  await expect(page.locator(".jp-metrics", { hasText: "Đã nhận" })).toContainText("12");
   await expect(page.getByText("Không phản hồi")).toBeVisible();
   await expect(page.getByText("Hoạt động", { exact: true }).first()).toBeVisible();
   // The workspace sidebar marks where you are (behind Menu on a phone).
@@ -658,8 +658,8 @@ test("admin dashboard: a section that did not answer says so instead of showing 
   await signIn(page, "Admin");
   await adminOverview(page, { ...STATS, applications: { status: "unavailable" } });
   await page.goto("/admin");
-  await expect(page.getByRole("status").filter({ hasText: "Chưa lấy được số liệu đơn ứng tuyển" })).toBeVisible();
-  await expect(page.locator(".jp-stat", { hasText: "Nhận việc" })).toContainText("Chưa có số liệu");
+  await expect(page.getByRole("status").filter({ hasText: "Chưa lấy được số liệu" })).toContainText("đơn ứng tuyển");
+  await expect(page.locator(".jp-metrics", { hasText: "Đã nhận" })).toContainText("Chưa có số liệu");
   await shoot(page, testInfo, "admin-dashboard-partial");
 });
 
@@ -675,7 +675,7 @@ test("admin dashboard: load error is Vietnamese and retry works", async ({ page 
   await shoot(page, testInfo, "admin-dashboard-error");
   fail = false;
   await page.getByRole("button", { name: "Thử lại" }).first().click();
-  await expect(page.locator(".jp-stat", { hasText: "Nhà tuyển dụng" })).toContainText("27");
+  await expect(page.locator(".jp-dash-tile", { hasText: "Người dùng" })).toContainText("27");
 });
 
 test("admin: a candidate is sent to the job board with a notice", async ({ page }) => {
@@ -1027,36 +1027,4 @@ test("admin users: load error is Vietnamese and retry works", async ({ page }) =
   fail = false;
   await page.getByRole("button", { name: "Thử lại" }).click();
   await expect(page.getByRole("heading", { name: "Chưa có người dùng" })).toBeVisible();
-});
-
-/* Deferred surfaces (S9): chat and CV scoring take the tokens, behaviour is unchanged ------------------- */
-
-test("chat page: labelled as in development, starter question gets an answer", async ({ page }, testInfo) => {
-  await offlineBackend(page);
-  await signIn(page, "User");
-  await page.goto("/chat");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Trợ lý việc làm");
-  await expect(page.locator("main .jp-devtag")).toBeVisible();
-  // No requirement code or service name leaks into the page.
-  await expect(page.locator("main")).not.toContainText(/AI-01|AI-svc/);
-  await expectSoundLayout(page);
-  await shoot(page, testInfo, "chat-empty");
-  await page.getByRole("button", { name: "Mẹo phỏng vấn backend" }).click();
-  await expect(page.locator(".chat-bubble--user")).toContainText("Mẹo phỏng vấn backend");
-  await expect(page.locator(".chat-bubble--assistant").first()).toBeVisible();
-  await shoot(page, testInfo, "chat-answer");
-});
-
-test("chat dock: opens from the button, can jump to the page and shrink", async ({ page }, testInfo) => {
-  await offlineBackend(page);
-  await signIn(page, "User");
-  await page.goto("/jobs");
-  await page.getByRole("button", { name: "Mở trợ lý việc làm" }).click();
-  await expect(page.getByRole("dialog", { name: "Trợ lý việc làm" })).toBeVisible();
-  await shoot(page, testInfo, "chat-dock");
-  await page.getByRole("button", { name: "Thu nhỏ" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Mở trợ lý việc làm" }).click();
-  await page.getByRole("link", { name: "Mở trang chat" }).click();
-  await expect(page).toHaveURL(/\/chat$/);
 });
