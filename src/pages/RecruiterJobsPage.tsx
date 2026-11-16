@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
 import { Alert, Button, ButtonLink, EmptyState, FilterChip, Pagination, SkeletonRows } from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { formatDate } from "../lib/dates";
-import { loadErrorMessage } from "../lib/http";
+import { apiErrorMessage, loadErrorMessage } from "../lib/http";
 import { jobStatusLabel, locationLabel } from "../lib/labels";
-import { fetchRecruiterJobs, type RecruiterJobStatus } from "../lib/jobsApi";
+import { deleteJob, fetchRecruiterJobs, type RecruiterJobStatus } from "../lib/jobsApi";
+import { showToast } from "../lib/toastBus";
+import type { Job } from "../types/job";
 
 const FILTERS: {
   value: RecruiterJobStatus | "";
@@ -37,6 +40,16 @@ export default function RecruiterJobsPage() {
     queryFn: () => fetchRecruiterJobs({ page, size: PAGE_SIZE, status: status || undefined }),
     placeholderData: keepPreviousData,
     staleTime: 0,
+  });
+  const client = useQueryClient();
+  const [removing, setRemoving] = useState<Job | null>(null);
+  const remove = useMutation({
+    mutationFn: (id: string) => deleteJob(id),
+    onSuccess: () => {
+      showToast({ title: t("recruiter.jobs.removed"), kind: "success" });
+      setRemoving(null);
+      void client.invalidateQueries({ queryKey: ["recruiter", "jobs"] });
+    },
   });
 
   function patch(next: { status?: RecruiterJobStatus | ""; page?: number }) {
@@ -88,6 +101,28 @@ export default function RecruiterJobsPage() {
         <EmptyState title={status ? t("recruiter.jobs.emptyFiltered") : t("recruiter.jobs.empty")} />
       )}
 
+      {removing && (
+        <div className="jp-recruiter-confirm" role="alertdialog" aria-labelledby="remove-job-title">
+          <div>
+            <p className="jp-recruiter-confirm-title" id="remove-job-title">
+              {t("recruiter.jobs.removeTitle", { title: removing.title })}
+            </p>
+            <p className="jp-recruiter-confirm-text">{t("recruiter.jobs.removeText")}</p>
+            {remove.isError && (
+              <p className="jp-error">{apiErrorMessage(remove.error, t("recruiter.jobs.removeFailed"))}</p>
+            )}
+          </div>
+          <div className="jp-recruiter-confirm-actions">
+            <Button variant="secondary" onClick={() => setRemoving(null)} disabled={remove.isPending}>
+              {t("recruiter.jobs.removeCancel")}
+            </Button>
+            <Button variant="danger" loading={remove.isPending} onClick={() => remove.mutate(removing.id)}>
+              {remove.isPending ? t("recruiter.jobs.removing") : t("recruiter.jobs.removeConfirm")}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {data && data.items.length > 0 && (
         <>
           <div className="jp-table-wrap">
@@ -100,6 +135,9 @@ export default function RecruiterJobsPage() {
                   <th scope="col">{t("recruiter.jobs.colPosted")}</th>
                   <th scope="col">
                     <span className="jp-sr-only">{t("recruiter.jobs.applicantsSr")}</span>
+                  </th>
+                  <th scope="col">
+                    <span className="jp-sr-only">{t("recruiter.jobs.colActions")}</span>
                   </th>
                 </tr>
               </thead>
@@ -114,6 +152,21 @@ export default function RecruiterJobsPage() {
                     <td data-label={t("recruiter.jobs.colPosted")}>{formatDate(job.createdAt)}</td>
                     <td data-label={t("recruiter.jobs.applicantsSr")}>
                       <Link to={`/recruiter/jobs/${job.id}/applications`}>{t("recruiter.jobs.viewApplicants")}</Link>
+                    </td>
+                    <td className="jp-recruiter-row-actions" data-label={t("recruiter.jobs.colActions")}>
+                      <Link className="jp-link" to={`/recruiter/jobs/${job.id}/edit`}>
+                        {t("recruiter.jobs.edit")}
+                      </Link>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => {
+                          remove.reset();
+                          setRemoving(job);
+                        }}
+                      >
+                        {t("recruiter.jobs.remove")}
+                      </Button>
                     </td>
                   </tr>
                 ))}

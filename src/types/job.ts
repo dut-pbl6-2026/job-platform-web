@@ -40,6 +40,33 @@ export function normalizeExperienceLevel(raw: string): DisplayExperienceLevel {
   return EXPERIENCE_LEVEL_DISPLAY[raw] ?? (raw as DisplayExperienceLevel);
 }
 
+// Reverse maps: display value (normalizeJob output) -> the enum name job-svc accepts on write.
+export const EMPLOYMENT_TYPE_BACKEND: Record<string, BackendEmploymentType> = {
+  FullTime: "FullTime",
+  "Full-time": "FullTime",
+  PartTime: "PartTime",
+  "Part-time": "PartTime",
+  Contract: "Contract",
+  Internship: "Internship",
+};
+
+export const EXPERIENCE_LEVEL_BACKEND: Record<string, BackendExperienceLevel> = {
+  Entry: "Entry",
+  Junior: "Entry",
+  Mid: "Mid",
+  Middle: "Mid",
+  Senior: "Senior",
+  Lead: "Lead",
+};
+
+export function toBackendEmploymentType(raw: string | undefined): BackendEmploymentType {
+  return (raw && EMPLOYMENT_TYPE_BACKEND[raw]) || "FullTime";
+}
+
+export function toBackendExperienceLevel(raw: string | undefined): BackendExperienceLevel {
+  return (raw && EXPERIENCE_LEVEL_BACKEND[raw]) || "Entry";
+}
+
 export interface Company {
   id: string;
   name: string;

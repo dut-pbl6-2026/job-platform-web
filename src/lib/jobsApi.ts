@@ -435,6 +435,16 @@ export async function createJob(payload: JobCreatePayload): Promise<{ id: string
   return { id: String(data?.id ?? "") };
 }
 
+/** job-svc PUT /api/jobs/{id} (poster only, Recruiter). Body matches JobCreateDto. */
+export async function updateJob(id: string, payload: JobCreatePayload): Promise<void> {
+  await api.put(`/jobs/${encodeURIComponent(id)}`, payload);
+}
+
+/** job-svc DELETE /api/jobs/{id} (poster only, Recruiter): removes it from the public board. */
+export async function deleteJob(id: string): Promise<void> {
+  await api.delete(`/jobs/${encodeURIComponent(id)}`);
+}
+
 /** One recommendation: the job, the backend's Vietnamese rationale, and the strategy (Collaborative | Content | Popular). */
 export type RecommendedJob = { job: Job; reason: string; strategy: string };
 

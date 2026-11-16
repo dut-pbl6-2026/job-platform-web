@@ -1,17 +1,18 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
-import { Alert, Button, Field, Input, Select, Textarea } from "../components/ui";
+import { Alert, Button, ButtonLink, EmptyState, Field, Input, Select, SkeletonBlock, Textarea } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import i18n from "../i18n";
-import { apiErrorMessage } from "../lib/http";
-import { createJob, fetchCategories, type JobCreatePayload } from "../lib/jobsApi";
+import { apiErrorMessage, loadErrorMessage } from "../lib/http";
+import { createJob, fetchCategories, fetchJobById, updateJob, type JobCreatePayload } from "../lib/jobsApi";
 import { employmentTypeLabel, experienceLevelLabel } from "../lib/labels";
 import { queryKeys } from "../lib/queryClient";
 import { showToast } from "../lib/toastBus";
+import { toBackendEmploymentType, toBackendExperienceLevel, type Job } from "../types/job";
 
 // Values are the backend enum names (job-svc); labels come from labels.ts.
 const EMPLOYMENT_TYPES = ["FullTime", "PartTime", "Contract", "Internship"] as const;
@@ -44,6 +45,21 @@ const EMPTY: Form = {
   benefits: "",
 };
 
+function formFromJob(job: Job): Form {
+  return {
+    title: job.title,
+    description: job.description,
+    location: job.location,
+    categoryId: job.categoryId ?? "",
+    employmentType: toBackendEmploymentType(job.employmentType),
+    experienceLevel: toBackendExperienceLevel(job.experienceLevel),
+    salaryMin: job.salaryMin > 0 ? String(job.salaryMin) : "",
+    salaryMax: job.salaryMax > 0 ? String(job.salaryMax) : "",
+    requirements: job.requirements ?? "",
+    benefits: job.benefits ?? "",
+  };
+}
+
 type Errors = Partial<Record<keyof Form, string>>;
 
 function validate(f: Form): Errors {
@@ -65,19 +81,44 @@ function validate(f: Form): Errors {
 
 export default function RecruiterPostJobPage() {
   const { t } = useTranslation();
-  useDocumentTitle(t("recruiter.documentTitles.post"));
+  const { jobId } = useParams();
+  const editing = Boolean(jobId);
+  useDocumentTitle(t(editing ? "recruiter.documentTitles.edit" : "recruiter.documentTitles.post"));
   const navigate = useNavigate();
   const { user } = useAuth();
-  const companyId = user?.companyId ?? "";
   const [form, setForm] = useState<Form>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
+  const [prefilled, setPrefilled] = useState(false);
 
   const categories = useQuery({ queryKey: queryKeys.categories, queryFn: fetchCategories, staleTime: 5 * 60_000 });
+  const job = useQuery({
+    queryKey: ["job", "edit", jobId ?? ""],
+    queryFn: () => fetchJobById(jobId!),
+    enabled: editing,
+  });
+
+  // Fill the form once the job loads; a later refetch must not overwrite the user's edits.
+  useEffect(() => {
+    if (!editing || prefilled || !job.data) return;
+    setForm(formFromJob(job.data));
+    setPrefilled(true);
+  }, [editing, prefilled, job.data]);
+
+  const companyId = (editing ? job.data?.companyId : undefined) ?? user?.companyId ?? "";
 
   const submit = useMutation({
-    mutationFn: (payload: JobCreatePayload) => createJob(payload),
+    mutationFn: async (payload: JobCreatePayload) => {
+      if (editing) {
+        await updateJob(jobId!, payload);
+        return;
+      }
+      await createJob(payload);
+    },
     onSuccess: () => {
-      showToast({ title: t("recruiter.post.published"), kind: "success" });
+      showToast({
+        title: t(editing ? "recruiter.post.saved" : "recruiter.post.published"),
+        kind: "success",
+      });
       navigate("/recruiter/jobs");
     },
   });
@@ -109,8 +150,40 @@ export default function RecruiterPostJobPage() {
     });
   }
 
+  const title = t(editing ? "recruiter.post.editTitle" : "recruiter.post.title");
+  const lead = t(editing ? "recruiter.post.editLead" : "recruiter.post.lead");
+
+  if (editing && job.isPending) {
+    return (
+      <RecruiterShell title={title} lead={lead}>
+        <SkeletonBlock height={320} />
+      </RecruiterShell>
+    );
+  }
+
+  if (editing && job.isError) {
+    return (
+      <RecruiterShell title={title} lead={lead}>
+        <Alert tone="error">{loadErrorMessage(job.error, t("recruiter.post.loadWhat"))}</Alert>
+      </RecruiterShell>
+    );
+  }
+
+  if (editing && job.data === null) {
+    return (
+      <RecruiterShell title={title} lead={lead}>
+        <EmptyState
+          title={t("recruiter.post.notFoundTitle")}
+          action={<ButtonLink to="/recruiter/jobs">{t("recruiter.jobs.title")}</ButtonLink>}
+        >
+          {t("recruiter.post.notFoundText")}
+        </EmptyState>
+      </RecruiterShell>
+    );
+  }
+
   return (
-    <RecruiterShell title={t("recruiter.post.title")} lead={t("recruiter.post.lead")}>
+    <RecruiterShell title={title} lead={lead}>
       {!companyId && <Alert tone="warning">{t("recruiter.post.noCompany")}</Alert>}
 
       <form className="jp-recruiter-form" onSubmit={onSubmit} noValidate>
@@ -247,7 +320,13 @@ export default function RecruiterPostJobPage() {
 
         <div className="jp-recruiter-actions">
           <Button type="submit" loading={submit.isPending} disabled={!companyId}>
-            {submit.isPending ? t("recruiter.post.publishing") : t("recruiter.post.publish")}
+            {editing
+              ? submit.isPending
+                ? t("recruiter.post.saving")
+                : t("recruiter.post.save")
+              : submit.isPending
+                ? t("recruiter.post.publishing")
+                : t("recruiter.post.publish")}
           </Button>
         </div>
       </form>
