@@ -123,7 +123,9 @@ export function NotificationBell({ onNavy = false }: { onNavy?: boolean }) {
         id: `interview-${interview.id}-${interview.createdAt}`,
         icon: "calendar",
         title: t("bell.interview", { job: interview.jobTitle }),
-        body: `${timeLabel(interview.startsAtUtc)} · ${t(`interviews.mode.${interview.mode}`)}`,
+        body: `${timeLabel(interview.startsAtUtc)} · ${t(`interviews.mode.${interview.mode}`)}${
+          interview.status === "cancelled" ? ` · ${t("bell.cancelled")}` : ""
+        }`,
         href: recruiter ? "/recruiter/interviews" : "/interviews",
         at: interview.createdAt,
       });

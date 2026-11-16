@@ -1629,6 +1629,7 @@
     "applicationStatus": "Hồ sơ: {{status}}",
     "applicationBody": "Đơn ứng tuyển của bạn vừa được cập nhật.",
     "newApplication": "Hồ sơ mới cho {{job}}",
-    "interview": "Phỏng vấn: {{job}}"
+    "interview": "Phỏng vấn: {{job}}",
+    "cancelled": "Đã huỷ"
   }
 }
