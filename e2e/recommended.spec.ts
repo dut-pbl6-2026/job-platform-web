@@ -84,6 +84,30 @@ test("user sees recommended jobs with the backend's rationale line", async ({ pa
   expect(calls).toHaveLength(1);
 });
 
+test("the job board comes before the recommendations", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page, "User");
+  await mockRecommended(page, () => ({
+    json: {
+      items: [
+        item("11111111-1111-1111-1111-333333333333", "Kỹ sư dữ liệu", "Popular", "Việc làm được nhiều người quan tâm"),
+      ],
+      total: 1,
+      isCached: false,
+      generatedAt: "2026-11-15T01:00:00Z",
+    },
+  }));
+  await page.goto("/jobs");
+
+  await expect(page.locator(".jp-board-wrap")).toBeVisible();
+  const boardFirst = await page.evaluate(() => {
+    const board = document.querySelector(".jp-board-wrap");
+    const reco = document.querySelector(".jp-reco");
+    return !!board && !!reco && Boolean(board.compareDocumentPosition(reco) & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(boardFirst).toBe(true);
+});
+
 test("cold start: a Popular recommendation renders like any other", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page, "User");

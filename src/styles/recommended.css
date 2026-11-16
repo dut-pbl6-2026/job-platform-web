@@ -3,7 +3,7 @@
 .jp-reco {
   display: grid;
   gap: var(--sp-3);
-  margin-bottom: var(--sp-6);
+  margin-top: var(--sp-6);
 }
 
 .jp-reco-head {
