@@ -158,6 +158,14 @@ export default function App() {
                       }
                     />
                     <Route
+                      path="/recruiter/jobs/:jobId/edit"
+                      element={
+                        <RequireRole requiredRole="Recruiter">
+                          <RecruiterPostJobPage />
+                        </RequireRole>
+                      }
+                    />
+                    <Route
                       path="/recruiter/jobs/:jobId/applications"
                       element={
                         <RequireRole requiredRole="Recruiter">

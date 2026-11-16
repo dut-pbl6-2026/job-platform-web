@@ -785,7 +785,8 @@
       "dashboard": "Nhà tuyển dụng: Tổng quan",
       "jobs": "Nhà tuyển dụng: Tin tuyển dụng",
       "post": "Nhà tuyển dụng: Đăng tin",
-      "applications": "Nhà tuyển dụng: Hồ sơ ứng viên"
+      "applications": "Nhà tuyển dụng: Hồ sơ ứng viên",
+      "edit": "Nhà tuyển dụng: Sửa tin"
     },
     "nav": {
       "label": "Điều hướng nhà tuyển dụng",
@@ -846,7 +847,17 @@
       "colStatus": "Trạng thái",
       "colPosted": "Ngày đăng",
       "applicantsSr": "Hồ sơ",
-      "viewApplicants": "Xem ứng viên"
+      "viewApplicants": "Xem ứng viên",
+      "colActions": "Thao tác",
+      "edit": "Sửa",
+      "remove": "Gỡ tin",
+      "removeTitle": "Gỡ tin “{{title}}”?",
+      "removeText": "Tin sẽ biến mất khỏi bảng việc làm và trang công ty. Hồ sơ ứng tuyển đã nhận vẫn được giữ, nhưng bạn không thể hoàn tác thao tác này.",
+      "removeConfirm": "Gỡ tin",
+      "removeCancel": "Giữ tin",
+      "removing": "Đang gỡ…",
+      "removed": "Đã gỡ tin khỏi bảng việc làm.",
+      "removeFailed": "Không gỡ được tin. Vui lòng thử lại."
     },
     "post": {
       "title": "Đăng tin tuyển dụng",
@@ -882,7 +893,15 @@
         "locationRequired": "Vui lòng nhập địa điểm",
         "salaryNotNegative": "Mức lương phải là số không âm",
         "salaryRange": "Mức lương tối đa phải lớn hơn hoặc bằng tối thiểu"
-      }
+      },
+      "editTitle": "Sửa tin tuyển dụng",
+      "editLead": "Cập nhật nội dung tin. Thay đổi hiển thị ngay trên bảng việc làm.",
+      "save": "Lưu thay đổi",
+      "saving": "Đang lưu…",
+      "saved": "Đã lưu thay đổi cho tin tuyển dụng.",
+      "loadWhat": "thông tin tin tuyển dụng",
+      "notFoundTitle": "Không tìm thấy tin tuyển dụng",
+      "notFoundText": "Tin có thể đã bị gỡ. Quay lại danh sách tin để chọn tin khác."
     },
     "applications": {
       "title": "Hồ sơ ứng viên",
