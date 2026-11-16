@@ -1272,6 +1272,7 @@
     "teamTitle": "Cộng tác",
     "teamLead": "Quản lý mã mời và yêu cầu tham gia công ty.",
     "logoHint": "Địa chỉ http(s), ví dụ https://congty.vn/logo.png.",
-    "websiteHint": "Địa chỉ http(s), ví dụ https://congty.vn."
+    "websiteHint": "Địa chỉ http(s), ví dụ https://congty.vn.",
+    "teamMembersLead": "Chỉ quản trị viên công ty quản lý mã mời và yêu cầu tham gia."
   }
 }
