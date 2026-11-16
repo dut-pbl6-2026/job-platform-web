@@ -2,7 +2,18 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
-import { Alert, ButtonLink, EmptyState, Icon, Panel, SkeletonRows, StatusMark, cx } from "../components/ui";
+import {
+  ActivityBars,
+  Alert,
+  ButtonLink,
+  Donut,
+  EmptyState,
+  Icon,
+  Panel,
+  SkeletonRows,
+  StatusMark,
+  cx,
+} from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { fetchApplicationsByJob } from "../lib/applicationsApi";
@@ -11,6 +22,7 @@ import { formatDate } from "../lib/dates";
 import { loadErrorMessage } from "../lib/http";
 import { jobStatusLabel } from "../lib/labels";
 import { fetchRecruiterJobs, type RecruiterJobStatus } from "../lib/jobsApi";
+import { APPLICATION_STATUSES, STATUS_LABEL, type ApplicationStatus } from "../types/application";
 
 const TILES: {
   status: RecruiterJobStatus;
@@ -22,7 +34,18 @@ const TILES: {
   { status: "Closed", labelKey: "recruiter.dashboard.tiles.closed", icon: "checkCircle", tone: "is-closed" },
 ];
 
-/** Real counts only: each tile is the `total` of a one-row request, and each bar is one too. */
+const STATUS_COLORS: Record<ApplicationStatus, string> = {
+  pending: "var(--c-amber)",
+  reviewed: "var(--c-navy)",
+  shortlisted: "var(--c-control)",
+  accepted: "var(--c-success)",
+  rejected: "var(--c-danger)",
+};
+
+/**
+ * The recruiter overview: counts from the API, then three charts (status mix, seven-day activity,
+ * applications per job) and a per-job performance list. No table: the same data reads faster as bars.
+ */
 export default function RecruiterDashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -48,8 +71,8 @@ export default function RecruiterDashboardPage() {
   const recentJobs = recent.data?.items ?? [];
   const applicants = useQueries({
     queries: recentJobs.map((job) => ({
-      queryKey: ["recruiter", "applications", "count", job.id],
-      queryFn: () => fetchApplicationsByJob(job.id, { page: 1, size: 1 }),
+      queryKey: ["recruiter", "applications", "list", job.id],
+      queryFn: () => fetchApplicationsByJob(job.id, { page: 1, size: 100 }),
       staleTime: 0,
     })),
   });
@@ -59,7 +82,32 @@ export default function RecruiterDashboardPage() {
     counts[0].data && counts[1].data ? counts[0].data.total + counts[1].data.total : null;
   const applicantTotals = applicants.map((a) => a.data?.total ?? 0);
   const maxApplicants = Math.max(1, ...applicantTotals);
+  // The chart shows the five jobs with the most applications; the full list stays below it.
+  const chartJobs = recentJobs
+    .map((job, index) => ({ job, count: applicantTotals[index] ?? 0 }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+  const maxChart = Math.max(1, ...chartJobs.map((entry) => entry.count));
   const isCompanyAdmin = company.data?.isCompanyAdmin === true;
+
+  const applications = applicants.flatMap((a) => a.data?.items ?? []);
+  const statusCounts = APPLICATION_STATUSES.reduce<Record<ApplicationStatus, number>>(
+    (acc, status) => ({ ...acc, [status]: applications.filter((a) => a.status === status).length }),
+    { pending: 0, reviewed: 0, shortlisted: 0, accepted: 0, rejected: 0 },
+  );
+  const statusTotal = applications.length;
+
+  // Seven local calendar days, oldest first; the labels are the Vietnamese weekday short names.
+  const activity = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+    day.setDate(day.getDate() - (6 - index));
+    const key = day.toDateString();
+    return {
+      label: day.toLocaleDateString("vi-VN", { weekday: "short" }),
+      value: applications.filter((a) => new Date(a.createdAt).toDateString() === key).length,
+    };
+  });
 
   return (
     <RecruiterShell
@@ -111,6 +159,66 @@ export default function RecruiterDashboardPage() {
         </div>
       </div>
 
+      <div className="jp-chart-grid">
+        <Panel title={t("recruiter.dashboard.statusTitle")}>
+          <p className="jp-dash-note">{t("recruiter.dashboard.statusLead")}</p>
+          {applications.length === 0 ? (
+            <p className="jp-muted">{t("recruiter.dashboard.statusEmpty")}</p>
+          ) : (
+            <Donut
+              label={t("recruiter.dashboard.statusTitle")}
+              centerValue={statusTotal.toLocaleString("vi-VN")}
+              centerLabel={t("recruiter.dashboard.statusCenter")}
+              slices={APPLICATION_STATUSES.map((status) => ({
+                label: STATUS_LABEL[status],
+                value: statusCounts[status],
+                color: STATUS_COLORS[status],
+              }))}
+            />
+          )}
+        </Panel>
+
+        <Panel title={t("recruiter.dashboard.activityTitle")}>
+          <p className="jp-dash-note">{t("recruiter.dashboard.activityLead")}</p>
+          <ActivityBars points={activity} label={t("recruiter.dashboard.activityTitle")} />
+        </Panel>
+
+        <Panel
+          title={t("recruiter.dashboard.chartTitle")}
+          actions={
+            <Link className="jp-link" to="/recruiter/jobs">
+              {t("recruiter.dashboard.viewAll")}
+            </Link>
+          }
+        >
+          <p className="jp-dash-note">{t("recruiter.dashboard.chartLead")}</p>
+          {recentJobs.length === 0 || applicantTotals.every((value) => value === 0) ? (
+            <p className="jp-muted">{t("recruiter.dashboard.chartNoData")}</p>
+          ) : (
+            <div className="jp-bars">
+              {chartJobs.map(({ job, count }) => (
+                <div className="jp-bar-row" key={job.id}>
+                  <div className="jp-bar-main">
+                    <Link className="jp-bar-label" to={`/recruiter/jobs/${job.id}/applications`}>
+                      {job.title}
+                    </Link>
+                    <div className="jp-bar-track">
+                      {count > 0 && (
+                        <span
+                          className="jp-bar-fill"
+                          style={{ width: `${Math.round((count / maxChart) * 100)}%` }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <span className="jp-bar-value">{count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+      </div>
+
       <div className="jp-dash-grid">
         <Panel
           title={t("recruiter.dashboard.recent")}
@@ -120,89 +228,51 @@ export default function RecruiterDashboardPage() {
             </Link>
           }
         >
+          <p className="jp-dash-note">{t("recruiter.dashboard.recentLead")}</p>
           {recent.isPending && <SkeletonRows rows={3} label={t("recruiter.dashboard.loadingRecent")} />}
           {recent.isError && (
             <Alert tone="error">{loadErrorMessage(recent.error, t("recruiter.dashboard.recentWhat"))}</Alert>
           )}
           {recent.data && recentJobs.length === 0 && <EmptyState title={t("recruiter.dashboard.empty")} />}
           {recentJobs.length > 0 && (
-            <div className="jp-table-wrap">
-              <table className="jp-table jp-recruiter-table">
-                <thead>
-                  <tr>
-                    <th scope="col">{t("recruiter.dashboard.colJob")}</th>
-                    <th scope="col">{t("recruiter.dashboard.colStatus")}</th>
-                    <th scope="col">{t("recruiter.dashboard.colPosted")}</th>
-                    <th scope="col" className="jp-num">
-                      {t("recruiter.dashboard.colApplicants")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentJobs.map((job, i) => {
-                    const a = applicants[i];
-                    return (
-                      <tr key={job.id}>
-                        <td>
-                          <Link to={`/jobs/${job.id}`}>{job.title}</Link>
-                        </td>
-                        <td data-label={t("recruiter.dashboard.colStatus")}>
-                          <StatusMark tone={job.status === "closed" ? "neutral" : "success"}>
-                            {jobStatusLabel(job.status)}
-                          </StatusMark>
-                        </td>
-                        <td data-label={t("recruiter.dashboard.colPosted")}>{formatDate(job.createdAt)}</td>
-                        <td data-label={t("recruiter.dashboard.colApplicants")} className="jp-num">
-                          {a?.isError ? (
-                            t("recruiter.dashboard.applicantsFailed")
-                          ) : a?.data ? (
-                            <Link to={`/recruiter/jobs/${job.id}/applications`}>{a.data.total.toLocaleString("vi-VN")}</Link>
-                          ) : (
-                            "…"
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <ul className="jp-jobperf">
+              {recentJobs.map((job, i) => {
+                const a = applicants[i];
+                const count = a?.data?.total ?? 0;
+                return (
+                  <li key={job.id}>
+                    <div className="jp-jobperf-head">
+                      <Link className="jp-jobperf-title" to={`/jobs/${job.id}`}>
+                        {job.title}
+                      </Link>
+                      <StatusMark tone={job.status === "closed" ? "neutral" : "success"}>
+                        {jobStatusLabel(job.status)}
+                      </StatusMark>
+                    </div>
+                    <div className="jp-jobperf-meta">
+                      <span>{formatDate(job.createdAt)}</span>
+                      {a?.isError ? (
+                        <span>{t("recruiter.dashboard.applicantsFailed")}</span>
+                      ) : (
+                        <Link to={`/recruiter/jobs/${job.id}/applications`}>
+                          {t("recruiter.dashboard.applicantsCount", { count: a?.data?.total ?? 0 })}
+                        </Link>
+                      )}
+                    </div>
+                    <div className="jp-meter-track">
+                      <span
+                        className="jp-meter-fill is-navy"
+                        style={{ width: `${Math.round((count / maxApplicants) * 100)}%` }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </Panel>
 
         <div className="jp-dash-side">
-          <Panel title={t("recruiter.dashboard.chartTitle")}>
-            <p className="jp-muted jp-dash-note">{t("recruiter.dashboard.chartLead")}</p>
-            {recentJobs.length === 0 || applicantTotals.every((v) => v === 0) ? (
-              <p className="jp-muted">{t("recruiter.dashboard.chartNoData")}</p>
-            ) : (
-              <div className="jp-bars">
-                {recentJobs.map((job, i) => {
-                  const a = applicants[i];
-                  const count = a?.data?.total ?? 0;
-                  return (
-                    <div className="jp-bar-row" key={job.id}>
-                      <div className="jp-bar-main">
-                        <Link className="jp-bar-label" to={`/recruiter/jobs/${job.id}/applications`}>
-                          {job.title}
-                        </Link>
-                        <div className="jp-bar-track">
-                          {count > 0 && (
-                            <span
-                              className="jp-bar-fill"
-                              style={{ width: `${Math.round((count / maxApplicants) * 100)}%` }}
-                            />
-                          )}
-                        </div>
-                      </div>
-                      <span className="jp-bar-value">{a?.isError ? "—" : a?.data ? count : "…"}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </Panel>
-
           <Panel title={t("recruiter.dashboard.quickTitle")}>
             <ul className="jp-quick">
               <li>

@@ -21,6 +21,9 @@ const LOCATION_LINKS = [
 export function AppFooter() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  // A footer link can leave the pathname unchanged (e.g. a category filter while on /jobs), so the
+  // layout's pathname effect would not fire; scroll here for those.
+  const toTop = () => window.scrollTo(0, 0);
   const { isAuthenticated, user } = useAuth();
   if (AUTH_PATHS.includes(pathname)) return null;
 
@@ -28,7 +31,7 @@ export function AppFooter() {
     <footer className="jp-footer on-navy">
       <div className="jp-footer-inner">
         <div className="jp-footer-brand">
-          <Link to="/" className="jp-footer-wordmark">
+          <Link to="/" className="jp-footer-wordmark" onClick={toTop}>
             jobplatform
           </Link>
           <p>{t("footer.about")}</p>
@@ -36,16 +39,30 @@ export function AppFooter() {
 
         <nav className="jp-footer-col" aria-label={t("footer.forCandidates")}>
           <h2 className="jp-footer-title">{t("footer.forCandidates")}</h2>
-          <Link to="/jobs">{t("footer.latestJobs")}</Link>
-          {(!isAuthenticated || isUser(user?.role)) && <Link to="/applications">{t("footer.myApplications")}</Link>}
-          {!isAuthenticated && <Link to="/login">{t("footer.login")}</Link>}
-          {!isAuthenticated && <Link to="/register">{t("footer.register")}</Link>}
+          <Link to="/jobs" onClick={toTop}>
+            {t("footer.latestJobs")}
+          </Link>
+          {(!isAuthenticated || isUser(user?.role)) && (
+            <Link to="/applications" onClick={toTop}>
+              {t("footer.myApplications")}
+            </Link>
+          )}
+          {!isAuthenticated && (
+            <Link to="/login" onClick={toTop}>
+              {t("footer.login")}
+            </Link>
+          )}
+          {!isAuthenticated && (
+            <Link to="/register" onClick={toTop}>
+              {t("footer.register")}
+            </Link>
+          )}
         </nav>
 
         <nav className="jp-footer-col" aria-label={t("footer.byCategory")}>
           <h2 className="jp-footer-title">{t("footer.byCategory")}</h2>
           {CATEGORY_VALUES.map((value) => (
-            <Link key={value} to={`/jobs?category=${encodeURIComponent(value)}`}>
+            <Link key={value} to={`/jobs?category=${encodeURIComponent(value)}`} onClick={toTop}>
               {categoryLabel(value)}
             </Link>
           ))}
@@ -54,7 +71,7 @@ export function AppFooter() {
         <nav className="jp-footer-col" aria-label={t("footer.byLocation")}>
           <h2 className="jp-footer-title">{t("footer.byLocation")}</h2>
           {LOCATION_LINKS.map((l) => (
-            <Link key={l.value} to={`/jobs?location=${encodeURIComponent(l.value)}`}>
+            <Link key={l.value} to={`/jobs?location=${encodeURIComponent(l.value)}`} onClick={toTop}>
               {t(l.labelKey)}
             </Link>
           ))}

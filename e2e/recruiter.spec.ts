@@ -140,10 +140,10 @@ test("recruiter sees the workspace sidebar and real counts on the dashboard", as
   await expect(page.locator("footer")).toHaveCount(0);
 
   // No approval stage remains: two tiles, Active and Closed, with the real totals.
-  await expect(page.getByRole("listitem").filter({ hasText: "Tin đang mở" })).toContainText("1");
-  await expect(page.getByRole("listitem").filter({ hasText: "Đã đóng" })).toContainText("1");
-  await expect(page.getByRole("listitem").filter({ hasText: "Chờ duyệt" })).toHaveCount(0);
-  await expect(page.getByRole("cell", { name: "Lập trình viên React" })).toBeVisible();
+  await expect(page.locator(".jp-dash-tile", { hasText: "Tin đang mở" })).toContainText("1");
+  await expect(page.locator(".jp-dash-tile", { hasText: "Đã đóng" })).toContainText("1");
+  await expect(page.locator(".jp-dash-tile", { hasText: "Chờ duyệt" })).toHaveCount(0);
+  await expect(page.locator(".jp-jobperf").getByRole("link", { name: "Lập trình viên React" })).toBeVisible();
 });
 
 test("user does not see the recruiter nav and never calls the recruiter endpoints", async ({ page }) => {

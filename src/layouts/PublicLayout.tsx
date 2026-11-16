@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../contexts/AuthContext";
 import { AppFooter } from "../components/AppFooter";
+import { ScrollToTop } from "../components/ScrollToTop";
 import { PageLoading, TopBar } from "../components/ui";
 import { WorkspaceLayout } from "./WorkspaceLayout";
 
@@ -9,6 +10,7 @@ import { WorkspaceLayout } from "./WorkspaceLayout";
 export function PublicLayout() {
   return (
     <>
+      <ScrollToTop />
       <TopBar />
       <Outlet />
       <AppFooter />
@@ -20,6 +22,7 @@ export function PublicLayout() {
 export function CandidateLayout() {
   return (
     <>
+      <ScrollToTop />
       <TopBar compact />
       <Outlet />
     </>

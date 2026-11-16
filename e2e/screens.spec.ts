@@ -641,9 +641,9 @@ test("admin dashboard: number groups, no approval shortcut, service down", async
   await expect(page.getByRole("heading", { level: 1, name: "Bảng quản trị" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Duyệt .* tin chờ duyệt/ })).toHaveCount(0);
   await expect(page.locator(".jp-dash-tile", { hasText: "Người dùng" })).toContainText("27");
-  await expect(page.locator(".jp-metrics", { hasText: "Đã nhận" })).toContainText("12");
-  await expect(page.getByText("Không phản hồi")).toBeVisible();
-  await expect(page.getByText("Hoạt động", { exact: true }).first()).toBeVisible();
+  await expect(page.locator(".jp-legend li", { hasText: "Đã nhận" })).toContainText("12");
+  await expect(page.getByText("Không phản hồi").first()).toBeVisible();
+  await expect(page.locator(".jp-legend li", { hasText: "Hoạt động" })).toBeVisible();
   // The workspace sidebar marks where you are (behind Menu on a phone).
   const menu = page.getByRole("button", { name: "Menu", exact: true });
   if (await menu.isVisible()) await menu.click();
@@ -659,7 +659,9 @@ test("admin dashboard: a section that did not answer says so instead of showing 
   await adminOverview(page, { ...STATS, applications: { status: "unavailable" } });
   await page.goto("/admin");
   await expect(page.getByRole("status").filter({ hasText: "Chưa lấy được số liệu" })).toContainText("đơn ứng tuyển");
-  await expect(page.locator(".jp-metrics", { hasText: "Đã nhận" })).toContainText("Chưa có số liệu");
+  await expect(
+    page.locator(".jp-chart-grid .jp-panel", { hasText: "Đơn ứng tuyển" }).locator(".jp-donut-center"),
+  ).toContainText("Chưa có số liệu");
   await shoot(page, testInfo, "admin-dashboard-partial");
 });
 

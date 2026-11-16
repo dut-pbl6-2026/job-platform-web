@@ -291,15 +291,25 @@ const MOCK_COMPANIES: CompanyOption[] = [
  * returns `{ items, total, page, size, totalPages }`; only the first page is read, the user narrows by typing.
  */
 export async function fetchCompanies(q: string, size = 8): Promise<CompanyOption[]> {
+  return (await fetchCompaniesWithTotal(q, size)).items;
+}
+
+/** The same list plus the backend's `total`, so a page can state a real company count in one request. */
+export async function fetchCompaniesWithTotal(q: string, size = 8): Promise<{ items: CompanyOption[]; total: number }> {
   try {
     const { data } = await api.get("/companies", { params: { q: q.trim(), page: 1, size } });
-    const items = (data as { items?: unknown } | null)?.items;
-    return (Array.isArray(items) ? items : []).map(toCompanyOption).filter((c): c is CompanyOption => c !== null);
+    const body = data as { items?: unknown; total?: unknown } | null;
+    const items = (Array.isArray(body?.items) ? body.items : [])
+      .map(toCompanyOption)
+      .filter((c): c is CompanyOption => c !== null);
+    const total = typeof body?.total === "number" ? body.total : items.length;
+    return { items, total };
   } catch (e) {
     if (!shouldUseMock(e, "GET /companies")) throw e;
     await new Promise((r) => setTimeout(r, 200));
     const keyword = q.trim().toLowerCase();
-    return MOCK_COMPANIES.filter((c) => c.name.toLowerCase().includes(keyword)).slice(0, size);
+    const matches = MOCK_COMPANIES.filter((c) => c.name.toLowerCase().includes(keyword));
+    return { items: matches.slice(0, size), total: matches.length };
   }
 }
 

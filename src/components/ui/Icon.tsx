@@ -144,6 +144,60 @@ const PATHS = {
       <rect x="17" y="6" width="3" height="11" rx="0.4" />
     </>
   ),
+  code: <path d="M9.5 8.5L5 12l4.5 3.5M14.5 8.5L19 12l-4.5 3.5" />,
+  wallet: (
+    <>
+      <rect x="3.5" y="6.5" width="17" height="12" rx="2" />
+      <path d="M3.5 10h17" />
+      <circle cx="16.3" cy="14.2" r="0.9" />
+    </>
+  ),
+  megaphone: (
+    <>
+      <path d="M4 10.5v3A1.5 1.5 0 0 0 5.5 15H8l8 4V5L8 9H5.5A1.5 1.5 0 0 0 4 10.5z" />
+      <path d="M8 15v4" />
+      <path d="M18.5 9.5a3.5 3.5 0 0 1 0 5" />
+    </>
+  ),
+  heart: <path d="M12 20s-7-4.4-7-9.2A3.8 3.8 0 0 1 12 8a3.8 3.8 0 0 1 7 2.8C19 15.6 12 20 12 20z" />,
+  book: (
+    <>
+      <path d="M4.5 5.5A2 2 0 0 1 6.5 4H19v15.5H6.5a2 2 0 0 0-2 2z" />
+      <path d="M4.5 5.5v14" />
+      <path d="M9 8h6M9 11.5h5" />
+    </>
+  ),
+  gear: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3.5v2M12 18.5v2M4.8 7.5l1.7 1M17.5 15.5l1.7 1M4.8 16.5l1.7-1M17.5 8.5l1.7-1" />
+    </>
+  ),
+  coffee: (
+    <>
+      <path d="M5 8h11v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5z" />
+      <path d="M16 9h1.5a2.5 2.5 0 0 1 0 5H16" />
+      <path d="M4 21h13" />
+    </>
+  ),
+  trendUp: (
+    <>
+      <path d="M4 16l5-5 3.5 3.5L20 7" />
+      <path d="M15 7h5v5" />
+    </>
+  ),
+  shieldCheck: (
+    <>
+      <path d="M12 3.5l7 3v5.2c0 4-3 7.4-7 8.8-4-1.4-7-4.8-7-8.8V6.5z" />
+      <path d="M8.8 11.8l2.3 2.3 4.1-4.6" />
+    </>
+  ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 1.8" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof PATHS;

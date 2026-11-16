@@ -39,7 +39,7 @@ test("home: a guest gets the hero, search and real job rows", async ({ page }) =
   await expect(page.getByRole("heading", { level: 1, name: "Tìm việc phù hợp, tuyển người đúng." })).toBeVisible();
   await expect(page.getByRole("searchbox", { name: "Từ khóa" })).toBeVisible();
   await expect(page.locator('[class*="skeleton"]')).toHaveCount(0, { timeout: 10_000 });
-  await expect(page.locator(".jp-row").first()).toBeVisible();
+  await expect(page.locator(".jp-jobcard").first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Đăng tuyển miễn phí" }).first()).toBeVisible();
 });
 

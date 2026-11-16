@@ -186,3 +186,250 @@ a.jp-dash-tile:hover {
 }
 
 .jp-dash-company { margin: 0; font-weight: 700; }
+
+/* Charts ------------------------------------------------------------------------------------- */
+
+.jp-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+  align-items: start;
+}
+.jp-chart-grid .jp-panel {
+  min-width: 0;
+}
+.jp-chart-note {
+  margin: 0 0 var(--sp-3);
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+/* Proportion ring */
+.jp-donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+.jp-donut {
+  position: relative;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.jp-donut::after {
+  content: "";
+  position: absolute;
+  width: var(--jp-donut-hole, 92px);
+  height: var(--jp-donut-hole, 92px);
+  border-radius: 50%;
+  background: var(--c-surface);
+}
+.jp-donut-center {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+}
+.jp-donut-center strong {
+  font-size: 24px;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.jp-donut-center span {
+  font-size: 11px;
+  color: var(--c-muted);
+}
+.jp-legend--stack {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 120px;
+}
+.jp-legend--stack li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+.jp-legend--stack i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
+}
+.jp-legend--stack strong {
+  margin-left: auto;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Vertical activity bars */
+.jp-activity {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  height: 160px;
+}
+.jp-activity-col {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 18px minmax(0, 1fr) 18px;
+  gap: 4px;
+  text-align: center;
+}
+.jp-activity-value {
+  font-size: 11px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+.jp-activity-track {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  background: var(--c-ground);
+  border-radius: 5px 5px 2px 2px;
+  overflow: hidden;
+}
+.jp-activity-fill {
+  width: 100%;
+  min-height: 2px;
+  background: var(--c-navy);
+  border-radius: 4px 4px 0 0;
+}
+.jp-activity-label {
+  font-size: 11px;
+  color: var(--c-muted);
+}
+
+/* Horizontal meters */
+.jp-meter-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(90px, 1.4fr) minmax(46px, auto);
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 32px;
+}
+.jp-meter-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.jp-meter-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--c-ground);
+  overflow: hidden;
+}
+.jp-meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  min-width: 2px;
+}
+.jp-meter-fill.is-navy { background: var(--c-navy); }
+.jp-meter-fill.is-amber { background: var(--c-amber); }
+.jp-meter-fill.is-success { background: var(--c-success); }
+.jp-meter-fill.is-danger { background: var(--c-danger); }
+.jp-meter-fill.is-muted { background: var(--c-control); }
+.jp-meter-value {
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Job performance list (replaces the dashboard table) */
+.jp-jobperf {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-3);
+}
+.jp-jobperf li {
+  display: grid;
+  gap: 6px;
+  padding: var(--sp-3);
+  background: var(--c-ground);
+  border-radius: 8px;
+}
+.jp-jobperf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.jp-jobperf-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--c-ink);
+}
+.jp-jobperf-title:hover { color: var(--c-navy); text-decoration: underline; text-underline-offset: 3px; }
+.jp-jobperf-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: 12px;
+  color: var(--c-muted);
+}
+.jp-jobperf-meta a { font-weight: 600; }
+
+@media (max-width: 1199px) {
+  .jp-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 899px) {
+  .jp-chart-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.jp-bignum {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.jp-bignum strong {
+  font-size: 44px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.jp-bignum span {
+  color: var(--c-muted);
+  font-size: var(--fs-caption);
+}
+.jp-chart-foot {
+  margin: var(--sp-3) 0 0;
+  font-size: 12px;
+  color: var(--c-muted);
+}
+.jp-service-charts {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: var(--sp-6);
+  align-items: center;
+}
+.jp-service-meters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px var(--sp-6);
+}
+.jp-service-meters .jp-meter-label {
+  text-transform: capitalize;
+}
+@media (max-width: 899px) {
+  .jp-service-charts { grid-template-columns: minmax(0, 1fr); }
+  .jp-service-meters { grid-template-columns: minmax(0, 1fr); }
+}

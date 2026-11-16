@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { AdminShell } from "../components/AdminShell";
-import { Alert, Button, Icon, Panel, SkeletonBlock, StatusMark } from "../components/ui";
+import { Alert, Button, Donut, Icon, MeterRow, Panel, SkeletonBlock } from "../components/ui";
 import { fetchAdminHealth, fetchAdminStatistics } from "../lib/adminApi";
 import { loadErrorMessage } from "../lib/http";
 import { queryKeys } from "../lib/queryClient";
@@ -53,6 +53,7 @@ export default function AdminDashboardPage() {
   const online = health.data?.services.filter((svc) => svc.status === "online").length ?? null;
   const serviceCount = health.data?.services.length ?? null;
   const allOnline = online != null && serviceCount != null && online === serviceCount;
+  const maxLatency = Math.max(1, ...(health.data?.services.map((svc) => svc.latencyMs ?? 0) ?? [0]));
 
   const dash = t("admin.dashboard.noData");
   const sectionLabels: Record<string, string> = {
@@ -150,96 +151,130 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="jp-dash-grid">
-            <div className="jp-dash-col">
-              <Panel title={t("admin.dashboard.groupUsers")}>
-                <dl className="jp-metrics">
-                  <div><dt>{t("admin.dashboard.total")}</dt><dd>{number(s.totalUsers, dash)}</dd></div>
-                  <div><dt>{t("admin.dashboard.seekers")}</dt><dd>{number(s.totalJobSeekers, dash)}</dd></div>
-                  <div><dt>{t("admin.dashboard.recruiters")}</dt><dd>{number(s.totalRecruiters, dash)}</dd></div>
-                  <div><dt>{t("admin.dashboard.activeUsers")}</dt><dd>{number(s.activeUsers, dash)}</dd></div>
-                  <div><dt>{t("admin.dashboard.newThisMonth")}</dt><dd>{number(s.newUsersThisMonth, dash)}</dd></div>
-                </dl>
-                <StackBar
-                  label={t("admin.dashboard.groupUsers")}
-                  segments={[
-                    { label: t("admin.dashboard.seekers"), value: s.totalJobSeekers ?? 0, className: "seg-navy" },
-                    { label: t("admin.dashboard.recruiters"), value: s.totalRecruiters ?? 0, className: "seg-amber" },
-                    { label: t("admin.dashboard.other"), value: otherUsers, className: "seg-muted" },
-                  ]}
-                />
-              </Panel>
+          <div className="jp-chart-grid">
+            <Panel title={t("admin.dashboard.groupUsers")}>
+              <p className="jp-dash-note">{t("admin.dashboard.usersLead")}</p>
+              <Donut
+                label={t("admin.dashboard.groupUsers")}
+                centerValue={number(s.totalUsers, dash)}
+                centerLabel={t("admin.dashboard.centerUsers")}
+                slices={[
+                  { label: t("admin.dashboard.seekers"), value: s.totalJobSeekers ?? 0, color: "var(--c-navy)" },
+                  { label: t("admin.dashboard.recruiters"), value: s.totalRecruiters ?? 0, color: "var(--c-amber)" },
+                  { label: t("admin.dashboard.other"), value: otherUsers, color: "var(--c-control)" },
+                ]}
+              />
+              <p className="jp-chart-foot">
+                {t("admin.dashboard.usersFoot", {
+                  active: number(s.activeUsers, dash),
+                  newUsers: number(s.newUsersThisMonth, dash),
+                })}
+              </p>
+            </Panel>
 
-              <Panel title={t("admin.dashboard.groupApplications")}>
-                <dl className="jp-metrics">
-                  <div><dt>{t("admin.dashboard.total")}</dt><dd>{number(s.totalApplications, dash)}</dd></div>
-                  <div><dt>{t("admin.dashboard.statusPending")}</dt><dd>{number(s.applicationStatus?.pending ?? null, dash)}</dd></div>
-                  <div><dt>{t("admin.dashboard.statusAccepted")}</dt><dd>{number(s.applicationStatus?.accepted ?? null, dash)}</dd></div>
-                  <div><dt>{t("admin.dashboard.statusRejected")}</dt><dd>{number(s.applicationStatus?.rejected ?? null, dash)}</dd></div>
-                </dl>
-                <StackBar
-                  label={t("admin.dashboard.groupApplications")}
-                  segments={[
-                    { label: t("admin.dashboard.statusPending"), value: s.applicationStatus?.pending ?? 0, className: "seg-amber" },
-                    { label: t("admin.dashboard.statusAccepted"), value: s.applicationStatus?.accepted ?? 0, className: "seg-success" },
-                    { label: t("admin.dashboard.statusRejected"), value: s.applicationStatus?.rejected ?? 0, className: "seg-danger" },
-                    { label: t("admin.dashboard.other"), value: otherApps, className: "seg-muted" },
-                  ]}
-                />
-              </Panel>
-            </div>
+            <Panel title={t("admin.dashboard.groupApplications")}>
+              <p className="jp-dash-note">{t("admin.dashboard.appsLead")}</p>
+              <Donut
+                label={t("admin.dashboard.groupApplications")}
+                centerValue={number(s.totalApplications, dash)}
+                centerLabel={t("admin.dashboard.centerApps")}
+                slices={[
+                  {
+                    label: t("admin.dashboard.statusPending"),
+                    value: s.applicationStatus?.pending ?? 0,
+                    color: "var(--c-amber)",
+                  },
+                  {
+                    label: t("admin.dashboard.statusAccepted"),
+                    value: s.applicationStatus?.accepted ?? 0,
+                    color: "var(--c-success)",
+                  },
+                  {
+                    label: t("admin.dashboard.statusRejected"),
+                    value: s.applicationStatus?.rejected ?? 0,
+                    color: "var(--c-danger)",
+                  },
+                  { label: t("admin.dashboard.other"), value: otherApps, color: "var(--c-control)" },
+                ]}
+              />
+            </Panel>
 
-            <div className="jp-dash-col">
-              <Panel title={t("admin.dashboard.groupJobs")}>
-                <dl className="jp-metrics">
-                  <div><dt>{t("admin.dashboard.total")}</dt><dd>{number(s.totalJobs, dash)}</dd></div>
-                  <div><dt>{t("admin.dashboard.visible")}</dt><dd>{number(s.activeJobs, dash)}</dd></div>
-                </dl>
-                <StackBar
-                  label={t("admin.dashboard.groupJobs")}
-                  segments={[
-                    { label: t("admin.dashboard.visible"), value: s.activeJobs ?? 0, className: "seg-navy" },
+            <Panel title={t("admin.dashboard.groupJobs")}>
+              <p className="jp-dash-note">{t("admin.dashboard.jobsLead")}</p>
+              <div className="jp-bignum">
+                <strong>{number(s.totalJobs, dash)}</strong>
+                <span>{t("admin.dashboard.tileJobsSub", { total: number(s.totalJobs, dash) })}</span>
+              </div>
+              <StackBar
+                label={t("admin.dashboard.groupJobs")}
+                segments={[
+                  { label: t("admin.dashboard.visible"), value: s.activeJobs ?? 0, className: "seg-navy" },
+                  {
+                    label: t("admin.dashboard.notVisible"),
+                    value: Math.max(0, (s.totalJobs ?? 0) - (s.activeJobs ?? 0)),
+                    className: "seg-muted",
+                  },
+                ]}
+              />
+              <p className="jp-chart-foot">
+                {t("admin.dashboard.jobsFoot", {
+                  visible: number(s.activeJobs, dash),
+                  total: number(s.totalJobs, dash),
+                })}
+              </p>
+            </Panel>
+          </div>
+
+          <Panel title={t("admin.dashboard.healthTitle")}>
+            <p className="jp-dash-note">{t("admin.dashboard.servicesLead")}</p>
+            {health.isPending && <SkeletonBlock height={120} label={t("admin.dashboard.checkingHealth")} />}
+            {health.isError && (
+              <Alert
+                tone="error"
+                action={
+                  <Button variant="secondary" loading={health.isFetching} onClick={() => void health.refetch()}>
+                    {health.isFetching ? t("jobs.retrying") : t("jobs.retry")}
+                  </Button>
+                }
+              >
+                {loadErrorMessage(health.error, t("admin.dashboard.healthWhat"))}
+              </Alert>
+            )}
+            {health.data && (
+              <div className="jp-service-charts">
+                <Donut
+                  size={132}
+                  label={t("admin.dashboard.healthTitle")}
+                  centerValue={online == null || serviceCount == null ? "…" : `${online}/${serviceCount}`}
+                  centerLabel={t("admin.dashboard.centerServices")}
+                  slices={[
+                    { label: t("admin.dashboard.online"), value: online ?? 0, color: "var(--c-success)" },
                     {
-                      label: t("admin.dashboard.notVisible"),
-                      value: Math.max(0, (s.totalJobs ?? 0) - (s.activeJobs ?? 0)),
-                      className: "seg-muted",
+                      label: t("admin.dashboard.offline"),
+                      value: Math.max(0, (serviceCount ?? 0) - (online ?? 0)),
+                      color: "var(--c-danger)",
                     },
                   ]}
                 />
-              </Panel>
-
-              <Panel title={t("admin.dashboard.healthTitle")}>
-                {health.isPending && <SkeletonBlock height={120} label={t("admin.dashboard.checkingHealth")} />}
-                {health.isError && (
-                  <Alert
-                    tone="error"
-                    action={
-                      <Button variant="secondary" loading={health.isFetching} onClick={() => void health.refetch()}>
-                        {health.isFetching ? t("jobs.retrying") : t("jobs.retry")}
-                      </Button>
-                    }
-                  >
-                    {loadErrorMessage(health.error, t("admin.dashboard.healthWhat"))}
-                  </Alert>
-                )}
-                {health.data && (
-                  <ul className="jp-services">
-                    {health.data.services.map((svc) => (
-                      <li key={svc.name}>
-                        <span className="jp-service-name">{svc.name}</span>
-                        <StatusMark tone={svc.status === "online" ? "success" : "danger"}>
-                          {svc.status === "online" ? t("admin.dashboard.online") : t("admin.dashboard.offline")}
-                        </StatusMark>
-                        <span className="jp-service-latency">
-                          {svc.latencyMs == null ? dash : t("admin.dashboard.latency", { ms: svc.latencyMs.toLocaleString("vi-VN") })}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Panel>
-            </div>
-          </div>
+                <div className="jp-service-meters">
+                  {health.data.services.map((svc) => (
+                    <MeterRow
+                      key={svc.name}
+                      label={svc.name}
+                      value={svc.latencyMs ?? 0}
+                      max={maxLatency}
+                      display={
+                        svc.latencyMs == null
+                          ? t("admin.dashboard.offline")
+                          : t("admin.dashboard.latency", { ms: svc.latencyMs.toLocaleString("vi-VN") })
+                      }
+                      tone={svc.status === "online" ? "success" : "danger"}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </Panel>
         </>
       )}
     </AdminShell>

@@ -1,5 +1,12 @@
 export { Icon, type IconName } from "./Icon";
 export {
+  ActivityBars,
+  Donut,
+  MeterRow,
+  type ActivityPoint,
+  type ChartSlice,
+} from "./charts";
+export {
   Button,
   ButtonLink,
   Checkbox,
