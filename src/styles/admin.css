@@ -347,3 +347,12 @@
   .jp-queue-actions .jp-btn { flex: 1 1 0; }
   .jp-queue-actions .jp-btn:first-child { flex-basis: 100%; }
 }
+
+/* Moderation: the takedown reason is part of the row it applies to. */
+.jp-queue-moderation {
+  margin: 4px 0 0;
+  max-width: 70ch;
+  color: var(--c-warning);
+  font-size: var(--fs-caption);
+  overflow-wrap: anywhere;
+}

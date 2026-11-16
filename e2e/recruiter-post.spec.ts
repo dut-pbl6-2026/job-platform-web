@@ -58,7 +58,7 @@ test("recruiter posts a job through POST /api/jobs with the account's companyId"
   await page.getByRole("button", { name: "Xuất bản" }).click();
 
   await expect(page).toHaveURL(/\/recruiter\/jobs$/);
-  await expect(page.getByText("Tin tuyển dụng đã được gửi duyệt thành công!")).toBeVisible();
+  await expect(page.getByText("Tin đã được đăng và hiển thị công khai.")).toBeVisible();
   expect(posts).toHaveLength(1);
   expect(posts[0].url).toBe("/api/jobs");
   expect(posts[0].body).toEqual({

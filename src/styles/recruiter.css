@@ -36,8 +36,46 @@
 
 @media (max-width: 640px) {
   .jp-recruiter-tiles {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-2);
   }
+}
+
+/* Recruiter job lists: below 768px each row is a card, label on the left and value on the right. */
+@media (max-width: 767px) {
+  .jp-recruiter-table thead { display: none; }
+  .jp-recruiter-table,
+  .jp-recruiter-table tbody { display: block; }
+  .jp-recruiter-table tbody tr {
+    display: grid;
+    gap: 2px;
+    padding: var(--sp-4);
+    border-top: 1px solid var(--c-row-rule);
+  }
+  .jp-recruiter-table tbody tr:first-child { border-top: 0; }
+  .jp-recruiter-table tbody td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding: 2px 0;
+    border: 0;
+    text-align: right;
+  }
+  .jp-recruiter-table tbody td::before {
+    content: attr(data-label);
+    color: var(--c-muted);
+    font-weight: 500;
+    text-align: left;
+  }
+  .jp-recruiter-table tbody td:first-child {
+    display: block;
+    padding-bottom: var(--sp-2);
+    font-size: var(--fs-title);
+    font-weight: 700;
+    text-align: left;
+  }
+  .jp-recruiter-table tbody td:first-child::before { display: none; }
 }
 
 /* Post-job form: sections stack, and the salary pair sits side by side on wide screens. */
@@ -203,4 +241,41 @@
   display: grid;
   gap: var(--sp-3);
   margin-top: var(--sp-4);
+}
+
+/* Recruiter-only AI match score on an applicant card. Candidates never see this. */
+.jp-score-note {
+  margin: calc(var(--sp-1) * -1) 0 var(--sp-4);
+  font-size: 14px;
+  max-width: 72ch;
+}
+
+.jp-match-score {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--c-rule);
+  border-left: 4px solid var(--c-amber);
+  border-radius: var(--radius-control);
+  background: var(--c-surface);
+  width: fit-content;
+}
+.jp-match-score-label {
+  color: var(--c-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.jp-match-score-value {
+  min-width: 2ch;
+  color: var(--c-navy);
+  font-size: var(--fs-title);
+  font-weight: 800;
+  text-align: center;
+}
+.jp-match-score-value.is-muted {
+  color: var(--c-muted);
+  font-size: 14px;
+  font-weight: 600;
 }

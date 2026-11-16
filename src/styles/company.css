@@ -1,0 +1,139 @@
+/* Public company page and recruiter company settings. Logos fall back to initials. */
+
+.jp-company-logo {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+  background: var(--c-info-soft);
+  color: var(--c-navy);
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.jp-company-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+.jp-company-logo--sm {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-control);
+  font-size: 14px;
+}
+
+.jp-company-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-6);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-left: 4px solid var(--c-amber);
+  border-radius: var(--radius-panel);
+}
+
+.jp-company-heading { min-width: 0; flex: 1; }
+.jp-company-heading .jp-h1 { font-size: var(--fs-h2); }
+.jp-company-marks {
+  margin: var(--sp-2) 0 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  color: var(--c-muted);
+}
+
+.jp-company-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.jp-company-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--sp-6);
+  align-items: start;
+  margin-top: var(--sp-6);
+}
+
+.jp-company-about { display: grid; gap: var(--sp-6); min-width: 0; }
+.jp-company-jobs { display: grid; gap: var(--sp-3); }
+.jp-company-side { display: grid; gap: var(--sp-4); }
+
+.jp-company-settings { display: grid; gap: var(--sp-4); max-width: 860px; }
+.jp-company-settings-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+}
+.jp-company-settings-head > div { min-width: 0; flex: 1; }
+.jp-company-settings-head p { margin: 2px 0 0; }
+.jp-company-verified {
+  flex: none;
+  color: var(--c-success);
+  font-size: 14px;
+  font-weight: 600;
+}
+.jp-company-verified::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.jp-company-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.jp-company-fieldset:disabled { opacity: 1; }
+.jp-company-fieldset .jp-input:disabled {
+  background: var(--c-ground);
+  color: var(--c-muted);
+  border-color: var(--c-rule);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.jp-company-links {
+  margin-top: var(--sp-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+
+@media (max-width: 1099px) {
+  .jp-company-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .jp-company-head { flex-wrap: wrap; padding: var(--sp-4); }
+  .jp-company-head-actions { width: 100%; }
+  .jp-company-head-actions .jp-btn { flex: 1 1 auto; }
+  /* Logo and verified mark on the first line, the company name full width beneath. */
+  .jp-company-settings-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: var(--sp-2) var(--sp-3);
+  }
+  .jp-company-settings-head > .jp-company-logo { grid-column: 1; grid-row: 1; }
+  .jp-company-settings-head > .jp-company-verified { grid-column: 2; grid-row: 1; justify-self: start; }
+  .jp-company-settings-head > div { grid-column: 1 / -1; grid-row: 2; }
+}

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AdminShell } from "../components/AdminShell";
-import { Alert, Button, ButtonLink, SkeletonBlock, StatusMark } from "../components/ui";
+import { Alert, Button, SkeletonBlock, StatusMark } from "../components/ui";
 import { fetchAdminHealth, fetchAdminStatistics } from "../lib/adminApi";
 import { loadErrorMessage } from "../lib/http";
 import { queryKeys } from "../lib/queryClient";
@@ -24,20 +24,9 @@ export default function AdminDashboardPage() {
   const stats = useQuery({ queryKey: queryKeys.adminStats, queryFn: fetchAdminStatistics, staleTime: 0 });
   const health = useQuery({ queryKey: queryKeys.adminHealth, queryFn: fetchAdminHealth, staleTime: 0 });
   const s = stats.data;
-  const pending = s?.pendingJobs ?? 0;
 
   return (
-    <AdminShell
-      title={t("admin.dashboard.title")}
-      lead={t("admin.dashboard.lead")}
-      actions={
-        pending > 0 ? (
-          <ButtonLink to="/admin/jobs?status=Pending">
-            {t("admin.dashboard.approveCount", { total: pending.toLocaleString("vi-VN") })}
-          </ButtonLink>
-        ) : undefined
-      }
-    >
+    <AdminShell title={t("admin.dashboard.title")} lead={t("admin.dashboard.lead")}>
       {stats.isPending && <SkeletonBlock height={240} label={t("admin.dashboard.loading")} />}
 
       {stats.isError && (
@@ -79,7 +68,6 @@ export default function AdminDashboardPage() {
               cells={[
                 { label: t("admin.dashboard.total"), value: s.totalJobs },
                 { label: t("admin.dashboard.visible"), value: s.activeJobs },
-                { label: t("admin.dashboard.pendingJobs"), value: s.pendingJobs, to: "/admin/jobs?status=Pending" },
               ]}
             />
             <StatGroup

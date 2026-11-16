@@ -23,6 +23,7 @@ export interface Application {
   status: ApplicationStatus;
   recruiterNotes?: string | null;
   score?: number | null;
+  scoringStatus?: string | null;
   createdAt: string;
   updatedAt: string;
   statusHistory?: StatusHistoryEntry[];

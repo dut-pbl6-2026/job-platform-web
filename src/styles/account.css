@@ -224,3 +224,41 @@
 .jp-item .jp-btn { margin-top: -4px; }
 
 .jp-filter-row .jp-chip { min-height: var(--tap); }
+
+/* Profile identity and account block ---------------------------------------------------------------- */
+
+.jp-profile-note {
+  margin: 0 0 var(--sp-2);
+  font-size: 14px;
+}
+
+.jp-profile-identity,
+.jp-profile-avatar-edit {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.jp-profile-avatar-edit { align-items: flex-start; }
+
+.jp-profile-avatar {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--c-rule);
+  border-radius: 999px;
+  background: var(--c-info-soft);
+  color: var(--c-navy);
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.jp-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.jp-profile-identity > div { display: grid; gap: 2px; min-width: 0; }
+.jp-profile-avatar-field { flex: 1; min-width: 0; }

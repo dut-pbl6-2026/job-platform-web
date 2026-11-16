@@ -124,25 +124,25 @@ async function openNavIfFolded(page: Page) {
 const recruiterCalls = (calls: Request[]) =>
   calls.filter((r) => new URL(r.url()).pathname.endsWith("/api/jobs/recruiter"));
 
-test("recruiter sees the recruiter nav and real counts on the dashboard", async ({ page }) => {
+test("recruiter sees the workspace sidebar and real counts on the dashboard", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page, "Recruiter");
   await mockRecruiterApi(page);
   await page.goto("/recruiter");
 
   await expect(page.getByRole("heading", { name: "Tổng quan tuyển dụng" })).toBeVisible();
-  const subnav = page.getByRole("navigation", { name: "Điều hướng nhà tuyển dụng" });
-  await expect(subnav.getByRole("link", { name: "Tổng quan" })).toBeVisible();
-  await expect(subnav.getByRole("link", { name: "Tin tuyển dụng" })).toBeVisible();
-
   await openNavIfFolded(page);
-  await expect(page.getByRole("banner").getByRole("link", { name: "Tuyển dụng" })).toBeVisible();
-  await expect(page.getByRole("banner").getByRole("link", { name: "Tạo CV" })).toHaveCount(0);
+  const nav = page.getByRole("navigation", { name: "Điều hướng khu vực làm việc" });
+  for (const label of ["Tổng quan", "Tin tuyển dụng", "Đăng tin", "Công ty"]) {
+    await expect(nav.getByRole("link", { name: label })).toBeVisible();
+  }
+  await expect(nav.getByRole("link", { name: "Tổng quan" })).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("footer")).toHaveCount(0);
 
-  // One job per status in the mock: each tile reads the real total for its status.
+  // No approval stage remains: two tiles, Active and Closed, with the real totals.
   await expect(page.getByRole("listitem").filter({ hasText: "Tin đang mở" })).toContainText("1");
-  await expect(page.getByRole("listitem").filter({ hasText: "Chờ duyệt" })).toContainText("1");
   await expect(page.getByRole("listitem").filter({ hasText: "Đã đóng" })).toContainText("1");
+  await expect(page.getByRole("listitem").filter({ hasText: "Chờ duyệt" })).toHaveCount(0);
   await expect(page.getByRole("cell", { name: "Lập trình viên React" })).toBeVisible();
 });
 
@@ -153,8 +153,9 @@ test("user does not see the recruiter nav and never calls the recruiter endpoint
   await page.goto("/jobs");
 
   await openNavIfFolded(page);
-  await expect(page.getByRole("banner").getByRole("link", { name: "Tuyển dụng" })).toHaveCount(0);
-  await expect(page.getByRole("banner").getByRole("link", { name: "Tạo CV" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Tuyển dụng" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Tạo CV" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Điều hướng khu vực làm việc" })).toHaveCount(0);
   expect(recruiterCalls(calls)).toHaveLength(0);
 });
 
@@ -202,11 +203,11 @@ test("recruiter job list filters by status and passes it to the API", async ({ p
   await expect(page.getByRole("cell", { name: "Lập trình viên React" })).toBeVisible();
   await expect(page.getByRole("cell", { name: "Kỹ sư dữ liệu" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Chờ duyệt" }).click();
-  await expect(page).toHaveURL(/status=Pending/);
-  await expect(page.getByRole("cell", { name: "Kỹ sư dữ liệu" })).toBeVisible();
+  await page.getByRole("button", { name: "Đã đóng" }).click();
+  await expect(page).toHaveURL(/status=Closed/);
+  await expect(page.getByRole("cell", { name: "Chuyên viên tuyển dụng" })).toBeVisible();
   await expect(page.getByRole("cell", { name: "Lập trình viên React" })).toHaveCount(0);
-  expect(recruiterCalls(calls).some((r) => new URL(r.url()).searchParams.get("status") === "Pending")).toBe(true);
+  expect(recruiterCalls(calls).some((r) => new URL(r.url()).searchParams.get("status") === "Closed")).toBe(true);
 });
 
 test("recruiter with no jobs sees the empty states", async ({ page }) => {

@@ -6,7 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { ResendVerification } from "../components/ResendVerification";
 import { validateEmail } from "../lib/validation";
 import { apiErrorMessage, httpStatus } from "../lib/http";
-import { DEFAULT_AFTER_AUTH } from "../lib/redirect";
+import { defaultAfterAuth, resolveAfterAuth } from "../lib/redirect";
 import { useAuthRedirect } from "../hooks/useAuthRedirect";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
@@ -21,7 +21,7 @@ export default function LoginPage() {
   const notice = state?.notice;
   // The address the account was registered with, so the user can ask for a new verification link.
   const registeredEmail = typeof state?.email === "string" ? state.email : undefined;
-  const { target, query } = useAuthRedirect();
+  const { query } = useAuthRedirect();
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -44,8 +44,8 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      await login(email.trim(), pwd, rememberMe);
-      nav(target, { replace: true });
+      const me = await login(email.trim(), pwd, rememberMe);
+      nav(resolveAfterAuth(location.search, location.state, defaultAfterAuth(me.role)), { replace: true });
     } catch (ex: unknown) {
       // auth-svc answers 401 for a wrong password and for an unverified account alike, so the message names both.
       setErr(httpStatus(ex) === 401 ? t("auth.login.credentialsError") : apiErrorMessage(ex, t("auth.login.failed")));
@@ -69,7 +69,7 @@ export default function LoginPage() {
     >
       {typeof notice === "string" && <Alert tone="success">{notice}</Alert>}
       {typeof notice === "string" && registeredEmail && <ResendVerification email={registeredEmail} />}
-      {target !== DEFAULT_AFTER_AUTH && <Alert tone="info">{t("auth.login.afterLoginNotice")}</Alert>}
+      {query && <Alert tone="info">{t("auth.login.afterLoginNotice")}</Alert>}
       {err && <Alert tone="error">{err}</Alert>}
 
       <form className="jp-form" onSubmit={onSubmit} noValidate>

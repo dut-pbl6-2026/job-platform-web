@@ -1,0 +1,203 @@
+/* Homepage: hero + search, categories, newest jobs, real companies, recruiter panel. */
+
+.jp-home {
+  background: var(--c-ground);
+}
+
+.jp-home-hero {
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-rule);
+}
+
+.jp-home-hero-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 56px 40px 44px;
+}
+
+.jp-home-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-3);
+  color: var(--c-muted);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.jp-home-kicker::before {
+  content: "";
+  width: 18px;
+  height: 4px;
+  background: var(--c-amber);
+}
+
+.jp-home-title {
+  margin: 0;
+  max-width: 22ch;
+  color: var(--c-ink);
+  font-size: clamp(32px, 4.2vw, 52px);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.jp-home-lead {
+  margin: var(--sp-4) 0 0;
+  max-width: 62ch;
+  color: var(--c-muted);
+  font-size: var(--fs-title);
+}
+
+.jp-home-search {
+  margin-top: var(--sp-6);
+  max-width: 1000px;
+}
+
+.jp-home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.jp-home-body {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--sp-8) 40px var(--sp-12);
+  display: grid;
+  gap: var(--sp-8);
+}
+
+.jp-home-section {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.jp-home-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.jp-home-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jp-home-cats .jp-chip {
+  text-decoration: none;
+}
+.jp-home-cats .jp-chip:hover { text-decoration: none; }
+
+.jp-home-note {
+  margin: 0;
+  color: var(--c-muted);
+  font-size: 14px;
+}
+
+.jp-home-companies {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jp-home-company {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+  color: var(--c-ink);
+  text-decoration: none;
+}
+.jp-home-company:hover {
+  border-color: var(--c-control);
+  background: var(--c-hover);
+  text-decoration: none;
+}
+.jp-home-company-text {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.jp-home-company-text strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jp-home-company-text > span {
+  color: var(--c-muted);
+  font-size: 14px;
+}
+.jp-home-company .jp-status {
+  margin-left: auto;
+  flex: none;
+}
+
+.jp-home-recruiter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  padding: var(--sp-6);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-left: 4px solid var(--c-amber);
+  border-radius: var(--radius-panel);
+}
+.jp-home-recruiter-lead {
+  margin: var(--sp-2) 0 0;
+  max-width: 62ch;
+  color: var(--c-muted);
+}
+.jp-home-facts {
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-6);
+  font-weight: 600;
+}
+.jp-home-facts li::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: var(--sp-2);
+  background: var(--c-amber);
+}
+
+.jp-home-recruiter-note {
+  margin: 0;
+  max-width: 34ch;
+  padding: var(--sp-3);
+  border-left: 3px solid var(--c-amber);
+  background: var(--c-amber-soft);
+  color: var(--c-ink);
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .jp-home-hero-inner { padding: var(--sp-6) var(--sp-4) var(--sp-6); }
+  .jp-home-title { font-size: 32px; }
+  .jp-home-lead { font-size: var(--fs-body); }
+  .jp-home-body { padding: var(--sp-6) var(--sp-4) var(--sp-8); gap: var(--sp-6); }
+  .jp-home-actions .jp-btn { flex: 1 1 auto; }
+  .jp-home-recruiter { flex-direction: column; align-items: flex-start; }
+  .jp-home-recruiter .jp-btn { width: 100%; }
+}

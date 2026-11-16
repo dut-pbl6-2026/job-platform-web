@@ -47,4 +47,10 @@ export interface AdminHealth {
 }
 
 /** A job as the admin endpoints return it: any status, plus the moderation fields of the detail DTO. */
-export type PendingJob = Job & { recruiterName?: string; rejectionReason?: string | null };
+export type PendingJob = Job & {
+  recruiterName?: string;
+  rejectionReason?: string | null;
+  moderationReason?: string | null;
+  moderatedBy?: string | null;
+  moderatedAt?: string | null;
+};

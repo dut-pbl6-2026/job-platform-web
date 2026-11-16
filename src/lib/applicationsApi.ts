@@ -81,6 +81,7 @@ export function normalizeApplication(raw: unknown): Application {
     status: asStatus(o.status),
     recruiterNotes: pickStr(o, "recruiterNotes", "recruiter_notes") ?? null,
     score: pickNum(o, "score") ?? null,
+    scoringStatus: pickStr(o, "scoringStatus", "scoring_status") ?? null,
     createdAt: pickStr(o, "createdAt", "created_at") || new Date().toISOString(),
     updatedAt:
       pickStr(o, "updatedAt", "updated_at") || pickStr(o, "createdAt", "created_at") || new Date().toISOString(),

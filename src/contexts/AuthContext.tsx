@@ -17,7 +17,7 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<User>;
   register: (p: {
     email: string;
     password: string;
@@ -79,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setTokens(res.accessToken, res.refreshToken);
     const me = await fetchMe();
     setUser(me);
+    return me;
   }, []);
 
   // Registration does not sign the user in: the account must verify its email first. No tokens are stored.

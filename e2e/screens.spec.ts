@@ -38,6 +38,8 @@ async function shoot(page: Page, testInfo: TestInfo, name: string) {
 }
 
 const GUEST_SCREENS: [name: string, path: string][] = [
+  ["home", "/"],
+  ["not-found", "/khong-co-trang-nay"],
   ["jobs", "/jobs"],
   ["jobs-empty", "/jobs?q=zzzzqqq"],
   [
@@ -58,6 +60,7 @@ const SIGNED_IN_SCREENS: [name: string, role: Role, path: string][] = [
   ["apply", "User", "/jobs/seed-1/apply"],
   ["profile", "User", "/profile"],
   ["applications", "User", "/applications"],
+  ["recruiter-dashboard", "Recruiter", "/recruiter"],
   ["admin-dashboard", "Admin", "/admin"],
   ["admin-jobs", "Admin", "/admin/jobs"],
   ["admin-users", "Admin", "/admin/users"],
@@ -534,7 +537,7 @@ test("profile: edit info, add and delete skill, experience and education", async
   await shoot(page, testInfo, "profile-edit");
   await page.getByRole("button", { name: "Lưu hồ sơ" }).click();
   await expect(page.getByText("Đã lưu hồ sơ.")).toBeVisible();
-  await expect(page.getByText("Nguyễn Văn An", { exact: true })).toBeVisible();
+  await expect(page.locator(".jp-profile-identity strong").filter({ hasText: "Nguyễn Văn An" })).toBeVisible();
   await expect(page.getByText("31/1/2000")).toBeVisible();
 
   // Skill: empty name is refused; a valid one is listed; it can be deleted.
@@ -630,19 +633,22 @@ async function adminOverview(page: Page, stats: object = STATS) {
   );
 }
 
-test("admin dashboard: number groups, pending shortcut, service down", async ({ page }, testInfo) => {
+test("admin dashboard: number groups, no approval shortcut, service down", async ({ page }, testInfo) => {
   await offlineBackend(page);
   await signIn(page, "Admin");
   await adminOverview(page);
   await page.goto("/admin");
   await expect(page.getByRole("heading", { level: 1, name: "Bảng quản trị" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Duyệt 3 tin chờ duyệt" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Duyệt .* tin chờ duyệt/ })).toHaveCount(0);
   await expect(page.locator(".jp-stat", { hasText: "Nhà tuyển dụng" })).toContainText("27");
   await expect(page.locator(".jp-stat", { hasText: "Nhận việc" })).toContainText("12");
   await expect(page.getByText("Không phản hồi")).toBeVisible();
   await expect(page.getByText("Hoạt động", { exact: true }).first()).toBeVisible();
-  // The second bar marks where you are.
+  // The workspace sidebar marks where you are (behind Menu on a phone).
+  const menu = page.getByRole("button", { name: "Menu", exact: true });
+  if (await menu.isVisible()) await menu.click();
   await expect(page.getByRole("link", { name: "Tổng quan" })).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("footer")).toHaveCount(0);
   await expectSoundLayout(page);
   await shoot(page, testInfo, "admin-dashboard-data");
 });
@@ -672,11 +678,12 @@ test("admin dashboard: load error is Vietnamese and retry works", async ({ page 
   await expect(page.locator(".jp-stat", { hasText: "Nhà tuyển dụng" })).toContainText("27");
 });
 
-test("admin: a candidate is not let in", async ({ page }) => {
+test("admin: a candidate is sent to the job board with a notice", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page, "User");
   await page.goto("/admin");
-  await expect(page.getByRole("heading", { name: "Chỉ quản trị viên mới vào được khu vực này." })).toBeVisible();
+  await expect(page).toHaveURL(/\/jobs$/);
+  await expect(page.getByText("Khu vực này chỉ dành cho quản trị viên.")).toBeVisible();
 });
 
 type FakeJob = Record<string, unknown> & { id: string; title: string; status: string };
@@ -758,7 +765,7 @@ async function adminBackend(page: Page) {
         totalPages: Math.max(1, Math.ceil(items.length / size)),
       },
     });
-    const jobMatch = path.match(/^\/admin\/jobs\/([^/]+)(?:\/(approve|reject|permanent))?$/);
+    const jobMatch = path.match(/^\/admin\/jobs\/([^/]+)(?:\/(takedown|restore|permanent))?$/);
 
     if (path === "/admin/jobs" && method === "GET") {
       const status = url.searchParams.get("status");
@@ -792,13 +799,18 @@ async function adminBackend(page: Page) {
         jobs.splice(jobs.indexOf(job), 1);
         return route.fulfill({ json: { message: "Đã xóa vĩnh viễn" } });
       }
-      if (action === "approve" && method === "POST") {
-        job.status = "Active";
-        return route.fulfill({ json: { message: "Đã duyệt tin" } });
+      if (action === "takedown" && method === "POST") {
+        job.status = "Deleted";
+        job.moderationReason = String(body.reason ?? "");
+        job.moderatedAt = new Date().toISOString();
+        return route.fulfill({ json: { message: "Đã gỡ tin" } });
       }
-      if (action === "reject" && method === "POST") {
-        job.status = "Rejected";
-        return route.fulfill({ json: { message: "Đã từ chối tin" } });
+      if (action === "restore" && method === "POST") {
+        if (job.status !== "Deleted") return route.fulfill({ status: 409, json: { message: "conflict" } });
+        job.status = "Active";
+        job.moderationReason = null;
+        job.moderatedAt = null;
+        return route.fulfill({ json: { message: "Đã khôi phục tin" } });
       }
     }
     if (path === "/admin/users" && method === "GET") {
@@ -822,52 +834,70 @@ async function adminBackend(page: Page) {
   });
 }
 
-test("admin jobs: read first, reject needs a reason, approve and reject leave the pending filter", async ({
-  page,
-}, testInfo) => {
+test("admin jobs: takedown requires a reason, then restore or purge", async ({ page }, testInfo) => {
   await offlineBackend(page);
   await adminBackend(page);
   await signIn(page, "Admin");
-  await page.goto("/admin/jobs?status=Pending");
+  await page.goto("/admin/jobs");
   const rows = page.locator(".jp-queue-item");
   await expect(rows.first()).toBeVisible();
-  const before = await rows.count();
-  expect(before).toBeGreaterThan(1);
-  const rejectedTitle = await rows.first().locator(".jp-row-title").innerText();
-  const approvedTitle = await rows.nth(1).locator(".jp-row-title").innerText();
-  // No raw category enum on screen.
-  await expect(page.locator(".jp-queue")).not.toContainText(/\b(IT|Sales|Finance|Healthcare)\b/);
-  await expectSoundLayout(page);
-  await shoot(page, testInfo, "admin-jobs");
+  await expect(page.locator(".jp-queue")).not.toContainText(/\b(Active|Pending|Deleted|active|pending)\b/);
 
-  // Read the content before deciding.
+  // No approval actions remain anywhere on the screen.
+  await expect(page.getByRole("button", { name: /^Duyệt tin/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Từ chối tin/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Tạo tin" })).toHaveCount(0);
+  await expectSoundLayout(page);
+
+  // Reading a job still works.
   const first = rows.first();
+  const title = await first.locator(".jp-row-title").innerText();
   await first.getByRole("button", { name: "Xem nội dung" }).click();
   await expect(first.locator(".jp-facts")).toBeVisible();
   await expect(first.getByRole("heading", { name: "Mô tả công việc" })).toBeVisible();
   await expect(first).not.toContainText(/FullTime|Full-time|Mid\b|Senior\b/);
-  await shoot(page, testInfo, "admin-jobs-reading");
   await first.getByRole("button", { name: "Ẩn nội dung" }).click();
-  await expect(first.locator(".jp-facts")).toHaveCount(0);
 
-  // Reject: an empty reason is refused next to the field; the request is not sent.
-  await first.getByRole("button", { name: /^Từ chối tin/ }).click();
-  await first.getByRole("button", { name: "Xác nhận từ chối" }).click();
-  await expect(first.getByText("Nhập lý do từ chối để gửi cho nhà tuyển dụng.")).toBeVisible();
-  await expect(first.getByLabel(/^Lý do từ chối/)).toHaveAttribute("aria-invalid", "true");
-  await shoot(page, testInfo, "admin-jobs-reject");
-  await first.getByLabel(/^Lý do từ chối/).fill("Thiếu mô tả công việc");
-  await first.getByRole("button", { name: "Xác nhận từ chối" }).click();
-  await expect(page.getByRole("status").filter({ hasText: /từ chối/i })).toBeVisible();
-  // The page refills from the next pending jobs, so check by title, not by count.
-  await expect(page.locator(".jp-queue")).not.toContainText(rejectedTitle);
+  // Takedown: an empty reason is refused next to the field; the request is not sent.
+  await first.getByRole("button", { name: /^Gỡ tin / }).click();
+  await expectSoundLayout(page);
+  await first.getByRole("button", { name: "Xác nhận gỡ tin" }).click();
+  await expect(first.getByText("Nhập lý do gỡ tin để lưu vào lịch sử kiểm duyệt.")).toBeVisible();
+  await expect(first.getByLabel(/^Lý do gỡ tin/)).toHaveAttribute("aria-invalid", "true");
+  await shoot(page, testInfo, "admin-jobs-takedown");
+  await first.getByLabel(/^Lý do gỡ tin/).fill("Nội dung vi phạm quy định đăng tin");
+  await first.getByRole("button", { name: "Xác nhận gỡ tin" }).click();
+  await expect(page.getByRole("status").filter({ hasText: /Đã gỡ tin/ })).toBeVisible();
+  await expect(page.locator(".jp-queue")).not.toContainText(title);
 
-  // Approve the next one.
-  await rows
-    .filter({ hasText: approvedTitle })
-    .getByRole("button", { name: /^Duyệt tin/ })
-    .click();
-  await expect(page.locator(".jp-queue")).not.toContainText(approvedTitle);
+  // Deleted filter: the stored reason is on the row, and restore brings the job back.
+  await page.getByLabel("Trạng thái").selectOption("Deleted");
+  const gone = rows.filter({ hasText: title });
+  await expect(gone).toContainText("Nội dung vi phạm quy định đăng tin");
+  await expect(gone.getByRole("button", { name: /^Khôi phục tin/ })).toBeVisible();
+  await expect(gone.getByRole("button", { name: /^Sửa tin/ })).toHaveCount(0);
+  await gone.getByRole("button", { name: /^Khôi phục tin/ }).click();
+  await expect(gone.getByText("Khôi phục tin này?")).toBeVisible();
+  await shoot(page, testInfo, "admin-jobs-restore");
+  await gone.getByRole("button", { name: "Xác nhận khôi phục" }).click();
+  await expect(page.getByRole("status").filter({ hasText: /Đã khôi phục tin/ })).toBeVisible();
+  await expect(rows.filter({ hasText: title })).toHaveCount(0);
+
+  // Purge is only offered on a soft-deleted job and warns that it cannot be undone.
+  await page.getByLabel("Trạng thái").selectOption("");
+  const restored = rows.filter({ hasText: title });
+  await expect(restored).toBeVisible();
+  await restored.getByRole("button", { name: /^Gỡ tin / }).click();
+  await restored.getByLabel(/^Lý do gỡ tin/).fill("Tin trùng lặp");
+  await restored.getByRole("button", { name: "Xác nhận gỡ tin" }).click();
+  await page.getByLabel("Trạng thái").selectOption("Deleted");
+  const again = rows.filter({ hasText: title });
+  await expect(again).toContainText("Tin trùng lặp");
+  await again.getByRole("button", { name: /^Xóa vĩnh viễn tin/ }).click();
+  await expect(again.getByText("Thao tác này không thể hoàn tác.")).toBeVisible();
+  await shoot(page, testInfo, "admin-jobs-purge");
+  await again.getByRole("button", { name: "Xóa vĩnh viễn", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Đã xóa vĩnh viễn" })).toBeVisible();
 });
 
 test("admin jobs: a failed list load can be retried", async ({ page }, testInfo) => {
@@ -888,68 +918,24 @@ test("admin jobs: a failed list load can be retried", async ({ page }, testInfo)
   await shoot(page, testInfo, "admin-jobs-empty");
 });
 
-test("admin jobs: create, edit, soft delete, then purge from the deleted filter", async ({ page }, testInfo) => {
+test("admin jobs: edit a job without leaving the moderation queue", async ({ page }, testInfo) => {
   await offlineBackend(page);
   await adminBackend(page);
   await signIn(page, "Admin");
   await page.goto("/admin/jobs");
   const rows = page.locator(".jp-queue-item");
   await expect(rows.first()).toBeVisible();
-  await expect(page.locator(".jp-queue")).not.toContainText(/\b(Active|Pending|Deleted|active|pending)\b/);
   await expectSoundLayout(page);
 
-  // Create: required fields are checked before anything is sent.
-  await page.getByRole("button", { name: "Tạo tin" }).click();
-  const form = page.locator(".jp-jobform-panel");
-  await form.getByRole("button", { name: "Đăng tin" }).click();
-  await expect(form.getByText("Nhập tiêu đề tin.")).toBeVisible();
-  await expect(form.getByText("Chọn công ty đăng tin.")).toBeVisible();
-  await expectSoundLayout(page);
-  await shoot(page, testInfo, "admin-jobs-create");
-  const title = `Tin thử quản trị ${testInfo.project.name}`;
-  await form.getByLabel(/^Tiêu đề tin/).fill(title);
-  await form.getByRole("combobox", { name: /Công ty/ }).fill("ng");
-  await form.getByRole("listbox", { name: "Công ty tìm thấy" }).getByRole("option").first().click();
-  await form.getByLabel(/^Địa điểm làm việc/).fill("Đà Nẵng");
-  await form.getByLabel("Từ", { exact: true }).fill("20000000");
-  await form.getByLabel("Đến", { exact: true }).fill("10000000");
-  await form.getByLabel(/^Mô tả công việc/).fill("Mô tả thử");
-  await form.getByRole("button", { name: "Đăng tin" }).click();
-  await expect(form.getByText("Lương tối thiểu không được lớn hơn lương tối đa.")).toBeVisible();
-  await form.getByLabel("Đến", { exact: true }).fill("30000000");
-  await form.getByRole("button", { name: "Đăng tin" }).click();
-  await expect(page.getByRole("status").filter({ hasText: `Đã đăng tin “${title}”` })).toBeVisible();
-
-  // Edit the new job: the form opens prefilled.
-  const row = rows.filter({ hasText: title });
-  await expect(row).toContainText("Đang tuyển");
+  const row = rows.first();
+  const title = await row.locator(".jp-row-title").innerText();
   await row.getByRole("button", { name: `Sửa tin ${title}` }).click();
   await expect(row.getByLabel(/^Tiêu đề tin/)).toHaveValue(title);
   await shoot(page, testInfo, "admin-jobs-edit");
   await row.getByLabel(/^Tiêu đề tin/).fill(`${title} (đã sửa)`);
   await row.getByRole("button", { name: "Lưu thay đổi" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Đã lưu thay đổi" })).toBeVisible();
-
-  // Soft delete: confirm first; the job leaves the default list.
-  const edited = rows.filter({ hasText: `${title} (đã sửa)` });
-  await edited.getByRole("button", { name: /^Xóa tin/ }).click();
-  await expect(edited.getByText("Xóa tin này?")).toBeVisible();
-  await edited.getByRole("button", { name: "Xác nhận xóa" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Đã xóa tin" })).toBeVisible();
-  await expect(page.locator(".jp-queue")).not.toContainText(`${title} (đã sửa)`);
-
-  // Purge from the deleted filter: only deleted jobs offer it, and it warns it cannot be undone.
-  await page.getByLabel("Trạng thái").selectOption("Deleted");
-  const gone = rows.filter({ hasText: `${title} (đã sửa)` });
-  await expect(gone).toContainText("Đã xóa");
-  await expect(gone.getByRole("button", { name: /^Sửa tin/ })).toHaveCount(0);
-  await gone.getByRole("button", { name: /^Xóa vĩnh viễn tin/ }).click();
-  await expect(gone.getByText("Thao tác này không thể hoàn tác.")).toBeVisible();
-  await expectSoundLayout(page);
-  await shoot(page, testInfo, "admin-jobs-purge");
-  await gone.getByRole("button", { name: "Xóa vĩnh viễn", exact: true }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Đã xóa vĩnh viễn" })).toBeVisible();
-  await expect(rows.filter({ hasText: `${title} (đã sửa)` })).toHaveCount(0);
+  await expect(rows.filter({ hasText: `${title} (đã sửa)` })).toBeVisible();
 });
 
 test("admin users: Vietnamese roles, filters, confirm before deactivating, admins untouched", async ({
@@ -1073,76 +1059,4 @@ test("chat dock: opens from the button, can jump to the page and shrink", async 
   await page.getByRole("button", { name: "Mở trợ lý việc làm" }).click();
   await page.getByRole("link", { name: "Mở trang chat" }).click();
   await expect(page).toHaveURL(/\/chat$/);
-});
-
-const SCORE = {
-  overall_score: 72,
-  band: "Good",
-  breakdown: {
-    skills: {
-      score: 68,
-      matching: ["React", "TypeScript"],
-      missing: ["GraphQL"],
-      negated: ["Docker"],
-      extra: ["Figma"],
-      evidence: { React: "3 năm React tại công ty A" },
-    },
-    semantic: {
-      score: 74,
-      title_fit: 0.8,
-      top_matches: [
-        {
-          requirement: "Xây dựng giao diện web",
-          cv_excerpt: "Phát triển giao diện cho ứng dụng bán hàng",
-          similarity: 0.8,
-        },
-      ],
-    },
-    experience: { score: 80, cv_years: 3, required_years: 2 },
-    education: { score: 100, cv_level: "bachelor", required_level: "none" },
-  },
-  suggestions: ["Thêm số liệu cụ thể cho từng dự án."],
-  warnings: ["pages_truncated: 7"],
-  meta: { parser: "pdf", pages: 7, language: "vi", model: "x", cached: false, elapsed_ms: 2300 },
-};
-
-test("resume score: pick a job, wrong file type, then a result with every band label", async ({ page }, testInfo) => {
-  await offlineBackend(page);
-  await signIn(page, "User");
-  await page.route(/\/api\/ai\/score-resume$/, (route) => route.fulfill({ json: SCORE }));
-  await page.goto("/resume-score");
-  await expect(page.locator("main .jp-devtag")).toBeVisible();
-  await expectSoundLayout(page);
-  await shoot(page, testInfo, "resume-score-pick");
-
-  await page.getByLabel("Chọn việc làm").selectOption({ index: 1 });
-  await expect(page).toHaveURL(/jobId=/);
-  await expect(page.locator(".jp-row").first()).toBeVisible();
-
-  await page
-    .locator('input[type="file"]')
-    .setInputFiles({ name: "cv.txt", mimeType: "text/plain", buffer: Buffer.from("x") });
-  await expect(page.getByText("Chỉ nhận PDF hoặc DOCX")).toBeVisible();
-  await shoot(page, testInfo, "resume-score-bad-file");
-
-  await page.locator('input[type="file"]').setInputFiles(PDF);
-  await page.getByRole("button", { name: "Chấm điểm CV" }).click();
-  await expect(page.getByText("Phù hợp", { exact: true })).toBeVisible();
-  await expect(page.getByRole("img", { name: "Điểm phù hợp 72 trên 100" })).toBeVisible();
-  await expect(page.getByText("CV dài, chỉ 5 trang đầu được chấm.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "CV ghi là chưa có" })).toBeVisible();
-  await expectSoundLayout(page);
-  await shoot(page, testInfo, "resume-score-result");
-});
-
-test("resume score: a service error is shown in Vietnamese", async ({ page }) => {
-  await offlineBackend(page);
-  await signIn(page, "User");
-  await page.route(/\/api\/ai\/score-resume$/, (route) =>
-    route.fulfill({ status: 422, json: { code: "cv_encrypted" } }),
-  );
-  await page.goto("/resume-score?jobId=seed-1");
-  await page.locator('input[type="file"]').setInputFiles(PDF);
-  await page.getByRole("button", { name: "Chấm điểm CV" }).click();
-  await expect(page.getByRole("alert").filter({ hasText: "CV đang đặt mật khẩu" })).toBeVisible();
 });

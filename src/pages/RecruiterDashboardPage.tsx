@@ -12,13 +12,9 @@ import { fetchRecruiterJobs, type RecruiterJobStatus } from "../lib/jobsApi";
 
 const TILES: {
   status: RecruiterJobStatus;
-  labelKey:
-    | "recruiter.dashboard.tiles.active"
-    | "recruiter.dashboard.tiles.pending"
-    | "recruiter.dashboard.tiles.closed";
+  labelKey: "recruiter.dashboard.tiles.active" | "recruiter.dashboard.tiles.closed";
 }[] = [
   { status: "Active", labelKey: "recruiter.dashboard.tiles.active" },
-  { status: "Pending", labelKey: "recruiter.dashboard.tiles.pending" },
   { status: "Closed", labelKey: "recruiter.dashboard.tiles.closed" },
 ];
 
@@ -84,7 +80,7 @@ export default function RecruiterDashboardPage() {
         {recent.data && recentJobs.length === 0 && <EmptyState title={t("recruiter.dashboard.empty")} />}
         {recentJobs.length > 0 && (
           <div className="jp-table-wrap">
-            <table className="jp-table">
+            <table className="jp-table jp-recruiter-table">
               <thead>
                 <tr>
                   <th scope="col">{t("recruiter.dashboard.colJob")}</th>
@@ -101,9 +97,9 @@ export default function RecruiterDashboardPage() {
                       <td>
                         <Link to={`/jobs/${job.id}`}>{job.title}</Link>
                       </td>
-                      <td>{jobStatusLabel(job.status)}</td>
-                      <td>{formatDate(job.createdAt)}</td>
-                      <td>
+                      <td data-label={t("recruiter.dashboard.colStatus")}>{jobStatusLabel(job.status)}</td>
+                      <td data-label={t("recruiter.dashboard.colPosted")}>{formatDate(job.createdAt)}</td>
+                      <td data-label={t("recruiter.dashboard.colApplicants")}>
                         {a?.isError
                           ? t("recruiter.dashboard.applicantsFailed")
                           : a?.data

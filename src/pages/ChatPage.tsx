@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { DevTag, PageHead, TopBar } from "../components/ui";
+import { DevTag, PageHead } from "../components/ui";
 import { ChatPanel } from "../components/ChatPanel";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
@@ -8,7 +8,6 @@ export default function ChatPage() {
   useDocumentTitle(t("nav.aiAssistant"));
   return (
     <>
-      <TopBar />
       <main className="jp-page jp-page--narrow">
         <PageHead
           title={

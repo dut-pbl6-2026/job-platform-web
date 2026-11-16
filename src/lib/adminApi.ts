@@ -1,6 +1,6 @@
 import i18n from "../i18n";
 import { api } from "./api";
-import { unwrap, pickNum, pickStr, toOneBased, fromOneBased } from "./http";
+import { pickNum, pickStr, toOneBased, fromOneBased } from "./http";
 import { normalizeJob } from "./jobsApi";
 import { normalizeRole } from "./roles";
 import type { AdminHealth, AdminStatistics, AdminUser, Paginated, PendingJob } from "../types/admin";
@@ -45,12 +45,20 @@ function asUser(raw: unknown): AdminUser | null {
   };
 }
 
-/** Same adapter as search/job pages (normalizeJob), plus the admin-only recruiterName. */
+/** Same adapter as search/job pages (normalizeJob), plus the admin-only moderation fields. */
 function asJob(raw: unknown): PendingJob | null {
   if (!raw || typeof raw !== "object") return null;
   const job = normalizeJob(raw);
   if (!job.id) return null;
-  return { ...job, recruiterName: pickStr(raw as Record<string, unknown>, "recruiterName", "recruiter_name") };
+  const o = raw as Record<string, unknown>;
+  return {
+    ...job,
+    recruiterName: pickStr(o, "recruiterName", "recruiter_name"),
+    rejectionReason: pickStr(o, "rejectionReason", "rejection_reason") ?? null,
+    moderationReason: pickStr(o, "moderationReason", "moderation_reason") ?? null,
+    moderatedBy: pickStr(o, "moderatedBy", "moderated_by") ?? null,
+    moderatedAt: pickStr(o, "moderatedAt", "moderated_at") ?? null,
+  };
 }
 
 const STAT_SECTIONS = ["users", "jobs", "applications"] as const;
@@ -198,20 +206,24 @@ export function validationErrors(e: unknown): Record<string, string> {
   return out;
 }
 
-/** job-svc POST /api/admin/jobs → 201 { id, message }. An admin's job is published at once (Active). */
-export async function createAdminJob(input: AdminJobInput): Promise<string> {
-  const { data } = await api.post("/admin/jobs", input);
-  return pickStr((data ?? {}) as Record<string, unknown>, "id") ?? "";
-}
-
-/** job-svc PUT /api/admin/jobs/{id}. 409 when the job is deleted: restore is not offered. */
+/** job-svc PUT /api/admin/jobs/{id}. 409 when the job is deleted: restore first. */
 export async function updateAdminJob(jobId: string, input: AdminJobInput): Promise<void> {
   await api.put(`/admin/jobs/${jobId}`, input);
 }
 
-/** job-svc DELETE /api/admin/jobs/{id}: soft delete. The job leaves the board but stays in the database. */
-export async function softDeleteAdminJob(jobId: string): Promise<void> {
-  await api.delete(`/admin/jobs/${jobId}`);
+/**
+ * job-svc POST /api/admin/jobs/{id}/takedown { reason } — takes a job off the public board with an
+ * audit reason. The company keeps seeing it and an admin can restore it.
+ */
+export async function takedownAdminJob(jobId: string, reason: string): Promise<void> {
+  const trimmed = reason.trim();
+  if (!trimmed) throw new Error(i18n.t("admin.jobs.takedownReasonRequired"));
+  await api.post(`/admin/jobs/${jobId}/takedown`, { reason: trimmed });
+}
+
+/** job-svc POST /api/admin/jobs/{id}/restore — puts a taken-down job back on the public board. */
+export async function restoreAdminJob(jobId: string): Promise<void> {
+  await api.post(`/admin/jobs/${jobId}/restore`);
 }
 
 /** job-svc DELETE /api/admin/jobs/{id}/permanent: removes a soft-deleted job from the database (409 otherwise). */
@@ -221,8 +233,8 @@ export async function hardDeleteAdminJob(jobId: string): Promise<void> {
 
 /**
  * job-svc GET /api/admin/jobs/{id}: full content of a job in any status. The list above only has
- * title/company/category, and the public GET /api/jobs/{id} hides Pending jobs (404), so this is
- * the only way for an admin to read a job before approving or rejecting it.
+ * title/company/category, and the public GET /api/jobs/{id} hides non-active jobs (404), so this is
+ * the only way for an admin to read a job before moderating it.
  */
 export async function fetchAdminJob(jobId: string): Promise<PendingJob | null> {
   try {
@@ -232,18 +244,4 @@ export async function fetchAdminJob(jobId: string): Promise<PendingJob | null> {
     if ((e as { response?: { status?: number } })?.response?.status === 404) return null;
     throw e;
   }
-}
-
-/**
- * job-svc: approve and reject are separate endpoints. POST /approve { note? } always approves,
- * so a rejection must go to POST /reject { reason }, and reason is required there.
- */
-export async function decideJob(jobId: string, approved: boolean, reason?: string): Promise<string> {
-  const trimmed = reason?.trim() ?? "";
-  if (!approved && !trimmed) throw new Error(i18n.t("admin.jobs.reasonRequiredApi"));
-  const { data } = approved
-    ? await api.post(`/admin/jobs/${jobId}/approve`, { note: trimmed || undefined })
-    : await api.post(`/admin/jobs/${jobId}/reject`, { reason: trimmed });
-  const body = unwrap<Record<string, unknown>>(data);
-  return pickStr(body, "message") || (approved ? i18n.t("admin.jobs.approved") : i18n.t("admin.jobs.rejected"));
 }

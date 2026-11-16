@@ -14,6 +14,7 @@ React 19 · Vite 8 · TypeScript 7 (strict) · React Router 7 · TanStack Query 
 
 ## Layout
 - `src/pages/*Page.tsx`: route screens, **default export**. Routes are in `src/App.tsx`.
+- `src/layouts/*`: `PublicLayout` (top bar + footer), `CandidateLayout` (compact header), `AuthedLayout` (auth guard + role shell) and `WorkspaceLayout` (recruiter/admin sidebar). `TopBar` and the footer are rendered only by layouts, never by a page.
 - `src/components/*.tsx`: shared UI, **named exports**.
 - `src/lib/*Api.ts`: one API module per service. Errors go through `lib/http.ts` (`httpStatus`, `shouldUseMock`).
 - `src/lib/roles.ts`: canonical roles `User` / `Recruiter` / `Admin` (`Employer` is a deprecated alias).
@@ -34,5 +35,7 @@ React 19 · Vite 8 · TypeScript 7 (strict) · React Router 7 · TanStack Query 
 - **Chosen first-viewport sketch:** `.impeccable/mocks/decision/assigned.html`.
 - **Baseline critique (16/40):** `.impeccable/critique/2026-11-05T15-34-04Z__src.md`.
 - **Design workflow:** the `impeccable` skill. Read its `craft-floor.md` before UI edits; run `impeccable detect --json src` after UI changes; write `DESIGN.md` only after the build is finished.
+- **Routes and shells:** public `/`, `/jobs`, `/jobs/:id`, `/companies/:id`, plus a public 404; auth pages keep `AuthLayout`/`GuestOnly`; all signed-in routes live in `AuthedLayout` (User header or recruiter/admin workspace). Recruiter and admin route groups use `RequireRole` (`src/components/ProtectedRoute.tsx`). Profile is reached from the avatar menu, not the nav/footer.
+- **Owner decisions:** jobs publish instantly (no approve/reject anywhere; admins use takedown-with-reason + restore); the company creator is Company Admin (Members read company info with a visible reason); the AI match score is recruiter-only and the candidate `/resume-score` page is gone.
 - **Screenshots:** headless Chrome on this machine lays out at ≥504px even with `--window-size=390`, so 390px mobile captures need real viewport emulation.
 - **Commits:** one commit per slice. Logic fixes go in their own `fix(web): …` commits. Commit only when the user asks.

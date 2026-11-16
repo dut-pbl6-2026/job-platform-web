@@ -48,5 +48,6 @@ export interface ProfileUpdate {
   address?: string;
   headline?: string;
   summary?: string;
+  avatarUrl?: string;
   dateOfBirth?: string;
 }

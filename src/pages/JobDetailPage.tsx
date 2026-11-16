@@ -7,14 +7,12 @@ import {
   BackLink,
   Button,
   ButtonLink,
-  DevTag,
   EmptyState,
   FactStrip,
   Icon,
   Panel,
   SkeletonBlock,
   StatusMark,
-  TopBar,
 } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { isAdmin, isRecruiter, isUser } from "../lib/roles";
@@ -63,7 +61,6 @@ export default function JobDetailPage() {
   if (loading) {
     return (
       <>
-        <TopBar />
         <main className="jp-page">
           <BackLink to="/jobs">{t("jobs.detail.backToBoard")}</BackLink>
           <SkeletonBlock height={440} label={t("jobs.detail.loading")} />
@@ -75,7 +72,6 @@ export default function JobDetailPage() {
   if (notFound) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-page--narrow">
           <EmptyState
             title={t("jobs.detail.notFound")}
@@ -89,7 +85,6 @@ export default function JobDetailPage() {
   if (err) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-page--narrow">
           <BackLink to="/jobs">{t("jobs.detail.backToBoard")}</BackLink>
           <Alert
@@ -126,7 +121,6 @@ export default function JobDetailPage() {
 
   return (
     <>
-      <TopBar />
       <main className="jp-page jp-detail">
         <BackLink to="/jobs">{t("jobs.detail.backToBoard")}</BackLink>
 
@@ -176,10 +170,6 @@ export default function JobDetailPage() {
                 <div className="jp-detail-actions">
                   <ButtonLink size="lg" block to={`/jobs/${job.id}/apply`}>
                     {t("jobs.detail.applyNow")}
-                  </ButtonLink>
-                  <ButtonLink variant="secondary" block to={`/resume-score?jobId=${job.id}`}>
-                    {t("jobs.detail.checkFit")}
-                    <DevTag />
                   </ButtonLink>
                 </div>
               )}

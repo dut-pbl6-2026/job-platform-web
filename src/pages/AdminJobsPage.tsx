@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +12,6 @@ import {
   Field,
   Input,
   Pagination,
-  Panel,
   Select,
   SkeletonRows,
   StatusMark,
@@ -21,17 +20,17 @@ import {
 } from "../components/ui";
 import {
   ADMIN_JOB_STATUSES,
-  createAdminJob,
-  decideJob,
   fetchAdminJob,
   fetchAdminJobs,
   hardDeleteAdminJob,
   isAdminJobStatus,
-  softDeleteAdminJob,
+  restoreAdminJob,
+  takedownAdminJob,
   updateAdminJob,
   type AdminJobInput,
 } from "../lib/adminApi";
 import { timeAgo } from "../lib/jobsApi";
+import { formatDate } from "../lib/dates";
 import { apiErrorMessage, httpStatus, loadErrorMessage } from "../lib/http";
 import { categoryLabel, jobStatusLabel } from "../lib/labels";
 import { queryKeys } from "../lib/queryClient";
@@ -39,6 +38,7 @@ import type { PendingJob } from "../types/admin";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const PAGE_SIZE = 8;
+const REASON_MAX = 500;
 
 const STATUS_TONE: Record<string, StatusTone> = {
   active: "success",
@@ -49,8 +49,13 @@ const STATUS_TONE: Record<string, StatusTone> = {
 };
 
 /** What is open under a row. One at a time, so a row never stacks a form on top of another. */
-type Open = { id: string; kind: "read" | "edit" | "reject" | "delete" | "purge" };
+type Open = { id: string; kind: "read" | "edit" | "takedown" | "restore" | "purge" };
 
+/**
+ * Job moderation. Jobs publish instantly, so there is no approve/reject step and no admin create form.
+ * The admin can read and edit any job, take a job off the public board with a required reason, restore
+ * it, and permanently delete a job that is already soft-deleted.
+ */
 export default function AdminJobsPage() {
   const { t } = useTranslation();
   useDocumentTitle(t("admin.documentTitles.jobs"));
@@ -61,7 +66,6 @@ export default function AdminJobsPage() {
   const status = isAdminJobStatus(rawStatus) ? rawStatus : "";
   const page = Math.max(0, Number(sp.get("page")) || 0);
   const [draftQ, setDraftQ] = useState(q);
-  const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState<Open | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -81,7 +85,6 @@ export default function AdminJobsPage() {
   const data = query.data;
   const filtered = !!(q || status);
 
-  // Removing the last job of page N > 0 empties that page; step back to one that still has jobs.
   const patchQuery = useCallback(
     (next: Record<string, string>) => {
       const params = new URLSearchParams(sp);
@@ -113,10 +116,6 @@ export default function AdminJobsPage() {
     setDone(null);
   }
 
-  /**
-   * After any change: the admin lists and counts, and the public board and job page, which would
-   * otherwise keep showing a deleted or edited job from cache until it goes stale.
-   */
   async function refresh(jobId?: string) {
     if (jobId) {
       queryClient.removeQueries({ queryKey: queryKeys.job(jobId) });
@@ -138,8 +137,6 @@ export default function AdminJobsPage() {
       setDone(message);
       await refresh(jobId);
     } catch (e: unknown) {
-      // Someone else removed or changed the job meanwhile: show why, and reload the list.
-      // job-svc words 404/409 in English, so say it here instead of echoing it.
       const status = httpStatus(e);
       if (status === 404 || status === 409) void refresh(jobId);
       setActionErr(
@@ -154,26 +151,21 @@ export default function AdminJobsPage() {
     }
   }
 
-  function decide(job: PendingJob, approved: boolean) {
-    // job-svc rejects without a reason (422); stop here instead of sending the request.
-    if (!approved && !reason.trim()) {
-      setReasonErr(t("admin.jobs.reasonRequired"));
+  function takedown(job: PendingJob) {
+    // The backend requires a reason; stop here instead of sending a request it will reject.
+    if (!reason.trim()) {
+      setReasonErr(t("admin.jobs.takedownReasonRequired"));
       return;
     }
     setReasonErr(null);
     void run(
       job.id,
-      () => decideJob(job.id, approved, approved ? undefined : reason.trim()),
-      t("admin.jobs.decideFailed"),
+      async () => {
+        await takedownAdminJob(job.id, reason);
+        return t("admin.jobs.takenDown", { title: job.title });
+      },
+      t("admin.jobs.takedownFailed"),
     );
-  }
-
-  async function create(input: AdminJobInput) {
-    await createAdminJob(input);
-    setCreating(false);
-    setActionErr(null);
-    setDone(t("admin.jobs.created", { title: input.title }));
-    await refresh();
   }
 
   async function save(jobId: string, input: AdminJobInput) {
@@ -187,38 +179,7 @@ export default function AdminJobsPage() {
   const showing = status ? jobStatusLabel(status).toLowerCase() : null;
 
   return (
-    <AdminShell
-      title={t("admin.jobs.title")}
-      lead={t("admin.jobs.lead")}
-      actions={
-        !creating && (
-          <Button
-            icon="plus"
-            onClick={() => {
-              setCreating(true);
-              setOpen(null);
-              setDone(null);
-              setActionErr(null);
-            }}
-          >
-            {t("admin.jobs.create")}
-          </Button>
-        )
-      }
-    >
-      {creating && (
-        <Panel title={t("admin.jobs.createTitle")} className="jp-jobform-panel">
-          <p className="jp-muted jp-jobform-note">{t("admin.jobs.createNote")}</p>
-          <AdminJobForm
-            idPrefix="new-job"
-            submitLabel={t("admin.jobs.publish")}
-            busyLabel={t("admin.jobs.publishing")}
-            onSubmit={create}
-            onCancel={() => setCreating(false)}
-          />
-        </Panel>
-      )}
-
+    <AdminShell title={t("admin.jobs.title")} lead={t("admin.jobs.lead")}>
       <form
         className="jp-user-filters jp-job-filters"
         onSubmit={search}
@@ -298,7 +259,7 @@ export default function AdminJobsPage() {
                 const kind = open?.id === job.id ? open.kind : null;
                 const busy = busyId === job.id;
                 const deleted = job.status === "deleted";
-                const pending = job.status === "pending";
+                const takenDown = deleted && !!job.moderationReason;
                 return (
                   <li key={job.id} className="jp-queue-item">
                     <div className="jp-queue-row">
@@ -309,6 +270,14 @@ export default function AdminJobsPage() {
                         </p>
                         {job.recruiterName && (
                           <p className="jp-queue-by">{t("admin.jobs.postedBy", { name: job.recruiterName })}</p>
+                        )}
+                        {job.moderationReason && (
+                          <p className="jp-queue-moderation">
+                            {t("admin.jobs.moderation", {
+                              reason: job.moderationReason,
+                              date: job.moderatedAt ? formatDate(job.moderatedAt) : t("common.notProvided"),
+                            })}
+                          </p>
                         )}
                       </div>
                       <span className="jp-cell">
@@ -333,28 +302,7 @@ export default function AdminJobsPage() {
                         >
                           {kind === "read" ? t("admin.jobs.hideContent") : t("admin.jobs.showContent")}
                         </Button>
-                        {pending && (
-                          <>
-                            <Button
-                              loading={busy && kind !== "reject"}
-                              disabled={busy}
-                              aria-label={t("admin.jobs.approveLabel", { title: job.title })}
-                              onClick={() => decide(job, true)}
-                            >
-                              {t("admin.jobs.approve")}
-                            </Button>
-                            <Button
-                              variant="danger"
-                              aria-expanded={kind === "reject"}
-                              aria-label={t("admin.jobs.rejectLabel", { title: job.title })}
-                              disabled={busy}
-                              onClick={() => toggle(job.id, "reject")}
-                            >
-                              {t("admin.jobs.reject")}
-                            </Button>
-                          </>
-                        )}
-                        {!pending && !deleted && (
+                        {!deleted && (
                           <>
                             <Button
                               variant="secondary"
@@ -367,14 +315,25 @@ export default function AdminJobsPage() {
                             </Button>
                             <Button
                               variant="danger"
-                              icon="trash"
-                              aria-expanded={kind === "delete"}
-                              aria-label={t("admin.jobs.deleteLabel", { title: job.title })}
-                              onClick={() => toggle(job.id, "delete")}
+                              aria-expanded={kind === "takedown"}
+                              aria-label={t("admin.jobs.takedownLabel", { title: job.title })}
+                              disabled={busy}
+                              onClick={() => toggle(job.id, "takedown")}
                             >
-                              {t("admin.jobs.delete")}
+                              {t("admin.jobs.takedown")}
                             </Button>
                           </>
+                        )}
+                        {takenDown && (
+                          <Button
+                            variant="secondary"
+                            aria-expanded={kind === "restore"}
+                            aria-label={t("admin.jobs.restoreLabel", { title: job.title })}
+                            disabled={busy}
+                            onClick={() => toggle(job.id, "restore")}
+                          >
+                            {t("admin.jobs.restore")}
+                          </Button>
                         )}
                         {deleted && (
                           <Button
@@ -390,46 +349,38 @@ export default function AdminJobsPage() {
                       </div>
                     </div>
 
-                    {kind === "read" && (
-                      <JobDetail jobId={job.id}>
-                        {pending && (
-                          <div className="jp-form-actions jp-queue-more">
-                            <Button variant="secondary" icon="pencil" onClick={() => toggle(job.id, "edit")}>
-                              {t("admin.jobs.editJob")}
-                            </Button>
-                            <Button variant="danger" icon="trash" onClick={() => toggle(job.id, "delete")}>
-                              {t("admin.jobs.deleteJob")}
-                            </Button>
-                          </div>
-                        )}
-                      </JobDetail>
-                    )}
+                    {kind === "read" && <JobDetail jobId={job.id} />}
 
                     {kind === "edit" && (
                       <EditJob job={job} onSave={(input) => save(job.id, input)} onCancel={() => setOpen(null)} />
                     )}
 
-                    {kind === "reject" && (
+                    {kind === "takedown" && (
                       <form
                         className="jp-queue-reject"
                         noValidate
+                        aria-label={t("admin.jobs.takedownGroup", { title: job.title })}
                         onSubmit={(e) => {
                           e.preventDefault();
-                          decide(job, false);
+                          takedown(job);
                         }}
                       >
+                        <div>
+                          <p className="jp-queue-confirm-title">{t("admin.jobs.takedownTitle")}</p>
+                          <p className="jp-queue-confirm-text">{t("admin.jobs.takedownText")}</p>
+                        </div>
                         <Field
-                          id={`reason-${job.id}`}
-                          label={t("admin.jobs.rejectReason")}
+                          id={`takedown-${job.id}`}
+                          label={t("admin.jobs.takedownReason")}
                           required
-                          hint={t("admin.jobs.rejectHint")}
+                          hint={t("admin.jobs.takedownHint", { max: REASON_MAX })}
                           error={reasonErr}
                         >
                           <Textarea
                             rows={3}
-                            maxLength={500}
+                            maxLength={REASON_MAX}
                             value={reason}
-                            placeholder={t("admin.jobs.rejectPlaceholder")}
+                            placeholder={t("admin.jobs.takedownPlaceholder")}
                             onChange={(e) => setReason(e.target.value)}
                           />
                         </Field>
@@ -438,27 +389,28 @@ export default function AdminJobsPage() {
                             {t("admin.form.cancel")}
                           </Button>
                           <Button type="submit" variant="danger" loading={busy}>
-                            {busy ? t("admin.jobs.rejectSubmitting") : t("admin.jobs.rejectConfirm")}
+                            {busy ? t("admin.jobs.takedownSubmitting") : t("admin.jobs.takedownConfirm")}
                           </Button>
                         </div>
                       </form>
                     )}
 
-                    {kind === "delete" && (
+                    {kind === "restore" && (
                       <ConfirmBlock
-                        label={t("admin.jobs.deleteConfirmLabel", { title: job.title })}
-                        title={t("admin.jobs.deleteTitle")}
-                        text={t("admin.jobs.deleteText")}
-                        confirm={busy ? t("admin.jobs.deleting") : t("admin.jobs.deleteConfirm")}
+                        tone="primary"
+                        label={t("admin.jobs.restoreConfirmLabel", { title: job.title })}
+                        title={t("admin.jobs.restoreTitle")}
+                        text={t("admin.jobs.restoreText")}
+                        confirm={busy ? t("admin.jobs.restoring") : t("admin.jobs.restoreConfirm")}
                         busy={busy}
                         onConfirm={() =>
                           void run(
                             job.id,
                             async () => {
-                              await softDeleteAdminJob(job.id);
-                              return t("admin.jobs.deleted", { title: job.title });
+                              await restoreAdminJob(job.id);
+                              return t("admin.jobs.restored", { title: job.title });
                             },
-                            t("admin.jobs.deleteFailed"),
+                            t("admin.jobs.restoreFailed"),
                           )
                         }
                         onCancel={() => setOpen(null)}
@@ -516,7 +468,7 @@ function useAdminJob(jobId: string) {
   });
 }
 
-function JobDetail({ jobId, children }: { jobId: string; children?: ReactNode }) {
+function JobDetail({ jobId }: { jobId: string }) {
   const { t } = useTranslation();
   const detail = useAdminJob(jobId);
   const job = detail.data;
@@ -530,16 +482,18 @@ function JobDetail({ jobId, children }: { jobId: string; children?: ReactNode })
       {detail.isError && <Alert tone="error">{loadErrorMessage(detail.error, t("admin.jobs.contentWhat"))}</Alert>}
       {job && (
         <>
-          {job.status === "rejected" && job.rejectionReason?.trim() && (
-            <Alert tone="warning" title={t("admin.jobs.rejectReason")}>
-              {job.rejectionReason}
+          {job.moderationReason && (
+            <Alert tone="warning" title={t("admin.jobs.moderationTitle")}>
+              {t("admin.jobs.moderationDetail", {
+                reason: job.moderationReason,
+                date: job.moderatedAt ? formatDate(job.moderatedAt) : t("common.notProvided"),
+              })}
             </Alert>
           )}
           <FactStrip job={job} />
           <JobText title={t("jobs.detail.sectionDescription")} text={job.description} />
           <JobText title={t("jobs.detail.sectionRequirements")} text={job.requirements} />
           <JobText title={t("jobs.detail.sectionBenefits")} text={job.benefits} />
-          {children}
         </>
       )}
     </div>
@@ -587,6 +541,7 @@ function ConfirmBlock({
   confirm,
   busy,
   strong,
+  tone = "danger",
   onConfirm,
   onCancel,
 }: {
@@ -596,6 +551,7 @@ function ConfirmBlock({
   confirm: string;
   busy: boolean;
   strong?: boolean;
+  tone?: "danger" | "primary";
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -614,7 +570,7 @@ function ConfirmBlock({
         <Button variant="secondary" disabled={busy} onClick={onCancel}>
           {t("admin.form.cancel")}
         </Button>
-        <Button variant="danger" loading={busy} onClick={onConfirm}>
+        <Button variant={tone === "danger" ? "danger" : "primary"} loading={busy} onClick={onConfirm}>
           {confirm}
         </Button>
       </div>

@@ -11,7 +11,6 @@ import {
   PageHead,
   Pagination,
   SkeletonRows,
-  TopBar,
 } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { isUser } from "../lib/roles";
@@ -50,7 +49,6 @@ export default function ApplicationHistoryPage() {
   if (!candidate) {
     return (
       <>
-        <TopBar />
         <main className="jp-page jp-page--narrow">
           <EmptyState
             title={t("applications.candidateOnly")}
@@ -82,7 +80,6 @@ export default function ApplicationHistoryPage() {
 
   return (
     <>
-      <TopBar />
       <main className="jp-page">
         <PageHead title={t("applications.heading")} lead={t("applications.lead")} />
 
