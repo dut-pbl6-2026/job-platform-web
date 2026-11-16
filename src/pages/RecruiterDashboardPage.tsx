@@ -37,7 +37,7 @@ const TILES: {
 const STATUS_COLORS: Record<ApplicationStatus, string> = {
   pending: "var(--c-amber)",
   reviewed: "var(--c-navy)",
-  shortlisted: "var(--c-control)",
+  shortlisted: "var(--c-navy-line)",
   accepted: "var(--c-success)",
   rejected: "var(--c-danger)",
 };

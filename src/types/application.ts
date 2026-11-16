@@ -17,6 +17,9 @@ export interface Application {
   companyName?: string;
   location?: string;
   applicantId: string;
+  /** Snapshot from the access token when the application was submitted; null on older rows. */
+  applicantName?: string | null;
+  applicantEmail?: string | null;
   coverLetter?: string | null;
   cvUrl?: string | null;
   cvFileName?: string | null;

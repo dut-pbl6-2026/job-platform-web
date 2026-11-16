@@ -7,13 +7,18 @@
 /* Utilities ------------------------------------------------------------------------------------- */
 
 .jp-sr {
-  position: absolute;
+  /* Fixed, not absolute: an absolutely positioned visually-hidden label inside the console's
+     scroll pane is not clipped by it, so it extends the document and adds a second scrollbar. */
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 1px;
   height: 1px;
   padding: 0;
-  margin: -1px;
+  margin: 0;
   overflow: hidden;
   clip: rect(0 0 0 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }

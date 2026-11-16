@@ -69,6 +69,8 @@ test("recruiter edits a published job through PUT /api/jobs/{id}", async ({ page
 
   await expect(page.getByLabel("Tiêu đề vị trí")).toHaveValue("Lập trình viên React");
   await page.getByLabel("Tiêu đề vị trí").fill("Lập trình viên React (cao cấp)");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByRole("button", { name: "Lưu thay đổi" }).click();
 
   await expect(page).toHaveURL(/\/recruiter\/jobs$/);

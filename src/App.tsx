@@ -30,6 +30,10 @@ import RecruiterDashboardPage from "./pages/RecruiterDashboardPage";
 import RecruiterJobsPage from "./pages/RecruiterJobsPage";
 import RecruiterPostJobPage from "./pages/RecruiterPostJobPage";
 import RecruiterApplicationsPage from "./pages/RecruiterApplicationsPage";
+import RecruiterCandidatesPage from "./pages/RecruiterCandidatesPage";
+import RecruiterEmailTemplatesPage from "./pages/RecruiterEmailTemplatesPage";
+import RecruiterInterviewsPage from "./pages/RecruiterInterviewsPage";
+import InterviewsPage from "./pages/InterviewsPage";
 import RecruiterCompanyPage from "./pages/RecruiterCompanyPage";
 import RecruiterInviteCodesPage from "./pages/RecruiterInviteCodesPage";
 import RecruiterJoinRequestsPage from "./pages/RecruiterJoinRequestsPage";
@@ -119,6 +123,14 @@ export default function App() {
                     }
                   />
                   <Route
+                    path="/interviews"
+                    element={
+                      <ProtectedRoute applicantOnly>
+                        <InterviewsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/jobs/:id/apply"
                     element={
                       <ProtectedRoute applicantOnly>
@@ -164,6 +176,30 @@ export default function App() {
                     element={
                       <RequireRole requiredRole="Recruiter">
                         <RecruiterApplicationsPage />
+                      </RequireRole>
+                    }
+                  />
+                  <Route
+                    path="/recruiter/candidates"
+                    element={
+                      <RequireRole requiredRole="Recruiter">
+                        <RecruiterCandidatesPage />
+                      </RequireRole>
+                    }
+                  />
+                  <Route
+                    path="/recruiter/interviews"
+                    element={
+                      <RequireRole requiredRole="Recruiter">
+                        <RecruiterInterviewsPage />
+                      </RequireRole>
+                    }
+                  />
+                  <Route
+                    path="/recruiter/email-templates"
+                    element={
+                      <RequireRole requiredRole="Recruiter">
+                        <RecruiterEmailTemplatesPage />
                       </RequireRole>
                     }
                   />

@@ -15,11 +15,12 @@ async function registerAndWaitForNotice(page: Page) {
     route.fulfill({ status: 202, json: { message: "Verification email sent." } }),
   );
   await page.goto("/register");
-  await page.getByRole("button", { name: "Ứng viên", exact: true }).click();
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByLabel("Họ và tên").fill("Nguyễn Văn An");
-  await page.getByLabel("Email").fill("an@e2e.local");
+  await page.getByRole("textbox", { name: "Email" }).fill("an@e2e.local");
   await page.locator("#reg-pwd").fill("Passw0rd!e2e");
   await page.locator("#reg-confirm").fill("Passw0rd!e2e");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByRole("button", { name: "Đăng ký ứng viên" }).click();
   await expect(page.getByText("Kiểm tra email để xác minh tài khoản của bạn.")).toBeVisible();
 }
@@ -89,7 +90,7 @@ test.describe("resend verification email", () => {
     await page.goto("/verify-email?token=expired-resend-e2e");
 
     await expect(page.getByText("Liên kết xác minh này không hợp lệ")).toBeVisible();
-    await page.getByLabel("Email").fill("an@e2e.local");
+    await page.getByRole("textbox", { name: "Email" }).fill("an@e2e.local");
     await page.getByRole("button", { name: RESEND_BUTTON }).click();
 
     await expect(page.getByText(SENT)).toBeVisible();

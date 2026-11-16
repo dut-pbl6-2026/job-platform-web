@@ -1,27 +1,222 @@
 /*
- * Sign-in screens (login, register, forgot and reset password): the shell bar, then one plain panel
- * on the ground colour. Replaces the legacy .auth-* look (gradient, glass card, input icons), which
- * is removed with the rest of the old CSS in S10.
+ * Sign-in screens (login, register, forgot and reset password): a split card with the form on the
+ * left and a decorative navy panel on the right. No site header or footer; the brand mark returns
+ * to the board. Below 900px the visual panel is dropped and the form fills the screen.
  */
 
 .jp-auth {
-  display: flex;
-  justify-content: center;
-  padding: var(--sp-12) var(--sp-4) calc(var(--sp-12) * 2);
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-6);
+  background:
+    radial-gradient(900px 520px at 12% -10%, var(--c-info-soft), transparent 62%),
+    var(--c-ground);
 }
 
-.jp-auth-panel {
-  width: 100%;
-  max-width: 480px;
-  padding: var(--sp-8);
+.jp-auth-card {
+  width: min(1120px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: 20px;
+  box-shadow: 0 40px 90px -60px var(--c-navy);
+  overflow: hidden;
 }
-.jp-auth-panel .jp-lead { margin-top: var(--sp-2); }
+
+.jp-auth-form {
+  min-width: 0;
+  padding: 44px 52px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.jp-auth-mark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  width: fit-content;
+  color: var(--c-navy);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+.jp-auth-mark b {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--c-navy);
+  color: var(--c-amber);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.jp-auth-mark:hover { text-decoration: none; color: var(--c-navy); }
+
+.jp-auth-heading { margin-top: var(--sp-8); }
+.jp-auth-title {
+  margin: 0;
+  color: var(--c-ink);
+  font-size: clamp(28px, 3vw, 36px);
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.jp-auth-lead {
+  margin: var(--sp-2) 0 0;
+  color: var(--c-muted);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+}
 
 .jp-auth-body {
   display: grid;
   gap: var(--sp-4);
   margin-top: var(--sp-6);
 }
+
+/* The form column is the only interactive area; keep it a comfortable measure on wide screens. */
+.jp-auth-form .jp-form { max-width: 420px; }
+
+.jp-auth-visual {
+  position: relative;
+  overflow: hidden;
+  padding: 48px 44px;
+  background: var(--c-navy);
+  color: #fff;
+}
+.jp-auth-visual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, #000 20%, transparent 90%);
+}
+.jp-auth-visual::after {
+  content: "";
+  position: absolute;
+  right: -130px;
+  bottom: -160px;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: var(--c-amber);
+  opacity: 0.16;
+}
+.jp-auth-visual-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.jp-auth-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-on-navy-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.jp-auth-eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 4px;
+  background: var(--c-amber);
+}
+.jp-auth-slogan {
+  margin: var(--sp-6) 0 0;
+  max-width: 18ch;
+  font-size: clamp(30px, 3.4vw, 44px);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+.jp-auth-slogan em {
+  font-style: normal;
+  background: linear-gradient(transparent 66%, rgba(246, 170, 26, 0.45) 66%);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.jp-auth-visual-lead {
+  margin: var(--sp-4) 0 0;
+  max-width: 42ch;
+  color: var(--c-on-navy-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.jp-auth-points {
+  margin: var(--sp-6) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  color: #fff;
+}
+.jp-auth-points li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.jp-auth-points .jp-icon { color: var(--c-amber); flex: none; }
+
+/* A small live-board echo from the home page, deliberately without invented numbers. */
+.jp-auth-board {
+  margin-top: auto;
+  padding: 6px 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(2px);
+}
+.jp-auth-board-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-on-navy-muted);
+}
+.jp-auth-board-head i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-amber);
+}
+.jp-auth-board-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+}
+.jp-auth-board-row:first-of-type { border-top: 0; }
+.jp-auth-board-row > span:nth-child(2) { flex: 1; min-width: 0; }
+.jp-auth-board-row .jp-icon { color: var(--c-on-navy-muted); }
+.jp-auth-board-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.jp-auth-board-dot.is-amber { background: var(--c-amber); }
+.jp-auth-board-dot.is-navy { background: #8fb6ff; }
+.jp-auth-board-dot.is-success { background: #7ddba8; }
 
 .jp-form { display: grid; gap: var(--sp-6); }
 
@@ -141,7 +336,20 @@
 .jp-company-picked-text strong { overflow-wrap: anywhere; }
 .jp-company-picked-text span { font-size: var(--fs-caption); color: var(--c-muted); overflow-wrap: anywhere; }
 
-@media (max-width: 767px) {
-  .jp-auth { padding: var(--sp-6) var(--sp-4) var(--sp-12); }
-  .jp-auth-panel { padding: var(--sp-6) var(--sp-4); }
+@media (max-width: 899px) {
+  .jp-auth-visual { display: none; }
+  .jp-auth-card { grid-template-columns: minmax(0, 1fr); }
+  .jp-auth-form { padding: 32px 28px 28px; }
+}
+
+@media (max-width: 599px) {
+  .jp-auth { padding: 0; place-items: stretch; }
+  .jp-auth-card {
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .jp-auth-form { padding: 24px 20px 28px; }
+  .jp-auth-heading { margin-top: var(--sp-6); }
 }

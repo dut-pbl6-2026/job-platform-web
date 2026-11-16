@@ -92,8 +92,27 @@ async function openApply(page: Page) {
   await expect(page.getByRole("heading", { name: "Gửi hồ sơ ứng tuyển" })).toBeVisible();
 }
 
-test("apply: file of the wrong type", async ({ page }, testInfo) => {
+/** Step 1 is the profile review: confirm it before the CV step becomes reachable. */
+async function confirmProfile(page: Page) {
+  await page.getByRole("checkbox", { name: /Tôi đã kiểm tra/ }).check();
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
+  await expect(page.getByRole("heading", { name: "Chọn CV và lời nhắn" })).toBeFocused();
+}
+
+async function openApplyDocuments(page: Page) {
   await openApply(page);
+  await confirmProfile(page);
+}
+
+async function openApplyReview(page: Page) {
+  await openApplyDocuments(page);
+  await page.locator('input[type="file"]').setInputFiles(PDF);
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
+  await expect(page.getByRole("heading", { name: "Xem lại trước khi gửi" })).toBeFocused();
+}
+
+test("apply: file of the wrong type", async ({ page }, testInfo) => {
+  await openApplyDocuments(page);
   await page
     .locator('input[type="file"]')
     .setInputFiles({ name: "anh.png", mimeType: "image/png", buffer: Buffer.from("png") });
@@ -102,7 +121,7 @@ test("apply: file of the wrong type", async ({ page }, testInfo) => {
 });
 
 test("apply: file over 5 MB", async ({ page }, testInfo) => {
-  await openApply(page);
+  await openApplyDocuments(page);
   await page
     .locator('input[type="file"]')
     .setInputFiles({ name: "cv-lon.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(5 * 1024 * 1024 + 1) });
@@ -111,16 +130,15 @@ test("apply: file over 5 MB", async ({ page }, testInfo) => {
 });
 
 test("apply: no file chosen", async ({ page }, testInfo) => {
-  await openApply(page);
-  await page.getByRole("button", { name: "Gửi hồ sơ", exact: true }).click();
+  await openApplyDocuments(page);
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await expect(page.getByText("Hãy chọn file CV")).toBeVisible();
   await expect(page.getByRole("button", { name: /File CV/ })).toBeFocused();
   await shoot(page, testInfo, "apply-no-file");
 });
 
 test("apply: success, then 409 on the same job", async ({ page }, testInfo) => {
-  await openApply(page);
-  await page.locator('input[type="file"]').setInputFiles(PDF);
+  await openApplyReview(page);
   await expect(page.getByText(PDF.name)).toBeVisible();
   await shoot(page, testInfo, "apply-file-chosen");
   await page.getByRole("button", { name: "Gửi hồ sơ", exact: true }).click();
@@ -129,8 +147,7 @@ test("apply: success, then 409 on the same job", async ({ page }, testInfo) => {
   await shoot(page, testInfo, "apply-success");
 
   // The mock store remembers the first application: the second one is a duplicate.
-  await page.goto("/jobs/seed-1/apply");
-  await page.locator('input[type="file"]').setInputFiles(PDF);
+  await openApplyReview(page);
   await page.getByRole("button", { name: "Gửi hồ sơ", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "đã nộp hồ sơ cho tin này" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Xem đơn đã nộp" })).toBeVisible();
@@ -217,6 +234,7 @@ test("login: coming from a job says where you go back to", async ({ page }) => {
 test("register: password rules are visible up front and tick as met", async ({ page }, testInfo) => {
   await offlineBackend(page);
   await page.goto("/register");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   const rules = page.locator(".jp-rules");
   await expect(rules).toBeVisible();
   await expect(rules.getByText("(chưa đạt)")).toHaveCount(3);
@@ -227,15 +245,15 @@ test("register: password rules are visible up front and tick as met", async ({ p
   await shoot(page, testInfo, "register-password-rules");
 });
 
-test("register: empty submit, role switch has aria-pressed", async ({ page }, testInfo) => {
+test("register: empty submit, role cards are radios", async ({ page }, testInfo) => {
   await offlineBackend(page);
   await page.goto("/register");
-  await expect(page.getByRole("button", { name: "Ứng viên", exact: true })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("button", { name: "Nhà tuyển dụng", exact: true })).toHaveAttribute(
-    "aria-pressed",
-    "false",
-  );
-  await page.getByRole("button", { name: "Đăng ký ứng viên" }).click();
+  const candidate = page.getByRole("radio", { name: /Ứng viên/ });
+  const recruiter = page.getByRole("radio", { name: /Nhà tuyển dụng/ });
+  await expect(candidate).toHaveAttribute("aria-checked", "true");
+  await expect(recruiter).toHaveAttribute("aria-checked", "false");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await expect(page.getByText("Họ tên là bắt buộc")).toBeVisible();
   await expect(page.getByLabel("Họ và tên")).toBeFocused();
   await shoot(page, testInfo, "register-errors");

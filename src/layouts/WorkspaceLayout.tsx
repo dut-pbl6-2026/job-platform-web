@@ -4,6 +4,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { AccountMenu } from "../components/ui/AccountMenu";
+import { NotificationBell } from "../components/NotificationBell";
 import { Icon, type IconName } from "../components/ui/Icon";
 import { cx } from "../components/ui/controls";
 import { fetchMyCompany } from "../lib/companyApi";
@@ -11,8 +12,11 @@ import { isAdmin, isRecruiter } from "../lib/roles";
 
 type NavLabelKey =
   | "recruiter.nav.overview"
+  | "recruiter.nav.candidates"
   | "recruiter.nav.jobs"
   | "recruiter.nav.post"
+  | "recruiter.nav.interviews"
+  | "recruiter.nav.templates"
   | "recruiter.nav.company"
   | "admin.nav.overview"
   | "admin.nav.jobs"
@@ -30,12 +34,35 @@ type NavItem = {
 const RECRUITER_NAV: NavItem[] = [
   { to: "/recruiter", labelKey: "recruiter.nav.overview", icon: "dashboard", match: (p) => p === "/recruiter" },
   {
+    to: "/recruiter/candidates",
+    labelKey: "recruiter.nav.candidates",
+    icon: "kanban",
+    match: (p) => p === "/recruiter/candidates",
+  },
+  {
     to: "/recruiter/jobs",
     labelKey: "recruiter.nav.jobs",
     icon: "briefcase",
     match: (p) => p === "/recruiter/jobs" || (p.startsWith("/recruiter/jobs/") && p !== "/recruiter/jobs/new"),
   },
-  { to: "/recruiter/jobs/new", labelKey: "recruiter.nav.post", icon: "plus", match: (p) => p === "/recruiter/jobs/new" },
+  {
+    to: "/recruiter/jobs/new",
+    labelKey: "recruiter.nav.post",
+    icon: "plus",
+    match: (p) => p === "/recruiter/jobs/new",
+  },
+  {
+    to: "/recruiter/interviews",
+    labelKey: "recruiter.nav.interviews",
+    icon: "calendar",
+    match: (p) => p === "/recruiter/interviews",
+  },
+  {
+    to: "/recruiter/email-templates",
+    labelKey: "recruiter.nav.templates",
+    icon: "mail",
+    match: (p) => p === "/recruiter/email-templates",
+  },
   {
     to: "/recruiter/company",
     labelKey: "recruiter.nav.company",
@@ -92,6 +119,7 @@ export function WorkspaceLayout() {
   const companyNav = recruiter && company.data?.isCompanyAdmin ? COMPANY_ADMIN_NAV : [];
 
   // Only the content pane scrolls, so the shell must reset it on navigation.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname is the trigger; the effect only touches the pane.
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, left: 0 });
   }, [pathname]);
@@ -124,6 +152,7 @@ export function WorkspaceLayout() {
           <span aria-hidden="true">jobplatform</span>
         </Link>
         <div className="jp-workspace-account">
+          <NotificationBell />
           <AccountMenu />
         </div>
         <button

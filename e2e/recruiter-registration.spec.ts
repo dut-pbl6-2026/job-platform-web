@@ -14,12 +14,14 @@ async function offlineBackend(page: Page) {
 
 async function fillRecruiterForm(page: Page, code: string, email = "tuyen@e2e.local") {
   await page.goto("/register");
-  await page.getByRole("button", { name: "Nhà tuyển dụng", exact: true }).click();
+  await page.getByRole("radio", { name: /Nhà tuyển dụng/ }).click();
   await page.getByLabel("Mã mời của công ty").fill(code);
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByLabel("Họ và tên").fill("Trần Văn Tuyển");
   await page.getByLabel("Email nhận mã mời").fill(email);
   await page.locator("#reg-pwd").fill("Passw0rd!e2e");
   await page.locator("#reg-confirm").fill("Passw0rd!e2e");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
 }
 
 test.describe("recruiter registration with an invite code", () => {
@@ -31,15 +33,15 @@ test.describe("recruiter registration with an invite code", () => {
       route.fulfill({ status: 202, json: { message: "must not be called" } });
     });
     await page.goto("/register");
-    await page.getByRole("button", { name: "Nhà tuyển dụng", exact: true }).click();
+    await page.getByRole("radio", { name: /Nhà tuyển dụng/ }).click();
 
-    await page.getByRole("button", { name: "Đăng ký nhà tuyển dụng" }).click();
+    await page.getByRole("button", { name: "Tiếp tục" }).click();
     await expect(page.getByText("Hãy nhập mã mời của công ty.")).toBeVisible();
     await expect(page.locator("#reg-invite")).toBeFocused();
 
     // A code with the wrong length never leaves the browser either.
     await page.getByLabel("Mã mời của công ty").fill("ABCD-EFGH");
-    await page.getByRole("button", { name: "Đăng ký nhà tuyển dụng" }).click();
+    await page.getByRole("button", { name: "Tiếp tục" }).click();
     await expect(page.getByText("Mã mời không hợp lệ, đã dùng hoặc đã hết hạn.")).toBeVisible();
     expect(requests).toHaveLength(0);
   });
@@ -83,6 +85,7 @@ test.describe("recruiter registration with an invite code", () => {
     await expect(page.getByText("Mã mời không hợp lệ, đã dùng hoặc đã hết hạn.")).toBeVisible();
     // The form keeps what was typed, so the code can be corrected without re-entering everything.
     await expect(page.getByLabel("Mã mời của công ty")).toHaveValue("ABCD-EFGH-JKMN");
+    await page.getByRole("button", { name: "Tiếp tục" }).click();
     await expect(page.getByLabel("Email nhận mã mời")).toHaveValue("tuyen@e2e.local");
     await expect(page).toHaveURL(/\/register$/);
   });

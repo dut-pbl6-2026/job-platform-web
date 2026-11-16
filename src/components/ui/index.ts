@@ -1,4 +1,6 @@
 export { Icon, type IconName } from "./Icon";
+export { Modal } from "./Modal";
+export { WizardSteps, type WizardStep } from "./wizard";
 export {
   ActivityBars,
   Donut,

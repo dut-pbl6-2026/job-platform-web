@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { PASSWORD_RULES } from "../../lib/validation";
 import { Icon } from "./Icon";
-import { TopBar } from "./TopBar";
 import { cx } from "./controls";
 
 /**
- * The four sign-in screens share this: the navy shell bar (so there is always a way back to the
- * board), then one plain panel on the ground colour. No gradient, no brand claims.
+ * The sign-in screens are the form and nothing else: a split card with the form on the left and a
+ * decorative navy panel on the right. No site header or footer, and a single brand mark as the way
+ * back to the board. The panel is aria-hidden: it is marketing, not content.
  */
 export function AuthLayout({
   title,
@@ -20,18 +21,75 @@ export function AuthLayout({
   footer?: ReactNode;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
-    <>
-      <TopBar />
-      <main className="jp-auth">
-        <div className="jp-panel jp-auth-panel">
-          <h1 className="jp-h1">{title}</h1>
-          {lead && <p className="jp-lead">{lead}</p>}
+    <main className="jp-auth">
+      <div className="jp-auth-card">
+        <section className="jp-auth-form" aria-labelledby="auth-title">
+          <Link to="/" className="jp-auth-mark" aria-label={t("nav.homeLabel")}>
+            <b aria-hidden="true">jp</b>
+            <span aria-hidden="true">jobplatform</span>
+          </Link>
+
+          <div className="jp-auth-heading">
+            <h1 className="jp-auth-title" id="auth-title">
+              {title}
+            </h1>
+            {lead && <p className="jp-auth-lead">{lead}</p>}
+          </div>
+
           <div className="jp-auth-body">{children}</div>
           {footer && <p className="jp-auth-footer">{footer}</p>}
-        </div>
-      </main>
-    </>
+        </section>
+
+        <aside className="jp-auth-visual" aria-hidden="true">
+          <div className="jp-auth-visual-inner">
+            <span className="jp-auth-eyebrow">{t("auth.layout.eyebrow")}</span>
+            <p className="jp-auth-slogan">
+              {t("auth.layout.sloganLead")} <em>{t("auth.layout.sloganAccent")}</em>
+            </p>
+            <p className="jp-auth-visual-lead">{t("auth.layout.lead")}</p>
+
+            <ul className="jp-auth-points">
+              <li>
+                <Icon name="file" size={16} />
+                {t("auth.layout.point1")}
+              </li>
+              <li>
+                <Icon name="kanban" size={16} />
+                {t("auth.layout.point2")}
+              </li>
+              <li>
+                <Icon name="calendar" size={16} />
+                {t("auth.layout.point3")}
+              </li>
+            </ul>
+
+            <div className="jp-auth-board">
+              <div className="jp-auth-board-head">
+                <span>{t("auth.layout.boardTitle")}</span>
+                <i />
+              </div>
+              <div className="jp-auth-board-row">
+                <span className="jp-auth-board-dot is-amber" />
+                <span>{t("auth.layout.boardRow1")}</span>
+                <Icon name="chevronRight" size={14} />
+              </div>
+              <div className="jp-auth-board-row">
+                <span className="jp-auth-board-dot is-navy" />
+                <span>{t("auth.layout.boardRow2")}</span>
+                <Icon name="chevronRight" size={14} />
+              </div>
+              <div className="jp-auth-board-row">
+                <span className="jp-auth-board-dot is-success" />
+                <span>{t("auth.layout.boardRow3")}</span>
+                <Icon name="chevronRight" size={14} />
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
   );
 }
 

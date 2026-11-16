@@ -52,8 +52,10 @@ test("recruiter posts a job through POST /api/jobs with the account's companyId"
   await page.goto("/recruiter/jobs/new");
 
   await page.getByLabel("Tiêu đề vị trí").fill("Lập trình viên React");
-  await page.getByLabel("Mô tả công việc").fill("Phát triển giao diện web.");
   await page.getByRole("textbox", { name: /^Địa điểm/ }).fill("Hà Nội");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
+  await page.getByRole("textbox", { name: "Mô tả công việc" }).fill("Phát triển giao diện web.");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByLabel("Lương tối thiểu (VND)").fill("10000000");
   await page.getByRole("button", { name: "Xuất bản" }).click();
 
@@ -83,10 +85,11 @@ test("post job: empty submit names each missing field and sends nothing", async 
   const posts = await mockPost(page);
   await page.goto("/recruiter/jobs/new");
 
-  await page.getByRole("button", { name: "Xuất bản" }).click();
+  // Step 1 is the basics, so it names only the fields on that step.
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await expect(page.getByText("Vui lòng nhập tiêu đề")).toBeVisible();
-  await expect(page.getByText("Vui lòng nhập mô tả")).toBeVisible();
   await expect(page.getByText("Vui lòng nhập địa điểm")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Mô tả công việc" })).toHaveCount(0);
   expect(posts).toHaveLength(0);
 });
 
@@ -97,8 +100,10 @@ test("post job: maximum salary below minimum is refused", async ({ page }) => {
   await page.goto("/recruiter/jobs/new");
 
   await page.getByLabel("Tiêu đề vị trí").fill("Kế toán");
-  await page.getByLabel("Mô tả công việc").fill("Kế toán tổng hợp.");
   await page.getByRole("textbox", { name: /^Địa điểm/ }).fill("Đà Nẵng");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
+  await page.getByRole("textbox", { name: "Mô tả công việc" }).fill("Kế toán tổng hợp.");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByLabel("Lương tối thiểu (VND)").fill("20000000");
   await page.getByLabel("Lương tối đa (VND)").fill("10000000");
   await page.getByRole("button", { name: "Xuất bản" }).click();
@@ -114,6 +119,11 @@ test("post job: an account without a company cannot publish", async ({ page }) =
   await page.goto("/recruiter/jobs/new");
 
   await expect(page.getByText("Tài khoản của bạn chưa gắn với công ty")).toBeVisible();
+  await page.getByLabel("Tiêu đề vị trí").fill("Kế toán");
+  await page.getByRole("textbox", { name: /^Địa điểm/ }).fill("Đà Nẵng");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
+  await page.getByRole("textbox", { name: "Mô tả công việc" }).fill("Kế toán tổng hợp.");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await expect(page.getByRole("button", { name: "Xuất bản" })).toBeDisabled();
   expect(posts).toHaveLength(0);
 });

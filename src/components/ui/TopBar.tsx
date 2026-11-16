@@ -4,6 +4,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { isAdmin, isRecruiter, isUser } from "../../lib/roles";
 import { AccountMenu } from "./AccountMenu";
+import { NotificationBell } from "../NotificationBell";
 import { Icon } from "./Icon";
 import { DevTag, cx } from "./controls";
 
@@ -37,6 +38,7 @@ export function TopBar({ compact = false }: { compact?: boolean }) {
   }
   if (isAuthenticated && isUser(user?.role)) {
     items.push({ to: "/applications", label: t("nav.myApplications"), match: (p) => p.startsWith("/applications") });
+    items.push({ to: "/interviews", label: t("nav.interviews"), match: (p) => p.startsWith("/interviews") });
   }
   if (isAuthenticated && isAdmin(user?.role)) {
     items.push({ to: "/admin", label: t("nav.admin"), match: (p) => p.startsWith("/admin") });
@@ -82,7 +84,10 @@ export function TopBar({ compact = false }: { compact?: boolean }) {
               </Link>
             </>
           ) : (
-            <AccountMenu onNavy />
+            <>
+              <NotificationBell onNavy />
+              <AccountMenu onNavy />
+            </>
           )}
         </div>
 

@@ -31,13 +31,15 @@ test("recruiter registration asks for an invite code and sends it, not a company
   });
   await page.goto("/register");
 
-  await page.getByRole("button", { name: "Nhà tuyển dụng" }).click();
+  await page.getByRole("radio", { name: /Nhà tuyển dụng/ }).click();
   await expect(page.getByLabel("Mã mời của công ty")).toBeVisible();
+  await page.getByLabel("Mã mời của công ty").fill("abcd-efgh-jklm");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByLabel("Họ và tên").fill("Người Mới");
   await page.getByLabel("Email nhận mã mời").fill("new.recruiter@e2e.local");
   await page.getByLabel(/^Mật khẩu/).fill("SecureP@ss123");
   await page.getByLabel("Nhập lại mật khẩu").fill("SecureP@ss123");
-  await page.getByLabel("Mã mời của công ty").fill("abcd-efgh-jklm");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByRole("button", { name: "Đăng ký nhà tuyển dụng" }).click();
 
   await expect(page).toHaveURL(/\/login/);
@@ -58,12 +60,14 @@ test("recruiter registration shows the invite error from a 422 on the field", as
   );
   await page.goto("/register");
 
-  await page.getByRole("button", { name: "Nhà tuyển dụng" }).click();
+  await page.getByRole("radio", { name: /Nhà tuyển dụng/ }).click();
+  await page.getByLabel("Mã mời của công ty").fill("ABCD-EFGH-JKLM");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByLabel("Họ và tên").fill("Người Mới");
   await page.getByLabel("Email nhận mã mời").fill("bad.code@e2e.local");
   await page.getByLabel(/^Mật khẩu/).fill("SecureP@ss123");
   await page.getByLabel("Nhập lại mật khẩu").fill("SecureP@ss123");
-  await page.getByLabel("Mã mời của công ty").fill("ABCD-EFGH-JKLM");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByRole("button", { name: "Đăng ký nhà tuyển dụng" }).click();
 
   await expect(page.getByText("Mã mời không hợp lệ, đã dùng hoặc đã hết hạn.")).toBeVisible();

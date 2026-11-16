@@ -123,7 +123,8 @@
     "hidePassword": "Ẩn mật khẩu",
     "removeFilter": "Bỏ lọc {{label}}",
     "openMenu": "Mở menu",
-    "closeMenu": "Đóng menu"
+    "closeMenu": "Đóng menu",
+    "cancel": "Huỷ"
   },
   "nav": {
     "homeLabel": "jobplatform, về trang chủ",
@@ -138,7 +139,8 @@
     "register": "Đăng ký",
     "login": "Đăng nhập",
     "logout": "Đăng xuất",
-    "menu": "Menu"
+    "menu": "Menu",
+    "interviews": "Lịch phỏng vấn"
   },
   "footer": {
     "about": "Nền tảng kết nối người tìm việc và nhà tuyển dụng: tìm việc theo kỹ năng, mức lương, địa điểm và theo dõi đơn ứng tuyển.",
@@ -365,7 +367,26 @@
       "inviteInvalid": "Mã mời không hợp lệ, đã dùng hoặc đã hết hạn.",
       "inviteUnavailable": "Chưa kiểm tra được mã mời. Vui lòng thử lại sau.",
       "verifyNotice": "Kiểm tra email để xác minh tài khoản của bạn.",
-      "recruiterReadyNotice": "Tài khoản nhà tuyển dụng đã sẵn sàng. Hãy đăng nhập."
+      "recruiterReadyNotice": "Tài khoản nhà tuyển dụng đã sẵn sàng. Hãy đăng nhập.",
+      "roleCandidateHint": "Tìm việc, nộp hồ sơ và theo dõi lịch phỏng vấn.",
+      "roleRecruiterHint": "Cần mã mời từ công ty để tạo tài khoản tuyển dụng.",
+      "back": "Quay lại",
+      "next": "Tiếp tục",
+      "stepOf": "Bước {{current}}/{{total}}",
+      "wizard": {
+        "label": "Các bước tạo tài khoản",
+        "roleTitle": "Bạn là ai?",
+        "roleHint": "Chọn vai trò",
+        "credentialsTitle": "Thông tin đăng nhập",
+        "credentialsHint": "Tên, email, mật khẩu",
+        "reviewTitle": "Xem lại",
+        "reviewHint": "Tạo tài khoản",
+        "roleQuestion": "Bạn tham gia với vai trò nào?",
+        "recruiterNote": "Dùng đúng email mà công ty đã gửi kèm mã mời.",
+        "candidateNote": "Email này dùng để đăng nhập và nhận thông báo về hồ sơ.",
+        "reviewQuestion": "Kiểm tra lần cuối",
+        "reviewLead": "Tài khoản sẽ được tạo với thông tin dưới đây."
+      }
     },
     "forgot": {
       "title": "Quên mật khẩu",
@@ -413,6 +434,19 @@
       "sendFailed": "Chưa gửi được email xác minh. Vui lòng thử lại.",
       "countdown": "Gửi lại sau {{seconds}} giây",
       "send": "Gửi lại email xác minh"
+    },
+    "layout": {
+      "eyebrow": "VIỆC LÀM TRÊN TOÀN QUỐC",
+      "sloganLead": "Tìm việc phù hợp,",
+      "sloganAccent": "tuyển người đúng.",
+      "lead": "Một tài khoản cho cả hành trình: hồ sơ, đơn ứng tuyển, lịch phỏng vấn và trao đổi với nhà tuyển dụng.",
+      "point1": "Hồ sơ và CV trong một nơi",
+      "point2": "Theo dõi ứng viên theo từng bước",
+      "point3": "Lời mời phỏng vấn kèm tệp lịch",
+      "boardTitle": "Bảng việc làm",
+      "boardRow1": "Hồ sơ mới đang chờ xem",
+      "boardRow2": "Lịch phỏng vấn sắp tới",
+      "boardRow3": "Tin đang tuyển"
     }
   },
   "validation": {
@@ -562,7 +596,52 @@
     "coverPlaceholder": "Ví dụ: Tôi muốn ứng tuyển vì…",
     "submitStep": "Gửi hồ sơ",
     "submitting": "Đang gửi…",
-    "submit": "Gửi hồ sơ"
+    "submit": "Gửi hồ sơ",
+    "back": "Quay lại",
+    "next": "Tiếp tục",
+    "wizard": {
+      "label": "Các bước nộp hồ sơ",
+      "profileTitle": "Hồ sơ của bạn",
+      "profileHint": "Kiểm tra thông tin",
+      "documentsTitle": "CV & thư giới thiệu",
+      "documentsHint": "Tệp đính kèm",
+      "reviewTitle": "Xem lại & gửi",
+      "reviewHint": "Xác nhận",
+      "progress": "Bước {{current}}/{{total}}"
+    },
+    "profile": {
+      "title": "Kiểm tra hồ sơ trước khi gửi",
+      "lead": "Nhà tuyển dụng nhận được hồ sơ này cùng CV của bạn, nên thông tin cần chính xác và đầy đủ.",
+      "requiredNote": "Thông tin hồ sơ không phải phần tuỳ chọn: tên, vị trí mong muốn, kỹ năng và giới thiệu giúp nhà tuyển dụng đánh giá bạn nhanh hơn. Hãy xem lại và bổ sung nếu còn thiếu.",
+      "loading": "Đang tải hồ sơ",
+      "loadError": "Chưa tải được hồ sơ. Bạn vẫn có thể mở trang hồ sơ để kiểm tra.",
+      "noHeadline": "Chưa có vị trí mong muốn",
+      "edit": "Sửa hồ sơ",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "skills": "Kỹ năng",
+      "summary": "Giới thiệu bản thân",
+      "empty": "Chưa cập nhật",
+      "missingTitle": "Hồ sơ còn thiếu:",
+      "complete": "Hồ sơ đã có đủ thông tin chính.",
+      "completeNow": "Bổ sung ngay",
+      "confirm": "Tôi đã kiểm tra và cập nhật hồ sơ của mình",
+      "confirmMissing": "Bạn chưa xác nhận đã kiểm tra hồ sơ.",
+      "headline": "Vị trí mong muốn"
+    },
+    "documents": {
+      "title": "Chọn CV và lời nhắn",
+      "lead": "CV là bắt buộc; thư giới thiệu giúp bạn nói rõ vì sao phù hợp với vị trí này."
+    },
+    "review": {
+      "title": "Xem lại trước khi gửi",
+      "lead": "Kiểm tra nhanh một lần. Sau khi gửi, hồ sơ không sửa được.",
+      "candidate": "Ứng viên",
+      "cvMissing": "Chưa chọn CV",
+      "coverEmpty": "Không gửi kèm thư giới thiệu",
+      "profileNote": "Hồ sơ và CV của bạn sẽ được gửi tới nhà tuyển dụng cùng đơn ứng tuyển này.",
+      "backToProfile": "Quay lại bước hồ sơ"
+    }
   },
   "applications": {
     "title": "Đơn ứng tuyển của tôi",
@@ -786,14 +865,20 @@
       "jobs": "Nhà tuyển dụng: Tin tuyển dụng",
       "post": "Nhà tuyển dụng: Đăng tin",
       "applications": "Nhà tuyển dụng: Hồ sơ ứng viên",
-      "edit": "Nhà tuyển dụng: Sửa tin"
+      "edit": "Nhà tuyển dụng: Sửa tin",
+      "candidates": "Ứng viên",
+      "interviews": "Lịch phỏng vấn",
+      "templates": "Mẫu email"
     },
     "nav": {
       "label": "Điều hướng nhà tuyển dụng",
       "overview": "Tổng quan",
       "jobs": "Tin tuyển dụng",
       "post": "Đăng tin",
-      "company": "Công ty"
+      "company": "Công ty",
+      "candidates": "Ứng viên",
+      "interviews": "Lịch phỏng vấn",
+      "templates": "Mẫu email"
     },
     "accessNotice": "Khu vực này chỉ dành cho nhà tuyển dụng.",
     "checkingAccess": "Đang kiểm tra quyền truy cập",
@@ -916,7 +1001,26 @@
       "saved": "Đã lưu thay đổi cho tin tuyển dụng.",
       "loadWhat": "thông tin tin tuyển dụng",
       "notFoundTitle": "Không tìm thấy tin tuyển dụng",
-      "notFoundText": "Tin có thể đã bị gỡ. Quay lại danh sách tin để chọn tin khác."
+      "notFoundText": "Tin có thể đã bị gỡ. Quay lại danh sách tin để chọn tin khác.",
+      "wizard": {
+        "label": "Các bước đăng tin",
+        "basicsTitle": "Thông tin cơ bản",
+        "basicsHint": "Vị trí và địa điểm",
+        "basicsLead": "Đây là những gì ứng viên dùng để lọc và tìm thấy tin của bạn.",
+        "contentTitle": "Mô tả công việc",
+        "contentHint": "Nội dung ứng viên đọc",
+        "contentLead": "Viết ngắn gọn nhưng đủ để ứng viên biết họ sẽ làm gì và cần gì.",
+        "publishTitle": "Lương & xem lại",
+        "publishHint": "Kiểm tra thẻ tin",
+        "publishLead": "Khoảng lương để trống nếu thương lượng. Thẻ bên dưới là cách tin của bạn hiển thị.",
+        "salaryNote": "Tin có khoảng lương rõ ràng thường nhận nhiều hồ sơ phù hợp hơn.",
+        "previewTitle": "Xem trước thẻ tin",
+        "previewUntitled": "Vị trí tuyển dụng",
+        "previewNoLocation": "Chưa có địa điểm",
+        "back": "Quay lại",
+        "next": "Tiếp tục",
+        "progress": "Bước {{current}}/{{total}}"
+      }
     },
     "applications": {
       "title": "Hồ sơ ứng viên",
@@ -944,7 +1048,124 @@
       "scoreNote": "Điểm do AI chấm từ CV so với yêu cầu tin tuyển dụng; chỉ nhà tuyển dụng thấy.",
       "scorePending": "Đang tính",
       "scoreNone": "Chưa có điểm",
-      "scoreFailed": "Không tính được"
+      "scoreFailed": "Không tính được",
+      "email": "Gửi email",
+      "schedule": "Đặt lịch"
+    },
+    "candidates": {
+      "title": "Quản lý ứng viên",
+      "lead": "Kéo thả thẻ giữa các cột để chuyển trạng thái, hoặc dùng menu trên thẻ. Mỗi cột là một bước trong quy trình.",
+      "loadingJobs": "Đang tải tin tuyển dụng",
+      "loadWhat": "danh sách ứng viên",
+      "noJobs": "Chưa có tin nào để quản lý ứng viên",
+      "noJobsText": "Đăng tin đầu tiên, hồ sơ ứng tuyển sẽ xuất hiện ở đây theo từng bước.",
+      "jobLabel": "Tin tuyển dụng",
+      "statTotal": "hồ sơ",
+      "statNew": "mới trong 7 ngày",
+      "statInterview": "đang ở vòng phỏng vấn",
+      "pipelineTitle": "Dòng ứng viên",
+      "pipelineLead": "Tỉ lệ hồ sơ ở mỗi bước của tin đang chọn.",
+      "pipelineAria": "Phân bố {{total}} hồ sơ theo trạng thái",
+      "loading": "Đang tải hồ sơ",
+      "empty": "Chưa có hồ sơ cho tin này",
+      "emptyText": "Khi ứng viên nộp hồ sơ, thẻ sẽ xuất hiện ở cột Chờ xem.",
+      "boardLabel": "Bảng ứng viên theo trạng thái",
+      "columnLabel": "{{status}}, {{count}} hồ sơ",
+      "anonymous": "Ứng viên",
+      "scoreTitle": "Điểm phù hợp tự động",
+      "hasLetter": "Có thư giới thiệu",
+      "emailAria": "Gửi email cho {{name}}",
+      "scheduleAria": "Đặt lịch phỏng vấn với {{name}}",
+      "openJob": "Mở danh sách hồ sơ của tin",
+      "moveLabel": "Chuyển trạng thái cho {{name}}",
+      "moveTo": "Chuyển sang…",
+      "closed": "Đã kết thúc",
+      "columnEmpty": "Chưa có hồ sơ",
+      "moved": "Đã chuyển sang {{status}}",
+      "stale": "Trạng thái vừa thay đổi ở nơi khác. Danh sách đã được tải lại.",
+      "moveFailed": "Chưa chuyển được trạng thái."
+    },
+    "email": {
+      "title": "Gửi email cho ứng viên",
+      "lead": "Tới {{name}} · {{email}}",
+      "failed": "Chưa gửi được email.",
+      "required": "Cần có tiêu đề và nội dung.",
+      "send": "Gửi email",
+      "template": "Dùng mẫu email",
+      "noTemplate": "Không dùng mẫu",
+      "subject": "Tiêu đề",
+      "body": "Nội dung",
+      "counter": "{{length}}/{{max}} ký tự",
+      "placeholders": "Có thể dùng các biến:",
+      "sent": "Đã gửi email cho ứng viên.",
+      "noEmail": "Ứng viên này chưa có email trong hồ sơ."
+    },
+    "interview": {
+      "title": "Đặt lịch phỏng vấn",
+      "lead": "Với {{name}}",
+      "sent": "Đã tạo lịch và gửi thư mời kèm tệp .ics.",
+      "savedNoMail": "Đã lưu lịch, nhưng chưa gửi được email mời.",
+      "failed": "Chưa tạo được lịch phỏng vấn.",
+      "invalidTime": "Chọn ngày và giờ hợp lệ.",
+      "noEmail": "Ứng viên chưa có email nên không thể gửi thư mời.",
+      "date": "Ngày",
+      "time": "Giờ",
+      "duration": "Thời lượng",
+      "minutes": "{{count}} phút",
+      "mode": "Hình thức",
+      "modeOnline": "Trực tuyến",
+      "modeOnsite": "Tại văn phòng",
+      "modePhone": "Điện thoại",
+      "link": "Liên kết cuộc họp",
+      "linkHint": "Dán link Google Meet, Zoom hoặc nền tảng bạn dùng.",
+      "location": "Địa điểm",
+      "locationPlaceholder": "Ví dụ: Tầng 5, 25 Lê Duẩn, Đà Nẵng",
+      "notes": "Ghi chú cho ứng viên",
+      "notesPlaceholder": "Nội dung cần chuẩn bị, người phỏng vấn, thời gian chờ…",
+      "sendInvite": "Gửi email mời kèm tệp lịch .ics",
+      "sendInviteNote": "Ứng viên nhận được thư mời có thể thêm trực tiếp vào Google Calendar, Outlook hoặc Apple Calendar.",
+      "schedule": "Tạo lịch",
+      "cancelTitle": "Huỷ lịch phỏng vấn",
+      "cancelConfirm": "Huỷ lịch",
+      "cancelBody": "Huỷ buổi phỏng vấn cho {{job}} với {{name}}? Email thông báo huỷ sẽ được gửi tới ứng viên.",
+      "cancelledAndMailed": "Đã huỷ lịch và gửi thư thông báo.",
+      "cancelledNoMail": "Đã huỷ lịch, nhưng chưa gửi được thư thông báo.",
+      "cancelFailed": "Chưa huỷ được lịch."
+    },
+    "interviews": {
+      "title": "Lịch phỏng vấn",
+      "lead": "Tất cả buổi phỏng vấn bạn đã đặt cho ứng viên, kèm tệp .ics để thêm vào lịch của bạn."
+    },
+    "templates": {
+      "title": "Mẫu email",
+      "lead": "Lưu sẵn những email bạn gửi nhiều lần, rồi chọn mẫu khi soạn thư cho ứng viên.",
+      "new": "Mẫu mới",
+      "placeholderNote": "Khi gửi, hệ thống thay các biến bằng thông tin thật của hồ sơ:",
+      "loading": "Đang tải mẫu email",
+      "loadWhat": "mẫu email",
+      "empty": "Chưa có mẫu email",
+      "emptyText": "Tạo mẫu đầu tiên để không phải viết lại thư mời phỏng vấn mỗi lần.",
+      "listLabel": "Danh sách mẫu email",
+      "updated": "Cập nhật {{date}}",
+      "edit": "Sửa",
+      "delete": "Xoá",
+      "confirmDelete": "Xoá mẫu này?",
+      "save": "Lưu mẫu",
+      "saveFailed": "Chưa lưu được mẫu email.",
+      "saved": "Đã lưu mẫu email.",
+      "created": "Đã tạo mẫu email.",
+      "deleted": "Đã xoá mẫu email.",
+      "deleteFailed": "Chưa xoá được mẫu email.",
+      "required": "Cần có tên, tiêu đề và nội dung.",
+      "editTitle": "Sửa mẫu email",
+      "newTitle": "Mẫu email mới",
+      "modalLead": "Mẫu chỉ dùng cho tài khoản của bạn.",
+      "name": "Tên mẫu",
+      "namePlaceholder": "Ví dụ: Mời phỏng vấn vòng 1",
+      "subject": "Tiêu đề",
+      "subjectPlaceholder": "Mời phỏng vấn vị trí {{job_title}}",
+      "body": "Nội dung",
+      "counter": "{{length}}/{{max}} ký tự"
     }
   },
   "admin": {
@@ -1371,5 +1592,43 @@
     "logoHint": "Địa chỉ http(s), ví dụ https://congty.vn/logo.png.",
     "websiteHint": "Địa chỉ http(s), ví dụ https://congty.vn.",
     "teamMembersLead": "Chỉ quản trị viên công ty quản lý mã mời và yêu cầu tham gia."
+  },
+  "interviews": {
+    "documentTitle": "Lịch phỏng vấn",
+    "title": "Lịch phỏng vấn của bạn",
+    "lead": "Những buổi phỏng vấn nhà tuyển dụng đã mời. Tải tệp .ics để thêm vào lịch cá nhân.",
+    "loading": "Đang tải lịch phỏng vấn",
+    "loadWhat": "lịch phỏng vấn",
+    "downloadFailed": "Chưa tải được tệp lịch.",
+    "previousMonth": "Tháng trước",
+    "nextMonth": "Tháng sau",
+    "today": "Hôm nay",
+    "gridLabel": "Lịch tháng {{month}}",
+    "dayLabel": "{{date}}, {{count}} buổi phỏng vấn",
+    "more": "+{{count}}",
+    "dayTitle": "Ngày {{date}}",
+    "monthTitle": "Trong tháng",
+    "showAll": "Xem cả tháng",
+    "empty": "Chưa có lịch phỏng vấn",
+    "emptyText": "Khi có lời mời, buổi phỏng vấn sẽ xuất hiện ở đây và trong email của bạn.",
+    "minutes": "{{count}} phút",
+    "cancelled": "Đã huỷ",
+    "addToCalendar": "Thêm vào lịch",
+    "cancel": "Huỷ lịch",
+    "mode": {
+      "online": "Trực tuyến",
+      "onsite": "Tại văn phòng",
+      "phone": "Điện thoại"
+    }
+  },
+  "bell": {
+    "label": "Thông báo",
+    "title": "Thông báo",
+    "count": "{{count}} mục gần đây",
+    "empty": "Chưa có thông báo nào.",
+    "applicationStatus": "Hồ sơ: {{status}}",
+    "applicationBody": "Đơn ứng tuyển của bạn vừa được cập nhật.",
+    "newApplication": "Hồ sơ mới cho {{job}}",
+    "interview": "Phỏng vấn: {{job}}"
   }
 }

@@ -19,11 +19,12 @@ test.describe("registration and email verification", () => {
     });
     await page.goto("/register");
 
-    await page.getByRole("button", { name: "Ứng viên", exact: true }).click();
+    await page.getByRole("button", { name: "Tiếp tục" }).click();
     await page.getByLabel("Họ và tên").fill("Nguyễn Văn An");
     await page.getByLabel("Email").fill("an@e2e.local");
     await page.locator("#reg-pwd").fill("Passw0rd!e2e");
     await page.locator("#reg-confirm").fill("Passw0rd!e2e");
+    await page.getByRole("button", { name: "Tiếp tục" }).click();
     await page.getByRole("button", { name: "Đăng ký ứng viên" }).click();
 
     await expect(page).toHaveURL(/\/login$/);

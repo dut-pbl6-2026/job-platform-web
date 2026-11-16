@@ -75,6 +75,8 @@ export function normalizeApplication(raw: unknown): Application {
     companyName: pickStr(o, "companyName", "company_name") || (company ? pickStr(company, "name") : undefined),
     location: pickStr(o, "location") || (job ? pickStr(job, "location") : undefined),
     applicantId: pickStr(o, "applicantId", "applicant_id") || "",
+    applicantName: pickStr(o, "applicantName", "applicant_name") ?? null,
+    applicantEmail: pickStr(o, "applicantEmail", "applicant_email") ?? null,
     coverLetter: pickStr(o, "coverLetter", "cover_letter") ?? null,
     cvUrl: pickStr(o, "cvUrl", "cv_url") ?? null,
     cvFileName: pickStr(o, "cvFileName", "cv_file_name") ?? null,

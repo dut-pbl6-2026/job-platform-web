@@ -4,6 +4,8 @@ import i18n from "../i18n";
 import { useParams, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
+import { EmailComposerDialog } from "../components/EmailComposerDialog";
+import { InterviewDialog } from "../components/InterviewDialog";
 import { Alert, BackLink, Button, EmptyState, FilterChip, Pagination, SkeletonRows } from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { downloadCv, fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus } from "../lib/applicationsApi";
@@ -12,7 +14,7 @@ import { httpStatus, loadErrorMessage, apiErrorMessage } from "../lib/http";
 import { fetchJobById } from "../lib/jobsApi";
 import { queryKeys } from "../lib/queryClient";
 import { showToast } from "../lib/toastBus";
-import { APPLICATION_STATUSES, STATUS_LABEL, type ApplicationStatus } from "../types/application";
+import { APPLICATION_STATUSES, STATUS_LABEL, type Application, type ApplicationStatus } from "../types/application";
 
 const PAGE_SIZE = 20;
 
@@ -48,6 +50,8 @@ export default function RecruiterApplicationsPage() {
   const page = Math.max(1, Number(params.get("page")) || 1);
   useDocumentTitle(t("recruiter.documentTitles.applications"));
   const [cvError, setCvError] = useState<string | null>(null);
+  const [emailFor, setEmailFor] = useState<Application | null>(null);
+  const [interviewFor, setInterviewFor] = useState<Application | null>(null);
 
   const job = useQuery({
     queryKey: queryKeys.job(jobId),
@@ -174,6 +178,12 @@ export default function RecruiterApplicationsPage() {
                     </details>
                   )}
                   <div className="jp-recruiter-app-actions">
+                    <Button variant="secondary" onClick={() => setEmailFor(app)}>
+                      {t("recruiter.applications.email")}
+                    </Button>
+                    <Button variant="secondary" onClick={() => setInterviewFor(app)}>
+                      {t("recruiter.applications.schedule")}
+                    </Button>
                     {app.cvUrl && (
                       <Button
                         variant="secondary"
@@ -224,6 +234,19 @@ export default function RecruiterApplicationsPage() {
           <Pagination page={data.page - 1} totalPages={data.totalPages} onPage={(p) => patch({ page: p + 1 })} />
         </>
       )}
+
+      <EmailComposerDialog
+        open={Boolean(emailFor)}
+        application={emailFor}
+        onClose={() => setEmailFor(null)}
+        onSent={() => showToast({ title: t("recruiter.email.sent"), kind: "success" })}
+      />
+      <InterviewDialog
+        open={Boolean(interviewFor)}
+        application={interviewFor}
+        onClose={() => setInterviewFor(null)}
+        onCreated={() => void queryClient.invalidateQueries({ queryKey: ["recruiter", "interviews"] })}
+      />
     </RecruiterShell>
   );
 }
