@@ -1,0 +1,62 @@
+# The image build runs `COPY . .` (only after `npm ci`) and the runtime stage
+# copies nginx.conf straight from the context, so everything not listed here
+# ends up in a layer. On the documented local path (infra compose sets
+# SERVICES_SRC=..) the working tree contains .env, node_modules/, dist/,
+# Playwright output and screenshots. Only what `npm run build` needs stays:
+# package.json, package-lock.json, src/, public/, index.html and the
+# vite/tsc configs.
+
+# VCS / editor metadata
+.git
+.gitignore
+.github
+**/.vs/
+**/.vscode/
+**/*.user
+*.swp
+*.md
+
+# Secrets and env files (build args supply VITE_* at build time)
+.env
+.env.*
+*.env
+.env.bak.*
+*.bak
+INFISICAL_TOKEN
+mise.toml
+mise.toml.local
+
+# Installed deps and build output
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.tsbuildinfo
+
+# Playwright / screenshots / impeccable runtime output
+e2e/
+test-results/
+playwright-report/
+screenshots/
+.playwright/
+blob-report/
+playwright.config.ts
+playwright.no-mocks.config.ts
+.impeccable/
+
+# Test and coverage output
+TestResults/
+coverage/
+*.trx
+*.coverage
+
+# Runtime/local noise
+*.db
+*.log
+local-feed/
+storage/
+
+# Host-only helpers
+scripts/
+run-backend.sh
+run-backend.bat
