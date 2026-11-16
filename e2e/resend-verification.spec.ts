@@ -76,7 +76,10 @@ test.describe("resend verification email", () => {
   test("verify-email page asks for the address and sends it", async ({ page }) => {
     await offlineBackend(page);
     await page.route("**/api/auth/verify-email", (route) =>
-      route.fulfill({ status: 400, json: { title: "Bad Request" } }),
+      route.fulfill({
+        status: 422,
+        json: { title: "Invalid verification token", errorCode: "VERIFICATION_TOKEN_INVALID" },
+      }),
     );
     const bodies: unknown[] = [];
     await page.route("**/api/auth/resend-verification", (route) => {

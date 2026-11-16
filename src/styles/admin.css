@@ -16,9 +16,13 @@
   padding: 0 calc(40px - var(--sp-4));
   display: flex;
   gap: var(--sp-1);
+  /* Five recruiter sections no longer fit 390px: the bar scrolls sideways instead of the page. */
+  overflow-x: auto;
 }
 .jp-subnav-link {
   display: inline-flex;
+  flex: none;
+  white-space: nowrap;
   align-items: center;
   min-height: 48px;
   padding: 0 var(--sp-4);
