@@ -189,6 +189,56 @@ test("candidate board moves an application through the status machine", async ({
     .toEqual({ status: "reviewed" });
 });
 
+test("kanban card opens the application; the avatar and name open the public profile", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page);
+  await mockEngagement(page);
+  await page.goto("/recruiter/candidates");
+
+  const card = page.locator(".jp-cand-card").filter({ hasText: "Trần Thị Bình" });
+  await expect(card).toBeVisible();
+
+  // Avatar -> the candidate's public profile.
+  await card.getByRole("link", { name: "Xem hồ sơ công khai của Trần Thị Bình" }).click();
+  await expect(page).toHaveURL(new RegExp(`/candidates/${APPLICATION.applicantId}$`));
+
+  // Name -> the same public profile.
+  await page.goto("/recruiter/candidates");
+  await expect(card).toBeVisible();
+  await card.getByRole("link", { name: "Trần Thị Bình", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/candidates/${APPLICATION.applicantId}$`));
+
+  // Anywhere else on the card -> the application page in the recruiter console.
+  await page.goto("/recruiter/candidates");
+  await expect(card).toBeVisible();
+  await card.locator(".jp-cand-meta").click();
+  await expect(page).toHaveURL(new RegExp(`/recruiter/applications/${APPLICATION_ID}$`));
+});
+
+test("dragging a card moves it and does not open the application", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page);
+  const calls = await mockEngagement(page);
+  await page.goto("/recruiter/candidates");
+
+  const card = page.locator(".jp-cand-card").filter({ hasText: "Trần Thị Bình" });
+  await expect(card).toBeVisible();
+  const column = page.locator(".jp-kanban-col.is-reviewed");
+  const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+
+  await card.dispatchEvent("dragstart", { dataTransfer });
+  await column.dispatchEvent("dragover", { dataTransfer });
+  await column.dispatchEvent("drop", { dataTransfer });
+  await card.dispatchEvent("dragend", { dataTransfer });
+  // Some browsers emit a click after dragend; the card guards against treating it as navigation.
+  await card.dispatchEvent("click");
+
+  await expect
+    .poll(() => calls.find((call) => call.path.endsWith(`/${APPLICATION_ID}/status`))?.body)
+    .toEqual({ status: "reviewed" });
+  await expect(page).toHaveURL(/\/recruiter\/candidates/);
+});
+
 test("a recruiter saves a reusable email template", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page);

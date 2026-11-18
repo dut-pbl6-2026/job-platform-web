@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -51,6 +51,8 @@ export default function RecruiterCandidatesPage() {
   const [emailFor, setEmailFor] = useState<Application | null>(null);
   const [interviewFor, setInterviewFor] = useState<Application | null>(null);
   const [dragging, setDragging] = useState<Application | null>(null);
+  // A drag that ends over a column must not also count as a click on the card.
+  const draggedRef = useRef(false);
   const [hover, setHover] = useState<ApplicationStatus | null>(null);
 
   const jobs = useQuery({
@@ -293,14 +295,23 @@ export default function RecruiterCandidatesPage() {
                           onDragStart={(event) => {
                             event.dataTransfer.effectAllowed = "move";
                             event.dataTransfer.setData("text/plain", application.id);
+                            draggedRef.current = true;
                             setDragging(application);
                           }}
                           onDragEnd={() => {
                             setDragging(null);
                             setHover(null);
+                            // Some browsers emit a click just after a drag; keep suppressing it briefly.
+                            window.setTimeout(() => {
+                              draggedRef.current = false;
+                            }, 300);
                           }}
                           onClick={(event) => {
                             // A card opens the application page; the identity links and its controls keep their own targets.
+                            if (draggedRef.current) {
+                              draggedRef.current = false;
+                              return;
+                            }
                             if ((event.target as HTMLElement).closest("a,button,select,input,label")) return;
                             navigate(`/recruiter/applications/${application.id}`);
                           }}
