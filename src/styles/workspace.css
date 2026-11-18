@@ -64,7 +64,14 @@
 }
 .jp-workspace-home:hover { color: var(--c-navy); text-decoration: none; }
 
-.jp-workspace-account { margin-left: auto; }
+/* Bell and avatar sit on one line: the row centres them and keeps a gap, so the two controls are
+   not flush against each other. */
+.jp-workspace-account {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
 
 .jp-workspace-menu {
   display: none;
