@@ -76,7 +76,7 @@ test("recruiter shell: sidebar sections, active marker, no marketing footer", as
   await page.goto("/recruiter");
   await expect(page.getByRole("heading", { name: "Tổng quan tuyển dụng" })).toBeVisible();
   await openWorkspaceMenu(page);
-  for (const label of ["Tổng quan", "Tin tuyển dụng", "Đăng tin", "Công ty"]) {
+  for (const label of ["Tổng quan", "Ứng viên", "Tin tuyển dụng", "Công ty"]) {
     await expect(
       page.getByRole("navigation", { name: "Điều hướng khu vực làm việc" }).getByRole("link", { name: label }),
     ).toBeVisible();

@@ -28,7 +28,7 @@ type NavItem = {
   to: string;
   labelKey: NavLabelKey;
   icon: IconName;
-  match: (path: string) => boolean;
+  match: (path: string, search: string) => boolean;
 };
 
 const RECRUITER_NAV: NavItem[] = [
@@ -43,13 +43,7 @@ const RECRUITER_NAV: NavItem[] = [
     to: "/recruiter/jobs",
     labelKey: "recruiter.nav.jobs",
     icon: "briefcase",
-    match: (p) => p === "/recruiter/jobs" || (p.startsWith("/recruiter/jobs/") && p !== "/recruiter/jobs/new"),
-  },
-  {
-    to: "/recruiter/jobs/new",
-    labelKey: "recruiter.nav.post",
-    icon: "plus",
-    match: (p) => p === "/recruiter/jobs/new",
+    match: (p) => p === "/recruiter/jobs",
   },
   {
     to: "/recruiter/interviews",
@@ -63,15 +57,16 @@ const RECRUITER_NAV: NavItem[] = [
     icon: "mail",
     match: (p) => p === "/recruiter/email-templates",
   },
-  {
-    to: "/recruiter/company",
-    labelKey: "recruiter.nav.company",
-    icon: "building",
-    match: (p) => p === "/recruiter/company",
-  },
 ];
 
-/** Company-admin only: the creator can hand out invite codes and decide join requests. */
+/** Company settings for every recruiter; the creator also gets invite codes and join requests. */
+const COMPANY_NAV: NavItem = {
+  to: "/recruiter/company",
+  labelKey: "recruiter.nav.company",
+  icon: "building",
+  match: (p) => p === "/recruiter/company",
+};
+
 const COMPANY_ADMIN_NAV: NavItem[] = [
   {
     to: "/recruiter/invite-codes",
@@ -101,7 +96,7 @@ const ADMIN_NAV: NavItem[] = [
 export function WorkspaceLayout() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [open, setOpen] = useState(false);
   const [menuPath, setMenuPath] = useState(pathname);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -116,7 +111,7 @@ export function WorkspaceLayout() {
     enabled: recruiter,
     staleTime: 5 * 60_000,
   });
-  const companyNav = recruiter && company.data?.isCompanyAdmin ? COMPANY_ADMIN_NAV : [];
+  const companyNav = recruiter ? [COMPANY_NAV, ...(company.data?.isCompanyAdmin ? COMPANY_ADMIN_NAV : [])] : [];
 
   // Only the content pane scrolls, so the shell must reset it on navigation.
   // biome-ignore lint/correctness/useExhaustiveDependencies: pathname is the trigger; the effect only touches the pane.
@@ -130,7 +125,7 @@ export function WorkspaceLayout() {
   }
 
   function navLink(item: NavItem) {
-    const active = item.match(pathname);
+    const active = item.match(pathname, search);
     return (
       <Link
         key={item.to}

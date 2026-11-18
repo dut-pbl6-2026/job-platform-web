@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
-import { Alert, Button, ButtonLink, EmptyState, FilterChip, Pagination, SkeletonRows } from "../components/ui";
+import { JobFormDialog } from "../components/JobFormDialog";
+import { Alert, Button, EmptyState, FilterChip, Pagination, SkeletonRows } from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { formatDate } from "../lib/dates";
 import { apiErrorMessage, loadErrorMessage } from "../lib/http";
@@ -34,6 +35,28 @@ export default function RecruiterJobsPage() {
   const status = parseStatus(params.get("status"));
   // The URL is 1-based, like the API. The Pagination component counts from 0.
   const page = Math.max(1, Number(params.get("page")) || 1);
+
+  // Posting and editing happen in a dialog; the query keeps deep links (dashboard, old /new route) working.
+  const [dialogJobId, setDialogJobId] = useState<string | null>(params.get("edit") ?? null);
+  const dialogOpen = params.get("new") === "1" || Boolean(dialogJobId);
+
+  function openDialog(jobId: string | null) {
+    const merged = new URLSearchParams(params);
+    merged.delete("new");
+    merged.delete("edit");
+    if (jobId) merged.set("edit", jobId);
+    else merged.set("new", "1");
+    setParams(merged, { replace: true });
+    setDialogJobId(jobId);
+  }
+
+  function closeDialog() {
+    const merged = new URLSearchParams(params);
+    merged.delete("new");
+    merged.delete("edit");
+    setParams(merged, { replace: true });
+    setDialogJobId(null);
+  }
 
   const list = useQuery({
     queryKey: ["recruiter", "jobs", "list", status, page],
@@ -72,7 +95,11 @@ export default function RecruiterJobsPage() {
     <RecruiterShell
       title={t("recruiter.jobs.title")}
       lead={t("recruiter.jobs.lead")}
-      actions={<ButtonLink to="/recruiter/jobs/new">{t("recruiter.jobs.newJob")}</ButtonLink>}
+      actions={
+        <Button icon="plus" onClick={() => openDialog(null)}>
+          {t("recruiter.jobs.newJob")}
+        </Button>
+      }
     >
       <div className="jp-recruiter-filters" role="group" aria-label={t("recruiter.jobs.filterGroup")}>
         {FILTERS.map((f) => (
@@ -154,9 +181,9 @@ export default function RecruiterJobsPage() {
                       <Link to={`/recruiter/jobs/${job.id}/applications`}>{t("recruiter.jobs.viewApplicants")}</Link>
                     </td>
                     <td className="jp-recruiter-row-actions" data-label={t("recruiter.jobs.colActions")}>
-                      <Link className="jp-link" to={`/recruiter/jobs/${job.id}/edit`}>
+                      <Button variant="secondary" size="sm" onClick={() => openDialog(job.id)}>
                         {t("recruiter.jobs.edit")}
-                      </Link>
+                      </Button>
                       <Button
                         variant="danger"
                         size="sm"
@@ -176,6 +203,13 @@ export default function RecruiterJobsPage() {
           <Pagination page={data.page - 1} totalPages={data.totalPages} onPage={(p) => patch({ page: p + 1 })} />
         </>
       )}
+
+      <JobFormDialog
+        open={dialogOpen}
+        jobId={dialogJobId}
+        onClose={closeDialog}
+        onSaved={() => void client.invalidateQueries({ queryKey: ["recruiter", "jobs"] })}
+      />
     </RecruiterShell>
   );
 }

@@ -918,3 +918,135 @@ html.jp-modal-open .jp-workspace-main {
   outline-offset: 4px;
   border-radius: 3px;
 }
+
+/* Public candidate profile, reached from a board card or a table row. */
+.jp-cand-profile {
+  display: grid;
+  gap: var(--sp-5);
+  max-width: 920px;
+  padding: var(--sp-6);
+  background: var(--c-surface);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--radius-panel);
+}
+.jp-cand-profile-head { display: flex; align-items: center; gap: var(--sp-4); }
+.jp-cand-profile-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--c-amber);
+  color: var(--c-navy);
+  font-size: 26px;
+  font-weight: 800;
+  overflow: hidden;
+}
+.jp-cand-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.jp-cand-profile-head h2 { margin: 0; }
+.jp-cand-profile-headline { margin: 4px 0 0; color: var(--c-muted); }
+.jp-cand-profile-section { display: grid; gap: var(--sp-3); padding-top: var(--sp-4); border-top: 1px solid var(--c-row-rule); }
+.jp-cand-profile-section h3 { margin: 0; font-size: var(--fs-title); }
+.jp-cand-profile-section p { margin: 0; white-space: pre-line; }
+.jp-cand-skills { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.jp-cand-skills li {
+  display: grid;
+  gap: 1px;
+  padding: 8px 12px;
+  background: var(--c-ground);
+  border: 1px solid var(--c-rule);
+  border-radius: 8px;
+}
+.jp-cand-skills li span { color: var(--c-muted); font-size: 12px; }
+.jp-cand-timeline { display: grid; gap: var(--sp-3); margin: 0; padding: 0; list-style: none; }
+.jp-cand-timeline li { display: grid; gap: 2px; padding-left: var(--sp-3); border-left: 3px solid var(--c-rule); }
+.jp-cand-timeline li p { margin: 4px 0 0; white-space: pre-line; }
+
+/* Table identity + application page. */
+.jp-apps-table { min-width: 1080px; table-layout: fixed; }
+.jp-apps-table td { vertical-align: middle; }
+.jp-apps-table thead th { line-height: 1.25; }
+.jp-apps-table th:nth-child(1) { width: 20%; }
+.jp-apps-table th:nth-child(2) { width: 11%; }
+.jp-apps-table th:nth-child(3) { width: 10%; }
+.jp-apps-table th:nth-child(4) { width: 28%; }
+.jp-apps-date { white-space: nowrap; }
+.jp-apps-candidate { display: grid; gap: 1px; overflow: hidden; }
+.jp-apps-name { font-weight: 700; color: var(--c-ink); }
+.jp-apps-name:hover { color: var(--c-navy); }
+.jp-apps-email {
+  overflow: hidden;
+  color: var(--c-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jp-apps-table tbody tr { cursor: pointer; }
+.jp-apps-table tbody tr:hover { background: var(--c-hover); }
+/* A control and the action beside it share one height, even though one is an input and one a button. */
+.jp-apps-status { display: flex; align-items: stretch; gap: var(--sp-2); }
+.jp-apps-status .jp-input { min-width: 195px; height: var(--tap); }
+.jp-apps-status .jp-btn { height: var(--tap); }
+.jp-apps-actions { white-space: nowrap; }
+.jp-apps-actions .jp-btn + .jp-btn { margin-left: 4px; }
+.jp-apps-wrap { overflow-x: auto; }
+
+.jp-app-detail { display: grid; gap: var(--sp-4); max-width: 1280px; }
+.jp-app-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+.jp-app-detail-col { display: grid; gap: var(--sp-4); min-width: 0; }
+/* The report sits in a narrow column, so its own panels stack instead of forming a 2x2 grid. */
+.jp-app-detail .rs-grid { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 1199px) {
+  .jp-app-detail-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.jp-app-detail-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+.jp-app-cover { margin: 0; white-space: pre-line; }
+.jp-app-detail .jp-score-note { margin: 0 0 var(--sp-3); }
+.jp-score-note { margin-bottom: var(--sp-4); }
+.jp-match-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid var(--c-rule);
+  border-radius: 8px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  text-decoration: none;
+}
+.jp-match-score:hover { text-decoration: none; border-color: var(--c-navy); }
+.jp-match-score-label { color: var(--c-muted); font-size: 12px; }
+.jp-match-score-value { color: var(--c-navy); font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.jp-match-score-value.is-muted, .jp-match-score.is-muted .jp-match-score-value { color: var(--c-muted); font-size: 13px; font-weight: 600; }
+
+.jp-apps-id { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.jp-apps-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--c-info-soft);
+  color: var(--c-navy);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.jp-apps-avatar:hover { text-decoration: none; box-shadow: 0 0 0 2px var(--c-navy); }
+.jp-apps-id-text { display: grid; gap: 1px; min-width: 0; overflow: hidden; }
+
+.jp-cand-name { overflow: hidden; color: var(--c-ink); font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.jp-cand-name:hover { color: var(--c-navy); }
+a.jp-cand-avatar:hover { text-decoration: none; box-shadow: 0 0 0 2px var(--c-navy); }

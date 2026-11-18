@@ -1007,12 +1007,12 @@
         "basicsTitle": "Thông tin cơ bản",
         "basicsHint": "Vị trí và địa điểm",
         "basicsLead": "Đây là những gì ứng viên dùng để lọc và tìm thấy tin của bạn.",
-        "contentTitle": "Mô tả công việc",
-        "contentHint": "Nội dung ứng viên đọc",
-        "contentLead": "Viết ngắn gọn nhưng đủ để ứng viên biết họ sẽ làm gì và cần gì.",
-        "publishTitle": "Lương & xem lại",
-        "publishHint": "Kiểm tra thẻ tin",
-        "publishLead": "Khoảng lương để trống nếu thương lượng. Thẻ bên dưới là cách tin của bạn hiển thị.",
+        "contentTitle": "Mô tả & lương",
+        "contentHint": "Nội dung và khoảng lương",
+        "contentLead": "Viết đủ để ứng viên biết họ sẽ làm gì, cần gì, và mức lương bạn trả.",
+        "publishTitle": "Xem lại tin",
+        "publishHint": "Kiểm tra lần cuối",
+        "publishLead": "Đây là cách tin của bạn hiển thị với ứng viên. Kiểm tra lần cuối rồi đăng.",
         "salaryNote": "Tin có khoảng lương rõ ràng thường nhận nhiều hồ sơ phù hợp hơn.",
         "previewTitle": "Xem trước thẻ tin",
         "previewUntitled": "Vị trí tuyển dụng",
@@ -1050,7 +1050,17 @@
       "scoreNone": "Chưa có điểm",
       "scoreFailed": "Không tính được",
       "email": "Gửi email",
-      "schedule": "Đặt lịch"
+      "schedule": "Đặt lịch",
+      "tableLabel": "Danh sách hồ sơ ứng tuyển",
+      "colCandidate": "Ứng viên",
+      "colDate": "Ngày ứng tuyển",
+      "colScore": "Điểm phù hợp AI",
+      "colStatus": "Trạng thái",
+      "colActions": "Thao tác",
+      "open": "Xem hồ sơ",
+      "scoreShort": "AI",
+      "scoreLink": "Xem chi tiết điểm AI của {{name}}",
+      "profileLink": "Xem hồ sơ công khai của {{name}}"
     },
     "candidates": {
       "title": "Quản lý ứng viên",
@@ -1081,7 +1091,9 @@
       "columnEmpty": "Chưa có hồ sơ",
       "moved": "Đã chuyển sang {{status}}",
       "stale": "Trạng thái vừa thay đổi ở nơi khác. Danh sách đã được tải lại.",
-      "moveFailed": "Chưa chuyển được trạng thái."
+      "moveFailed": "Chưa chuyển được trạng thái.",
+      "profileLink": "Xem hồ sơ công khai của {{name}}",
+      "openApplication": "Mở hồ sơ ứng tuyển"
     },
     "email": {
       "title": "Gửi email cho ứng viên",
@@ -1162,6 +1174,29 @@
       "subjectPlaceholder": "Mời phỏng vấn vị trí {{job_title}}",
       "body": "Nội dung",
       "counter": "{{length}}/{{max}} ký tự"
+    },
+    "applicationDetail": {
+      "documentTitle": "Hồ sơ ứng viên",
+      "lead": "Ứng tuyển {{job}} · {{date}}",
+      "jobFallback": "tin tuyển dụng",
+      "back": "Danh sách hồ sơ",
+      "loading": "Đang tải hồ sơ",
+      "loadWhat": "hồ sơ ứng viên",
+      "notFound": "Không tìm thấy hồ sơ này.",
+      "scoreTitle": "Điểm phù hợp AI",
+      "scorePending": "Hệ thống đang chấm CV. Điểm và giải thích sẽ xuất hiện sau ít phút.",
+      "scoreFailed": "Chưa chấm được CV này. Nhà tuyển dụng vẫn xem được hồ sơ và CV bên dưới.",
+      "scoreNoDetail": "Điểm đã có nhưng bản giải thích chi tiết không được lưu cho hồ sơ này.",
+      "coverTitle": "Thư ứng tuyển",
+      "coverEmpty": "Ứng viên không gửi kèm thư ứng tuyển.",
+      "cvTitle": "CV đã nộp",
+      "cvEmpty": "Hồ sơ này không có tệp CV.",
+      "cvLoading": "Đang tải CV",
+      "cvFailed": "Không tải được CV. Vui lòng thử lại.",
+      "cvFrameTitle": "CV của ứng viên",
+      "cvNoPreview": "Chỉ xem trước được tệp PDF. Hồ sơ này dùng định dạng khác.",
+      "cvDownload": "Tải CV",
+      "cvReady": "CV đã hiển thị"
     }
   },
   "admin": {
@@ -1625,5 +1660,17 @@
     "newApplication": "Hồ sơ mới cho {{job}}",
     "interview": "Phỏng vấn: {{job}}",
     "cancelled": "Đã huỷ"
+  },
+  "candidateProfile": {
+    "title": "Hồ sơ ứng viên",
+    "lead": "Thông tin công khai ứng viên chia sẻ với nhà tuyển dụng.",
+    "loading": "Đang tải hồ sơ",
+    "loadWhat": "hồ sơ ứng viên",
+    "empty": "Chưa có hồ sơ công khai",
+    "emptyText": "Ứng viên này chưa cập nhật hồ sơ công khai.",
+    "summary": "Giới thiệu",
+    "skills": "Kỹ năng",
+    "experience": "Kinh nghiệm làm việc",
+    "education": "Học vấn"
   }
 }

@@ -133,7 +133,7 @@ test("recruiter sees the workspace sidebar and real counts on the dashboard", as
   await expect(page.getByRole("heading", { name: "Tổng quan tuyển dụng" })).toBeVisible();
   await openNavIfFolded(page);
   const nav = page.getByRole("navigation", { name: "Điều hướng khu vực làm việc" });
-  for (const label of ["Tổng quan", "Tin tuyển dụng", "Đăng tin", "Công ty"]) {
+  for (const label of ["Tổng quan", "Ứng viên", "Tin tuyển dụng", "Công ty"]) {
     await expect(nav.getByRole("link", { name: label })).toBeVisible();
   }
   await expect(nav.getByRole("link", { name: "Tổng quan" })).toHaveAttribute("aria-current", "page");

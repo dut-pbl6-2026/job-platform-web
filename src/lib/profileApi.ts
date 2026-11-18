@@ -111,6 +111,21 @@ export function normalizeProfile(raw: unknown, fallbackUserId: string, fallbackN
   };
 }
 
+/**
+ * GET /api/profiles/{userId}. The public profile: name, headline, summary, skills, experience and
+ * education. profile-svc strips phone, address and date of birth from this response.
+ */
+export async function fetchPublicProfile(userId: string): Promise<Profile | null> {
+  try {
+    const { data } = await api.get(`${P}/${userId}`);
+    return normalizeProfile(unwrap(data), userId, "");
+  } catch (e) {
+    if (statusOf(e) === 404) return null;
+    if (!isOffline(e)) throw e;
+    return null;
+  }
+}
+
 /** profile-svc routes (gateway: /api/profiles/{**catch-all}). */
 const P = "/profiles";
 

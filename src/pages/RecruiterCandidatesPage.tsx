@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
 import { EmailComposerDialog } from "../components/EmailComposerDialog";
@@ -19,7 +19,7 @@ import {
 } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus, viewCv } from "../lib/applicationsApi";
+import { fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus } from "../lib/applicationsApi";
 import { formatDate } from "../lib/dates";
 import { apiErrorMessage, httpStatus, loadErrorMessage } from "../lib/http";
 import { fetchRecruiterJobs } from "../lib/jobsApi";
@@ -45,13 +45,13 @@ export default function RecruiterCandidatesPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   useDocumentTitle(t("recruiter.documentTitles.candidates"));
   const [params, setParams] = useSearchParams();
   const [emailFor, setEmailFor] = useState<Application | null>(null);
   const [interviewFor, setInterviewFor] = useState<Application | null>(null);
   const [dragging, setDragging] = useState<Application | null>(null);
   const [hover, setHover] = useState<ApplicationStatus | null>(null);
-  const [cvError, setCvError] = useState<string | null>(null);
 
   const jobs = useQuery({
     queryKey: ["recruiter", "jobs", "pipeline", user?.id],
@@ -155,18 +155,12 @@ export default function RecruiterCandidatesPage() {
     move.mutate({ id: application.id, next: status });
   }
 
-  function openCv(application: Application) {
-    if (!application.cvUrl) return;
-    setCvError(null);
-    viewCv(application.cvUrl).catch(() => setCvError(t("recruiter.applications.cvFailed")));
-  }
-
   return (
     <RecruiterShell
       title={t("recruiter.candidates.title")}
       lead={t("recruiter.candidates.lead")}
       actions={
-        <ButtonLink to="/recruiter/jobs/new" icon="plus">
+        <ButtonLink to="/recruiter/jobs?new=1" icon="plus">
           {t("recruiter.jobs.newJob")}
         </ButtonLink>
       }
@@ -177,7 +171,7 @@ export default function RecruiterCandidatesPage() {
       {jobs.data && jobList.length === 0 && (
         <EmptyState
           title={t("recruiter.candidates.noJobs")}
-          action={<ButtonLink to="/recruiter/jobs/new">{t("recruiter.jobs.newJob")}</ButtonLink>}
+          action={<ButtonLink to="/recruiter/jobs?new=1">{t("recruiter.jobs.newJob")}</ButtonLink>}
         >
           {t("recruiter.candidates.noJobsText")}
         </EmptyState>
@@ -240,7 +234,6 @@ export default function RecruiterCandidatesPage() {
             </ul>
           </Panel>
 
-          {cvError && <Alert tone="error">{cvError}</Alert>}
           {list.isPending && <SkeletonRows rows={4} label={t("recruiter.candidates.loading")} />}
           {list.isError && (
             <Alert
@@ -306,13 +299,24 @@ export default function RecruiterCandidatesPage() {
                             setDragging(null);
                             setHover(null);
                           }}
+                          onClick={(event) => {
+                            // A card opens the application page; the identity links and its controls keep their own targets.
+                            if ((event.target as HTMLElement).closest("a,button,select,input,label")) return;
+                            navigate(`/recruiter/applications/${application.id}`);
+                          }}
                         >
                           <div className="jp-cand-top">
-                            <span className="jp-cand-avatar" aria-hidden="true">
+                            <Link
+                              className="jp-cand-avatar"
+                              to={`/candidates/${application.applicantId}`}
+                              aria-label={t("recruiter.candidates.profileLink", { name: name || "" })}
+                            >
                               {(name || "?").trim().charAt(0).toUpperCase()}
-                            </span>
+                            </Link>
                             <div className="jp-cand-id">
-                              <strong>{name || t("recruiter.candidates.anonymous")}</strong>
+                              <Link className="jp-cand-name" to={`/candidates/${application.applicantId}`}>
+                                {name || t("recruiter.candidates.anonymous")}
+                              </Link>
                               {application.applicantEmail && application.applicantName && (
                                 <span>{application.applicantEmail}</span>
                               )}
@@ -356,17 +360,14 @@ export default function RecruiterCandidatesPage() {
                             >
                               <Icon name="calendar" size={16} />
                             </button>
-                            {application.cvUrl && (
-                              <button
-                                type="button"
-                                className="jp-icon-btn"
-                                title={t("recruiter.applications.viewCv")}
-                                aria-label={t("recruiter.applications.viewCv")}
-                                onClick={() => openCv(application)}
-                              >
-                                <Icon name="file" size={16} />
-                              </button>
-                            )}
+                            <Link
+                              className="jp-icon-btn"
+                              title={t("recruiter.candidates.openApplication")}
+                              aria-label={t("recruiter.candidates.openApplication")}
+                              to={`/recruiter/applications/${application.id}`}
+                            >
+                              <Icon name="file" size={16} />
+                            </Link>
                             <Link
                               className="jp-icon-btn"
                               title={t("recruiter.candidates.openJob")}

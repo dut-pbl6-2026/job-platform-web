@@ -11,6 +11,7 @@ import "./styles/board.css";
 import "./styles/detail.css";
 import "./styles/apply.css";
 import "./styles/engagement.css";
+import "./styles/score.css";
 import "./styles/authform.css";
 import "./styles/account.css";
 import "./styles/admin.css";

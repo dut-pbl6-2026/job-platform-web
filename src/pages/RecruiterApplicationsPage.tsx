@@ -1,14 +1,24 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
-import { useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RecruiterShell } from "../components/RecruiterShell";
 import { EmailComposerDialog } from "../components/EmailComposerDialog";
 import { InterviewDialog } from "../components/InterviewDialog";
-import { Alert, BackLink, Button, EmptyState, FilterChip, Pagination, SkeletonRows } from "../components/ui";
+import {
+  Alert,
+  BackLink,
+  Button,
+  ButtonLink,
+  EmptyState,
+  FilterChip,
+  Pagination,
+  SkeletonRows,
+  StatusMark,
+} from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus, viewCv } from "../lib/applicationsApi";
+import { fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus } from "../lib/applicationsApi";
 import { formatDate } from "../lib/dates";
 import { httpStatus, loadErrorMessage, apiErrorMessage } from "../lib/http";
 import { fetchJobById } from "../lib/jobsApi";
@@ -38,18 +48,19 @@ function scoreText(app: { score?: number | null; scoringStatus?: string | null }
 }
 
 /**
- * Applications for one job. The API has no candidate name (ApplicationSummaryDto carries only
- * applicantId), so rows show the application date, status, cover letter and CV. Ids are never shown.
+ * Applications for one job, as a table. A row carries the parts a recruiter scans (who, when, score,
+ * status) and links to the application page for the cover letter, the submitted CV and the full AI
+ * report. Ids are never shown.
  */
 export default function RecruiterApplicationsPage() {
   const { t } = useTranslation();
   const { jobId = "" } = useParams();
   const [params, setParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const status = parseStatus(params.get("status"));
   const page = Math.max(1, Number(params.get("page")) || 1);
   useDocumentTitle(t("recruiter.documentTitles.applications"));
-  const [cvError, setCvError] = useState<string | null>(null);
   const [emailFor, setEmailFor] = useState<Application | null>(null);
   const [interviewFor, setInterviewFor] = useState<Application | null>(null);
 
@@ -127,10 +138,9 @@ export default function RecruiterApplicationsPage() {
 
       <p className="jp-muted jp-score-note">{t("recruiter.applications.scoreNote")}</p>
 
-      {cvError && <Alert tone="error">{cvError}</Alert>}
       {update.isError && <Alert tone="error">{errorFor(update.error)}</Alert>}
 
-      {list.isPending && <SkeletonRows rows={4} label={t("recruiter.applications.loading")} />}
+      {list.isPending && <SkeletonRows rows={5} label={t("recruiter.applications.loading")} />}
 
       {list.isError && (
         <Alert
@@ -153,84 +163,131 @@ export default function RecruiterApplicationsPage() {
 
       {data && data.items.length > 0 && (
         <>
-          <ul className="jp-recruiter-apps" aria-label={t("recruiter.applications.listLabel")}>
-            {data.items.map((app) => {
-              const next = (flowMap[app.status] ?? []) as ApplicationStatus[];
-              const score = scoreText(app);
-              return (
-                <li className="jp-recruiter-app" key={app.id}>
-                  <div className="jp-recruiter-app-head">
-                    <span className="jp-recruiter-app-date">
-                      {t("recruiter.applications.applied", { date: formatDate(app.createdAt) })}
-                    </span>
-                    <span className="jp-recruiter-app-status">{STATUS_LABEL[app.status]}</span>
-                  </div>
-                  <p className="jp-match-score">
-                    <span className="jp-match-score-label">{t("recruiter.applications.scoreLabel")}</span>
-                    <span className={score.muted ? "jp-match-score-value is-muted" : "jp-match-score-value"}>
-                      {score.value}
-                    </span>
-                  </p>
-                  {app.coverLetter && (
-                    <details className="jp-recruiter-app-letter">
-                      <summary>{t("recruiter.applications.letter")}</summary>
-                      <p>{app.coverLetter}</p>
-                    </details>
-                  )}
-                  <div className="jp-recruiter-app-actions">
-                    <Button variant="secondary" onClick={() => setEmailFor(app)}>
-                      {t("recruiter.applications.email")}
-                    </Button>
-                    <Button variant="secondary" onClick={() => setInterviewFor(app)}>
-                      {t("recruiter.applications.schedule")}
-                    </Button>
-                    {app.cvUrl && (
-                      <Button
-                        variant="secondary"
-                        onClick={() => {
-                          const cv = app.cvUrl ?? "";
-                          setCvError(null);
-                          viewCv(cv).catch(() => setCvError(t("recruiter.applications.cvFailed")));
-                        }}
-                      >
-                        {t("recruiter.applications.viewCv")}
-                      </Button>
-                    )}
-                    {next.length > 0 ? (
-                      <form
-                        className="jp-recruiter-app-status-form"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const form = new FormData(e.currentTarget);
-                          const value = String(form.get("next") ?? "") as ApplicationStatus;
-                          if (value) update.mutate({ id: app.id, next: value });
-                        }}
-                      >
-                        <label className="jp-sr-only" htmlFor={`next-${app.id}`}>
-                          {t("recruiter.applications.updateStatusLabel")}
-                        </label>
-                        <select id={`next-${app.id}`} name="next" className="jp-input" defaultValue="" required>
-                          <option value="" disabled>
-                            {t("recruiter.applications.chooseNext")}
-                          </option>
-                          {next.map((s) => (
-                            <option key={s} value={s}>
-                              {STATUS_LABEL[s]}
-                            </option>
-                          ))}
-                        </select>
-                        <Button type="submit" loading={update.isPending && update.variables?.id === app.id}>
-                          {t("recruiter.applications.update")}
-                        </Button>
-                      </form>
-                    ) : (
-                      <span className="jp-muted">{t("recruiter.applications.ended")}</span>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="jp-table-wrap jp-apps-wrap">
+            <table className="jp-table jp-apps-table">
+              <caption className="jp-sr-only">{t("recruiter.applications.tableLabel")}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{t("recruiter.applications.colCandidate")}</th>
+                  <th scope="col">{t("recruiter.applications.colDate")}</th>
+                  <th scope="col">{t("recruiter.applications.colScore")}</th>
+                  <th scope="col">{t("recruiter.applications.colStatus")}</th>
+                  <th scope="col">
+                    <span className="jp-sr-only">{t("recruiter.applications.colActions")}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.items.map((app) => {
+                  const next = (flowMap[app.status] ?? []) as ApplicationStatus[];
+                  const score = scoreText(app);
+                  const name = app.applicantName || app.applicantEmail;
+                  return (
+                    <tr
+                      key={app.id}
+                      onClick={(event) => {
+                        // The row opens the application; the identity cell and the controls keep their own targets.
+                        if ((event.target as HTMLElement).closest("a,button,select,input,label")) return;
+                        navigate(`/recruiter/applications/${app.id}`);
+                      }}
+                    >
+                      <td className="jp-apps-candidate">
+                        <div className="jp-apps-id">
+                          <Link
+                            className="jp-apps-avatar"
+                            to={`/candidates/${app.applicantId}`}
+                            aria-label={t("recruiter.applications.profileLink", { name: name || "" })}
+                          >
+                            {(name || "?").trim().charAt(0).toUpperCase()}
+                          </Link>
+                          <span className="jp-apps-id-text">
+                            <Link className="jp-apps-name" to={`/candidates/${app.applicantId}`}>
+                              {name || t("recruiter.candidates.anonymous")}
+                            </Link>
+                            {app.applicantName && app.applicantEmail && (
+                              <span className="jp-apps-email">{app.applicantEmail}</span>
+                            )}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="jp-apps-date">{formatDate(app.createdAt)}</td>
+                      <td>
+                        <Link
+                          className={score.muted ? "jp-match-score is-muted" : "jp-match-score"}
+                          to={`/recruiter/applications/${app.id}`}
+                          aria-label={t("recruiter.applications.scoreLink", { name: name || "" })}
+                        >
+                          <span className="jp-match-score-label">{t("recruiter.applications.scoreShort")}</span>
+                          <span className={score.muted ? "jp-match-score-value is-muted" : "jp-match-score-value"}>
+                            {score.value}
+                          </span>
+                        </Link>
+                      </td>
+                      <td>
+                        {next.length > 0 ? (
+                          <form
+                            className="jp-apps-status"
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              const form = new FormData(e.currentTarget);
+                              const value = String(form.get("next") ?? "") as ApplicationStatus;
+                              if (value) update.mutate({ id: app.id, next: value });
+                            }}
+                          >
+                            <label className="jp-sr-only" htmlFor={`next-${app.id}`}>
+                              {t("recruiter.applications.updateStatusLabel")}
+                            </label>
+                            <select id={`next-${app.id}`} name="next" className="jp-input" defaultValue="" required>
+                              <option value="" disabled>
+                                {t("recruiter.applications.chooseNext")}
+                              </option>
+                              {next.map((s) => (
+                                <option key={s} value={s}>
+                                  {STATUS_LABEL[s]}
+                                </option>
+                              ))}
+                            </select>
+                            <Button
+                              type="submit"
+                              size="sm"
+                              loading={update.isPending && update.variables?.id === app.id}
+                            >
+                              {t("recruiter.applications.update")}
+                            </Button>
+                          </form>
+                        ) : (
+                          <StatusMark tone={app.status === "rejected" ? "danger" : "success"}>
+                            {STATUS_LABEL[app.status]}
+                          </StatusMark>
+                        )}
+                      </td>
+                      <td className="jp-apps-actions">
+                        <ButtonLink to={`/recruiter/applications/${app.id}`} variant="secondary" size="sm" icon="file">
+                          {t("recruiter.applications.open")}
+                        </ButtonLink>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon="mail"
+                          title={t("recruiter.applications.email")}
+                          aria-label={t("recruiter.email.title")}
+                          onClick={() => setEmailFor(app)}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon="calendar"
+                          title={t("recruiter.applications.schedule")}
+                          aria-label={t("recruiter.interview.title")}
+                          onClick={() => setInterviewFor(app)}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           <Pagination page={data.page - 1} totalPages={data.totalPages} onPage={(p) => patch({ page: p + 1 })} />
         </>
       )}

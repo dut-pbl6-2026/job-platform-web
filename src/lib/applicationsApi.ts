@@ -3,6 +3,7 @@ import i18n from "../i18n";
 import { unwrap, pickStr, pickNum, toOneBased, fromOneBased, shouldUseMock, httpStatus } from "./http";
 import { MOCK_JOBS } from "../mocks/jobsMock";
 import type { Application, ApplicationStatus, PaginatedApplications, StatusHistoryEntry } from "../types/application";
+import type { ResumeScore } from "../types/resumeScore";
 import { APPLICATION_STATUSES } from "../types/application";
 
 const STORE_KEY = "jp.mock.applications";
@@ -83,6 +84,7 @@ export function normalizeApplication(raw: unknown): Application {
     status: asStatus(o.status),
     recruiterNotes: pickStr(o, "recruiterNotes", "recruiter_notes") ?? null,
     score: pickNum(o, "score") ?? null,
+    scoreDetail: o.scoreDetail && typeof o.scoreDetail === "object" ? (o.scoreDetail as ResumeScore) : null,
     scoringStatus: pickStr(o, "scoringStatus", "scoring_status") ?? null,
     createdAt: pickStr(o, "createdAt", "created_at") || new Date().toISOString(),
     updatedAt:
@@ -222,7 +224,7 @@ export async function fetchApplicationById(id: string, userId: string): Promise<
  * Authenticated route. A plain <a href> sends no Bearer token (401) and, on Vercel, the SPA
  * rewrite serves index.html for it. Fetch it through the API client and hand the blob back.
  */
-async function fetchCvBlob(cvUrl: string): Promise<Blob> {
+export async function fetchCvBlob(cvUrl: string): Promise<Blob> {
   const path = cvUrl.replace(/^\/api(?=\/)/, ""); // API_BASE_URL already ends with /api
   try {
     const { data } = await api.get<Blob>(path, { responseType: "blob" });
@@ -262,38 +264,6 @@ export async function downloadCv(cvUrl: string, fileName?: string | null): Promi
   const data = await fetchCvBlob(cvUrl);
   const url = URL.createObjectURL(data);
   saveBlob(url, fileName || cvUrl.split("/").pop() || "cv");
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-}
-
-/**
- * Opens the CV in the browser's own viewer instead of downloading it. The fetch needs the Bearer
- * token, so the tab is opened inside the click (a popup opened after an await is blocked) and then
- * pointed at the blob: URL. app-svc sends the file's MIME type, so a PDF renders in the browser's
- * built-in viewer. A blocked popup falls back to the download.
- */
-export async function viewCv(cvUrl: string, fileName?: string | null): Promise<void> {
-  if (!cvUrl.startsWith("/")) {
-    if (!/^(https?|blob):/i.test(cvUrl)) throw new Error(i18n.t("cv.invalidUrl"));
-    window.open(cvUrl, "_blank");
-    return;
-  }
-
-  const tab = window.open("", "_blank");
-  let url: string;
-  try {
-    const data = await fetchCvBlob(cvUrl);
-    url = URL.createObjectURL(data);
-  } catch (e) {
-    tab?.close();
-    throw e;
-  }
-
-  if (tab) {
-    tab.opener = null;
-    tab.location.href = url;
-  } else {
-    saveBlob(url, fileName || cvUrl.split("/").pop() || "cv");
-  }
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 

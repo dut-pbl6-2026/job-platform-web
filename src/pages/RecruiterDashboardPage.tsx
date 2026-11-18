@@ -114,7 +114,7 @@ export default function RecruiterDashboardPage() {
       title={t("recruiter.dashboard.title")}
       lead={t("recruiter.dashboard.lead")}
       actions={
-        <ButtonLink to="/recruiter/jobs/new" icon="plus">
+        <ButtonLink to="/recruiter/jobs?new=1" icon="plus">
           {t("recruiter.jobs.newJob")}
         </ButtonLink>
       }
@@ -276,7 +276,7 @@ export default function RecruiterDashboardPage() {
           <Panel title={t("recruiter.dashboard.quickTitle")}>
             <ul className="jp-quick">
               <li>
-                <Link to="/recruiter/jobs/new">
+                <Link to="/recruiter/jobs?new=1">
                   <Icon name="plus" size={18} />
                   <span>{t("recruiter.nav.post")}</span>
                   <Icon name="chevronRight" size={16} />

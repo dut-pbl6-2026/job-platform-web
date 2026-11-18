@@ -1,0 +1,98 @@
+/* CV scoring (deferred feature): tokens only, no redesign. */
+
+/* The job board row needs the full width; the form and the result read better at 880px. */
+.rs-pick,
+.rs-form,
+.rs-result,
+.rs-err,
+.rs-page > .jp-alert { max-width: 880px; }
+
+.rs-pick { margin-bottom: var(--sp-4); }
+.rs-job { display: grid; gap: var(--sp-3); justify-items: start; margin-bottom: var(--sp-4); }
+.rs-job .jp-board { width: 100%; }
+.rs-form { display: grid; gap: var(--sp-4); }
+.rs-err { margin-top: var(--sp-4); }
+.rs-result { display: flex; flex-direction: column; gap: var(--sp-4); margin-top: var(--sp-6); }
+.rs-note { margin-top: var(--sp-1); font-size: 14px; }
+
+.rs-summary { display: flex; gap: var(--sp-6); align-items: center; flex-wrap: wrap; }
+.rs-summary p { margin: var(--sp-2) 0 0; }
+.rs-ring { position: relative; width: 148px; height: 148px; flex: none; }
+.rs-ring-bg { fill: none; stroke: var(--c-rule); stroke-width: 10; }
+.rs-ring-fg { fill: none; stroke: currentColor; stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray 0.6s ease; }
+.rs-ring-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 2px; color: var(--c-ink); }
+.rs-ring-label strong { font-size: 38px; line-height: 1; }
+.rs-ring-label span { font-size: var(--fs-caption); color: var(--c-muted); align-self: flex-end; margin-bottom: 34px; }
+
+/* The band is always written out next to the colour. */
+.rs-strong { color: var(--c-success); }
+.rs-good { color: var(--c-navy); }
+.rs-partial { color: var(--c-warning); }
+.rs-weak { color: var(--c-danger); }
+.rs-band { font-size: var(--fs-h2); font-weight: 800; }
+
+.rs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); align-items: start; }
+@media (max-width: 767px) {
+  .rs-grid { grid-template-columns: minmax(0, 1fr); }
+  .rs-summary { justify-content: center; text-align: center; }
+}
+
+.rs-sub {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.rs-bar-head { display: flex; justify-content: space-between; margin-bottom: var(--sp-2); }
+.rs-bar-track { height: 8px; border-radius: 4px; background: var(--c-rule); overflow: hidden; }
+.rs-bar-fill { height: 100%; background: var(--c-navy); transition: width 0.6s ease; }
+
+.rs-chips { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.rs-chip {
+  padding: 4px var(--sp-3);
+  border-radius: var(--radius-control);
+  background: var(--c-ground);
+  color: var(--c-ink);
+  border: 1px solid var(--c-rule);
+  font-size: 14px;
+}
+.rs-ok { background: var(--c-success-soft); color: #14532f; border-color: #bfdccb; }
+.rs-miss { background: var(--c-warning-soft); color: #5c3d00; border-color: #ead9a6; }
+.rs-neg { background: var(--c-danger-soft); color: #7a1a12; border-color: #f1c4c0; }
+
+.rs-match { margin-top: var(--sp-3); font-size: 14px; }
+.rs-match-req { font-weight: 600; }
+.rs-suggest { margin: 0; padding-left: var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-2); }
+
+/* In the application detail page the report is one section of the page, not a standalone result. */
+.jp-score-report { display: grid; gap: var(--sp-4); }
+.jp-score-report .rs-summary { margin: 0; }
+
+/* The CV the candidate submitted, rendered by pdf.js inside the page. */
+.jp-cv-view {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.jp-cv-pages { display: grid; gap: var(--sp-3); min-width: 0; }
+.jp-cv-page {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--c-rule);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px -18px var(--c-navy);
+}
+.jp-cv-empty {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  padding: var(--sp-6);
+  border: 1px dashed var(--c-control);
+  border-radius: 10px;
+  color: var(--c-muted);
+  text-align: center;
+}

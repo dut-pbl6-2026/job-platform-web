@@ -55,8 +55,10 @@ test("recruiter posts a job through POST /api/jobs with the account's companyId"
   await page.getByRole("textbox", { name: /^Địa điểm/ }).fill("Hà Nội");
   await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByRole("textbox", { name: "Mô tả công việc" }).fill("Phát triển giao diện web.");
-  await page.getByRole("button", { name: "Tiếp tục" }).click();
+  // Salary shares the description step; the last step is the preview only.
   await page.getByLabel("Lương tối thiểu (VND)").fill("10000000");
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
+  await expect(page.locator(".jp-post-preview")).toBeVisible();
   await page.getByRole("button", { name: "Xuất bản" }).click();
 
   await expect(page).toHaveURL(/\/recruiter\/jobs$/);
@@ -103,12 +105,12 @@ test("post job: maximum salary below minimum is refused", async ({ page }) => {
   await page.getByRole("textbox", { name: /^Địa điểm/ }).fill("Đà Nẵng");
   await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByRole("textbox", { name: "Mô tả công việc" }).fill("Kế toán tổng hợp.");
-  await page.getByRole("button", { name: "Tiếp tục" }).click();
   await page.getByLabel("Lương tối thiểu (VND)").fill("20000000");
   await page.getByLabel("Lương tối đa (VND)").fill("10000000");
-  await page.getByRole("button", { name: "Xuất bản" }).click();
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
 
   await expect(page.getByText("Mức lương tối đa phải lớn hơn hoặc bằng tối thiểu")).toBeVisible();
+  await expect(page.locator(".jp-post-preview")).toHaveCount(0);
   expect(posts).toHaveLength(0);
 });
 

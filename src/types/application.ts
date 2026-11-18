@@ -10,6 +10,8 @@ export interface StatusHistoryEntry {
   changedAt: string;
 }
 
+import type { ResumeScore } from "./resumeScore";
+
 export interface Application {
   id: string;
   jobId: string;
@@ -26,6 +28,8 @@ export interface Application {
   status: ApplicationStatus;
   recruiterNotes?: string | null;
   score?: number | null;
+  /** Only present on the recruiter detail response: the ai-svc report behind the score. */
+  scoreDetail?: ResumeScore | null;
   scoringStatus?: string | null;
   createdAt: string;
   updatedAt: string;

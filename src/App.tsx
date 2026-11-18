@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -18,6 +18,7 @@ import HomePage from "./pages/HomePage";
 import JobListPage from "./pages/JobListPage";
 import JobDetailPage from "./pages/JobDetailPage";
 import CompanyPage from "./pages/CompanyPage";
+import CandidateProfilePage from "./pages/CandidateProfilePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import ApplyPage from "./pages/ApplyPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -28,7 +29,7 @@ import AdminJobsPage from "./pages/AdminJobsPage";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import RecruiterDashboardPage from "./pages/RecruiterDashboardPage";
 import RecruiterJobsPage from "./pages/RecruiterJobsPage";
-import RecruiterPostJobPage from "./pages/RecruiterPostJobPage";
+import RecruiterApplicationDetailPage from "./pages/RecruiterApplicationDetailPage";
 import RecruiterApplicationsPage from "./pages/RecruiterApplicationsPage";
 import RecruiterCandidatesPage from "./pages/RecruiterCandidatesPage";
 import RecruiterEmailTemplatesPage from "./pages/RecruiterEmailTemplatesPage";
@@ -38,6 +39,12 @@ import RecruiterCompanyPage from "./pages/RecruiterCompanyPage";
 import RecruiterInviteCodesPage from "./pages/RecruiterInviteCodesPage";
 import RecruiterJoinRequestsPage from "./pages/RecruiterJoinRequestsPage";
 import JoinRequestPage from "./pages/JoinRequestPage";
+
+/** Old deep link for editing: the form is a dialog on the jobs page now. */
+function EditJobRedirect() {
+  const { jobId = "" } = useParams();
+  return <Navigate to={`/recruiter/jobs?edit=${encodeURIComponent(jobId)}`} replace />;
+}
 
 /**
  * One layout per audience. Public pages get the marketing chrome; auth pages keep their own panel;
@@ -59,6 +66,7 @@ export default function App() {
                   <Route path="/jobs" element={<JobListPage />} />
                   <Route path="/jobs/:id" element={<JobDetailPage />} />
                   <Route path="/companies/:id" element={<CompanyPage />} />
+                  <Route path="/candidates/:id" element={<CandidateProfilePage />} />
                 </Route>
 
                 <Route
@@ -155,27 +163,21 @@ export default function App() {
                       </RequireRole>
                     }
                   />
-                  <Route
-                    path="/recruiter/jobs/new"
-                    element={
-                      <RequireRole requiredRole="Recruiter">
-                        <RecruiterPostJobPage />
-                      </RequireRole>
-                    }
-                  />
-                  <Route
-                    path="/recruiter/jobs/:jobId/edit"
-                    element={
-                      <RequireRole requiredRole="Recruiter">
-                        <RecruiterPostJobPage />
-                      </RequireRole>
-                    }
-                  />
+                  <Route path="/recruiter/jobs/new" element={<Navigate to="/recruiter/jobs?new=1" replace />} />
+                  <Route path="/recruiter/jobs/:jobId/edit" element={<EditJobRedirect />} />
                   <Route
                     path="/recruiter/jobs/:jobId/applications"
                     element={
                       <RequireRole requiredRole="Recruiter">
                         <RecruiterApplicationsPage />
+                      </RequireRole>
+                    }
+                  />
+                  <Route
+                    path="/recruiter/applications/:id"
+                    element={
+                      <RequireRole requiredRole="Recruiter">
+                        <RecruiterApplicationDetailPage />
                       </RequireRole>
                     }
                   />
