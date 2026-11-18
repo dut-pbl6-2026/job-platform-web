@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
-import { Alert, Button, Checkbox, Field, Input, Modal, Textarea } from "../components/ui";
+import { Alert, Button, Field, Input, Modal, Textarea } from "../components/ui";
 import { apiErrorMessage } from "../lib/http";
 import { createInterview, type InterviewMutation, type InterviewMode } from "../lib/engagementApi";
 import type { Application } from "../types/application";
@@ -43,7 +43,6 @@ export function InterviewDialog({
   const [mode, setMode] = useState<InterviewMode>("online");
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
-  const [sendInvite, setSendInvite] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // A different applicant gets a clean form; the dialog stays mounted for the focus handling.
@@ -57,7 +56,6 @@ export function InterviewDialog({
     setMode("online");
     setLocation("");
     setNotes("");
-    setSendInvite(true);
   }, [open, application?.id]);
 
   const create = useMutation({
@@ -69,7 +67,8 @@ export function InterviewDialog({
         mode,
         location: location.trim() || null,
         notes: notes.trim() || null,
-        sendInvite,
+        // The invite always carries the .ics file; the API sends it after saving.
+        sendInvite: true,
       }),
     onSuccess: (result) => {
       showToast({
@@ -183,13 +182,6 @@ export function InterviewDialog({
             onChange={(e) => setNotes(e.target.value)}
           />
         </Field>
-
-        <Checkbox
-          label={t("recruiter.interview.sendInvite")}
-          checked={sendInvite}
-          onChange={(e) => setSendInvite(e.target.checked)}
-        />
-        <p className="jp-muted jp-modal-note">{t("recruiter.interview.sendInviteNote")}</p>
       </form>
     </Modal>
   );

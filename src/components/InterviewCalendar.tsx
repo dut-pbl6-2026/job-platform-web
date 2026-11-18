@@ -41,13 +41,11 @@ export function InterviewCalendar({
   interviews,
   viewer,
   onCancel,
-  onDownload,
   cancellingId,
 }: {
   interviews: Interview[];
   viewer: "recruiter" | "candidate";
   onCancel?: (interview: Interview) => void;
-  onDownload: (interview: Interview) => void;
   cancellingId?: string | null;
 }) {
   const { t } = useTranslation();
@@ -222,11 +220,8 @@ export function InterviewCalendar({
                       </span>
                     </p>
                     {interview.notes && <p className="jp-interview-notes">{interview.notes}</p>}
-                    <div className="jp-interview-actions">
-                      <Button variant="secondary" size="sm" icon="download" onClick={() => onDownload(interview)}>
-                        {t("interviews.addToCalendar")}
-                      </Button>
-                      {viewer === "recruiter" && !cancelled && onCancel && (
+                    {viewer === "recruiter" && !cancelled && onCancel && (
+                      <div className="jp-interview-actions">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -236,8 +231,8 @@ export function InterviewCalendar({
                         >
                           {t("interviews.cancel")}
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </li>
               );

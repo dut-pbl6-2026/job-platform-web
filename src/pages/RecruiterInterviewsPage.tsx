@@ -5,11 +5,11 @@ import { RecruiterShell } from "../components/RecruiterShell";
 import { InterviewCalendar } from "../components/InterviewCalendar";
 import { Alert, Button, Modal, SkeletonBlock } from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { cancelInterview, downloadInterviewIcs, listInterviews, type Interview } from "../lib/engagementApi";
+import { cancelInterview, listInterviews, type Interview } from "../lib/engagementApi";
 import { apiErrorMessage, loadErrorMessage } from "../lib/http";
 import { showToast } from "../lib/toastBus";
 
-/** Every interview this recruiter scheduled, on a month grid with its .ics download and cancel action. */
+/** Every interview this recruiter scheduled, on a month grid with its cancel action. */
 export default function RecruiterInterviewsPage() {
   const { t } = useTranslation();
   useDocumentTitle(t("recruiter.documentTitles.interviews"));
@@ -38,10 +38,6 @@ export default function RecruiterInterviewsPage() {
       showToast({ title: apiErrorMessage(error, t("recruiter.interview.cancelFailed")), kind: "error" }),
   });
 
-  function download(interview: Interview) {
-    downloadInterviewIcs(interview).catch(() => showToast({ title: t("interviews.downloadFailed"), kind: "error" }));
-  }
-
   return (
     <RecruiterShell title={t("recruiter.interviews.title")} lead={t("recruiter.interviews.lead")}>
       {interviews.isPending && <SkeletonBlock height={380} label={t("interviews.loading")} />}
@@ -62,7 +58,6 @@ export default function RecruiterInterviewsPage() {
           interviews={interviews.data}
           viewer="recruiter"
           onCancel={setCancelling}
-          onDownload={download}
           cancellingId={cancel.isPending ? (cancel.variables ?? null) : null}
         />
       )}

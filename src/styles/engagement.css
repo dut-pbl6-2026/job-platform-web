@@ -252,7 +252,9 @@
 
 .jp-modal {
   width: min(560px, calc(100vw - 32px));
-  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  /* The card owns the scroll; the dialog itself must never paint a second scrollbar. */
+  overflow: hidden;
   padding: 0;
   border: 1px solid var(--c-rule);
   border-radius: 14px;
@@ -262,7 +264,7 @@
 }
 .jp-modal.is-lg { width: min(720px, calc(100vw - 32px)); }
 .jp-modal::backdrop { background: rgba(20, 32, 54, 0.42); backdrop-filter: blur(2px); }
-.jp-modal-card { display: flex; flex-direction: column; max-height: calc(100vh - 48px); }
+.jp-modal-card { display: flex; flex-direction: column; max-height: calc(100dvh - 48px); }
 .jp-modal-head {
   display: flex;
   align-items: flex-start;
@@ -492,9 +494,6 @@
 }
 .jp-cand-actions .jp-icon-btn { width: 28px; height: 28px; }
 .jp-cand-actions a.jp-icon-btn { color: var(--c-muted); }
-.jp-cand-move { display: block; }
-.jp-cand-move .jp-input { width: 100%; min-height: 30px; padding: 2px 6px; font-size: 12px; }
-
 /* Email templates ----------------------------------------------------------------------------- */
 
 .jp-template-note {
@@ -890,6 +889,20 @@
   .jp-interview-when { grid-auto-flow: column; justify-content: start; gap: 8px; align-items: baseline; }
   .jp-pipe-legend { gap: 2px 10px; }
   .jp-bell-pop { position: fixed; top: 60px; left: 12px; right: 12px; width: auto; }
+}
+
+/* No page scrollbar behind an open dialog: the dialog body is the only scroll region. */
+html.jp-modal-open,
+html.jp-modal-open body,
+html.jp-modal-open .jp-workspace-main {
+  overflow: hidden;
+}
+
+/* The post-job wizard is a measured column centred in the console, not a left-aligned form. */
+.jp-post-page .jp-wizard-steps,
+.jp-post-page .jp-recruiter-form {
+  max-width: 920px;
+  margin-inline: auto;
 }
 
 /* The wizards have a wider measure than the old single-page forms. */

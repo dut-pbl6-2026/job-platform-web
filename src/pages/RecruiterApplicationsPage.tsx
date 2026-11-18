@@ -8,7 +8,7 @@ import { EmailComposerDialog } from "../components/EmailComposerDialog";
 import { InterviewDialog } from "../components/InterviewDialog";
 import { Alert, BackLink, Button, EmptyState, FilterChip, Pagination, SkeletonRows } from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { downloadCv, fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus } from "../lib/applicationsApi";
+import { fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus, viewCv } from "../lib/applicationsApi";
 import { formatDate } from "../lib/dates";
 import { httpStatus, loadErrorMessage, apiErrorMessage } from "../lib/http";
 import { fetchJobById } from "../lib/jobsApi";
@@ -190,7 +190,7 @@ export default function RecruiterApplicationsPage() {
                         onClick={() => {
                           const cv = app.cvUrl ?? "";
                           setCvError(null);
-                          downloadCv(cv).catch(() => setCvError(t("recruiter.applications.cvFailed")));
+                          viewCv(cv).catch(() => setCvError(t("recruiter.applications.cvFailed")));
                         }}
                       >
                         {t("recruiter.applications.viewCv")}

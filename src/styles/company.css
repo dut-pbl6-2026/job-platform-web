@@ -68,7 +68,12 @@
 .jp-company-jobs { display: grid; gap: var(--sp-3); }
 .jp-company-side { display: grid; gap: var(--sp-4); }
 
-.jp-company-settings { display: grid; gap: var(--sp-4); max-width: 860px; }
+.jp-company-settings {
+  display: grid;
+  gap: var(--sp-4);
+  max-width: 860px;
+  margin-inline: auto;
+}
 .jp-company-settings-head {
   display: flex;
   align-items: center;

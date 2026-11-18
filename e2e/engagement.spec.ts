@@ -174,7 +174,16 @@ test("candidate board moves an application through the status machine", async ({
   await expect(card).toBeVisible();
   await expect(card).toContainText("candidate.binh@jobplatform.local");
 
-  await card.getByRole("combobox", { name: /Chuyển trạng thái cho Trần Thị Bình/ }).selectOption("reviewed");
+  // Dragging is the only way to move a card: no per-card select.
+  await expect(card.getByRole("combobox")).toHaveCount(0);
+
+  // HTML5 drag and drop: the same DataTransfer has to travel from the card to the target column.
+  const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+  const reviewedColumn = page.locator(".jp-kanban-col.is-reviewed");
+  await card.dispatchEvent("dragstart", { dataTransfer });
+  await reviewedColumn.dispatchEvent("dragover", { dataTransfer });
+  await reviewedColumn.dispatchEvent("drop", { dataTransfer });
+
   await expect
     .poll(() => calls.find((call) => call.path.endsWith(`/${APPLICATION_ID}/status`))?.body)
     .toEqual({ status: "reviewed" });
@@ -209,10 +218,13 @@ test("scheduling from a candidate card sends the interview and shows the confirm
   await page.getByRole("button", { name: /Đặt lịch phỏng vấn với Trần Thị Bình/ }).click();
   const dialog = page.getByRole("dialog", { name: "Đặt lịch phỏng vấn" });
   await expect(dialog).toBeVisible();
+  // The invite always carries the .ics file, so there is nothing to tick or explain.
+  await expect(dialog.getByRole("checkbox")).toHaveCount(0);
+  await expect(dialog).not.toContainText(".ics");
   await dialog.getByLabel("Liên kết cuộc họp").fill("https://meet.example.vn/phong-van");
   await dialog.getByRole("button", { name: "Tạo lịch" }).click();
 
-  await expect(page.getByText("Đã tạo lịch và gửi thư mời kèm tệp .ics.")).toBeVisible();
+  await expect(page.getByText("Đã tạo lịch và gửi thư mời.")).toBeVisible();
   const post = calls.find((call) => call.method === "POST" && call.path === "/api/interviews");
   expect(post?.body).toMatchObject({
     applicationId: APPLICATION_ID,

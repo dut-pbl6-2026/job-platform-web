@@ -33,6 +33,15 @@ export function Modal({
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
+  // A modal owns the viewport: hide the scrollbar of the page behind it, or the dialog body and
+  // that page scrollbar appear side by side.
+  useEffect(() => {
+    if (!open) return;
+    const root = document.documentElement;
+    root.classList.add("jp-modal-open");
+    return () => root.classList.remove("jp-modal-open");
+  }, [open]);
+
   return (
     <dialog
       ref={ref}

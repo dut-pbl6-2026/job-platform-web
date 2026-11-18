@@ -1054,7 +1054,7 @@
     },
     "candidates": {
       "title": "Quản lý ứng viên",
-      "lead": "Kéo thả thẻ giữa các cột để chuyển trạng thái, hoặc dùng menu trên thẻ. Mỗi cột là một bước trong quy trình.",
+      "lead": "Kéo thả thẻ giữa các cột để chuyển trạng thái. Mỗi cột là một bước trong quy trình.",
       "loadingJobs": "Đang tải tin tuyển dụng",
       "loadWhat": "danh sách ứng viên",
       "noJobs": "Chưa có tin nào để quản lý ứng viên",
@@ -1077,8 +1077,6 @@
       "emailAria": "Gửi email cho {{name}}",
       "scheduleAria": "Đặt lịch phỏng vấn với {{name}}",
       "openJob": "Mở danh sách hồ sơ của tin",
-      "moveLabel": "Chuyển trạng thái cho {{name}}",
-      "moveTo": "Chuyển sang…",
       "closed": "Đã kết thúc",
       "columnEmpty": "Chưa có hồ sơ",
       "moved": "Đã chuyển sang {{status}}",
@@ -1103,7 +1101,7 @@
     "interview": {
       "title": "Đặt lịch phỏng vấn",
       "lead": "Với {{name}}",
-      "sent": "Đã tạo lịch và gửi thư mời kèm tệp .ics.",
+      "sent": "Đã tạo lịch và gửi thư mời.",
       "savedNoMail": "Đã lưu lịch, nhưng chưa gửi được email mời.",
       "failed": "Chưa tạo được lịch phỏng vấn.",
       "invalidTime": "Chọn ngày và giờ hợp lệ.",
@@ -1122,8 +1120,6 @@
       "locationPlaceholder": "Ví dụ: Tầng 5, 25 Lê Duẩn, Đà Nẵng",
       "notes": "Ghi chú cho ứng viên",
       "notesPlaceholder": "Nội dung cần chuẩn bị, người phỏng vấn, thời gian chờ…",
-      "sendInvite": "Gửi email mời kèm tệp lịch .ics",
-      "sendInviteNote": "Ứng viên nhận được thư mời có thể thêm trực tiếp vào Google Calendar, Outlook hoặc Apple Calendar.",
       "schedule": "Tạo lịch",
       "cancelTitle": "Huỷ lịch phỏng vấn",
       "cancelConfirm": "Huỷ lịch",
@@ -1134,7 +1130,7 @@
     },
     "interviews": {
       "title": "Lịch phỏng vấn",
-      "lead": "Tất cả buổi phỏng vấn bạn đã đặt cho ứng viên, kèm tệp .ics để thêm vào lịch của bạn."
+      "lead": "Tất cả buổi phỏng vấn bạn đã đặt cho ứng viên."
     },
     "templates": {
       "title": "Mẫu email",
@@ -1596,10 +1592,9 @@
   "interviews": {
     "documentTitle": "Lịch phỏng vấn",
     "title": "Lịch phỏng vấn của bạn",
-    "lead": "Những buổi phỏng vấn nhà tuyển dụng đã mời. Tải tệp .ics để thêm vào lịch cá nhân.",
+    "lead": "Những buổi phỏng vấn nhà tuyển dụng đã mời. Thư mời cũng được gửi tới email của bạn.",
     "loading": "Đang tải lịch phỏng vấn",
     "loadWhat": "lịch phỏng vấn",
-    "downloadFailed": "Chưa tải được tệp lịch.",
     "previousMonth": "Tháng trước",
     "nextMonth": "Tháng sau",
     "today": "Hôm nay",
@@ -1613,7 +1608,6 @@
     "emptyText": "Khi có lời mời, buổi phỏng vấn sẽ xuất hiện ở đây và trong email của bạn.",
     "minutes": "{{count}} phút",
     "cancelled": "Đã huỷ",
-    "addToCalendar": "Thêm vào lịch",
     "cancel": "Huỷ lịch",
     "mode": {
       "online": "Trực tuyến",

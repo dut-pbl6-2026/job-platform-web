@@ -19,7 +19,7 @@ import {
 } from "../components/ui";
 import { useAuth } from "../contexts/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { downloadCv, fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus } from "../lib/applicationsApi";
+import { fetchApplicationsByJob, fetchStatusFlow, updateApplicationStatus, viewCv } from "../lib/applicationsApi";
 import { formatDate } from "../lib/dates";
 import { apiErrorMessage, httpStatus, loadErrorMessage } from "../lib/http";
 import { fetchRecruiterJobs } from "../lib/jobsApi";
@@ -155,10 +155,10 @@ export default function RecruiterCandidatesPage() {
     move.mutate({ id: application.id, next: status });
   }
 
-  function download(application: Application) {
+  function openCv(application: Application) {
     if (!application.cvUrl) return;
     setCvError(null);
-    downloadCv(application.cvUrl).catch(() => setCvError(t("recruiter.applications.cvFailed")));
+    viewCv(application.cvUrl).catch(() => setCvError(t("recruiter.applications.cvFailed")));
   }
 
   return (
@@ -362,9 +362,9 @@ export default function RecruiterCandidatesPage() {
                                 className="jp-icon-btn"
                                 title={t("recruiter.applications.viewCv")}
                                 aria-label={t("recruiter.applications.viewCv")}
-                                onClick={() => download(application)}
+                                onClick={() => openCv(application)}
                               >
-                                <Icon name="download" size={16} />
+                                <Icon name="file" size={16} />
                               </button>
                             )}
                             <Link
@@ -377,30 +377,7 @@ export default function RecruiterCandidatesPage() {
                             </Link>
                           </div>
 
-                          {next.length > 0 ? (
-                            <label className="jp-cand-move">
-                              <span className="jp-sr-only">
-                                {t("recruiter.candidates.moveLabel", { name: name || "" })}
-                              </span>
-                              <select
-                                className="jp-input"
-                                value=""
-                                disabled={move.isPending && move.variables?.id === application.id}
-                                onChange={(event) => {
-                                  const value = event.target.value as ApplicationStatus;
-                                  if (value) move.mutate({ id: application.id, next: value });
-                                  event.target.value = "";
-                                }}
-                              >
-                                <option value="">{t("recruiter.candidates.moveTo")}</option>
-                                {next.map((target) => (
-                                  <option key={target} value={target}>
-                                    {STATUS_LABEL[target]}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                          ) : (
+                          {next.length === 0 && (
                             <StatusMark tone={application.status === "rejected" ? "danger" : "success"}>
                               {t("recruiter.candidates.closed")}
                             </StatusMark>

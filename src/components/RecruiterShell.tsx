@@ -10,16 +10,18 @@ export function RecruiterShell({
   lead,
   actions,
   back,
+  className,
   children,
 }: {
   title: string;
   lead?: string;
   actions?: ReactNode;
   back?: ReactNode;
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <main className="jp-page">
+    <main className={className ? `jp-page ${className}` : "jp-page"}>
       <PageHead title={title} lead={lead} actions={actions} back={back} />
       {children}
     </main>

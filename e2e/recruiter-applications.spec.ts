@@ -158,6 +158,43 @@ test("recruiter sees the job's applications with Vietnamese status and no applic
   await expect(page.getByText(APP_PENDING)).toHaveCount(0);
 });
 
+test("Xem CV opens the PDF in the browser viewer instead of downloading it", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page, "Recruiter");
+  await mockApplications(page);
+  // The CV endpoint is authenticated, so the page fetches it and hands the blob to a new tab.
+  await page.route("**/api/applications/cv/e2e.pdf", (route) =>
+    route.fulfill({ status: 200, contentType: "application/pdf", body: "%PDF-1.4 e2e" }),
+  );
+  // Record the tab target: Chrome's PDF viewer is not available headless, so a real popup would
+  // show about:blank here even though the code is right. The stub keeps the assertion deterministic.
+  await page.addInitScript(() => {
+    const nav: string[] = [];
+    (window as unknown as { __cvTabs: string[] }).__cvTabs = nav;
+    window.open = ((url?: string | URL) => {
+      if (url) nav.push(String(url));
+      const target = {
+        opener: {},
+        close: () => undefined,
+        location: {
+          set href(value: string) {
+            nav.push(value);
+          },
+        },
+      };
+      return target as unknown as Window;
+    }) as typeof window.open;
+  });
+  await page.goto(`/recruiter/jobs/${JOB_ID}/applications`);
+
+  await LIST(page).getByRole("button", { name: "Xem CV" }).first().click();
+
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __cvTabs: string[] }).__cvTabs))
+    .toEqual([expect.stringMatching(/^blob:/)]);
+  await expect(page.locator(".jp-alert--error")).toHaveCount(0);
+});
+
 test("recruiter moves a pending application to reviewed, and only legal next steps are offered", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page, "Recruiter");

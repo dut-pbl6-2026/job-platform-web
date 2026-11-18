@@ -3,9 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { InterviewCalendar } from "../components/InterviewCalendar";
 import { Alert, Button, PageHead, SkeletonBlock } from "../components/ui";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { downloadInterviewIcs, listInterviews, type Interview } from "../lib/engagementApi";
+import { listInterviews } from "../lib/engagementApi";
 import { loadErrorMessage } from "../lib/http";
-import { showToast } from "../lib/toastBus";
 
 /** The candidate's interview calendar: invites the recruiter sent, with the .ics to add to their own. */
 export default function InterviewsPage() {
@@ -17,10 +16,6 @@ export default function InterviewsPage() {
     queryFn: () => listInterviews(),
     staleTime: 30_000,
   });
-
-  function download(interview: Interview) {
-    downloadInterviewIcs(interview).catch(() => showToast({ title: t("interviews.downloadFailed"), kind: "error" }));
-  }
 
   return (
     <main className="jp-page">
@@ -38,7 +33,7 @@ export default function InterviewsPage() {
           {loadErrorMessage(interviews.error, t("interviews.loadWhat"))}
         </Alert>
       )}
-      {interviews.data && <InterviewCalendar interviews={interviews.data} viewer="candidate" onDownload={download} />}
+      {interviews.data && <InterviewCalendar interviews={interviews.data} viewer="candidate" />}
     </main>
   );
 }

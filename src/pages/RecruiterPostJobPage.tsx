@@ -255,7 +255,7 @@ export default function RecruiterPostJobPage() {
   const salaryPreview = formatSalary(Number(form.salaryMin) || 0, Number(form.salaryMax) || 0, "VND");
 
   return (
-    <RecruiterShell title={title} lead={lead}>
+    <RecruiterShell title={title} lead={lead} className="jp-post-page">
       {!companyId && <Alert tone="warning">{t("recruiter.post.noCompany")}</Alert>}
 
       <WizardSteps steps={steps} current={step} label={t("recruiter.post.wizard.label")} />

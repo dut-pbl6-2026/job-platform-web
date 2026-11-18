@@ -220,19 +220,13 @@ export async function fetchApplicationById(id: string, userId: string): Promise<
 /**
  * app-svc stores cvUrl as a gateway-relative path ("/api/applications/cv/<file>") behind the
  * Authenticated route. A plain <a href> sends no Bearer token (401) and, on Vercel, the SPA
- * rewrite serves index.html for it. Fetch it through the API client and save the blob instead.
+ * rewrite serves index.html for it. Fetch it through the API client and hand the blob back.
  */
-export async function downloadCv(cvUrl: string, fileName?: string | null): Promise<void> {
-  if (!cvUrl.startsWith("/")) {
-    // blob: (mock mode) or an absolute storage URL: nothing to authenticate.
-    if (!/^(https?|blob):/i.test(cvUrl)) throw new Error(i18n.t("cv.invalidUrl"));
-    window.open(cvUrl, "_blank", "noopener");
-    return;
-  }
+async function fetchCvBlob(cvUrl: string): Promise<Blob> {
   const path = cvUrl.replace(/^\/api(?=\/)/, ""); // API_BASE_URL already ends with /api
-  let data: Blob;
   try {
-    ({ data } = await api.get<Blob>(path, { responseType: "blob" }));
+    const { data } = await api.get<Blob>(path, { responseType: "blob" });
+    return data;
   } catch (e) {
     // With responseType "blob" the error body is a Blob too; parse it so apiErrorMessage can read
     // app-svc's { message } instead of showing "Request failed with status code 403".
@@ -246,13 +240,60 @@ export async function downloadCv(cvUrl: string, fileName?: string | null): Promi
     }
     throw e;
   }
-  const url = URL.createObjectURL(data);
+}
+
+function saveBlob(url: string, fileName: string): void {
   const a = document.createElement("a");
   a.href = url;
-  a.download = fileName || path.split("/").pop() || "cv";
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   a.remove();
+}
+
+/** Saves the CV to disk. */
+export async function downloadCv(cvUrl: string, fileName?: string | null): Promise<void> {
+  if (!cvUrl.startsWith("/")) {
+    // blob: (mock mode) or an absolute storage URL: nothing to authenticate.
+    if (!/^(https?|blob):/i.test(cvUrl)) throw new Error(i18n.t("cv.invalidUrl"));
+    window.open(cvUrl, "_blank", "noopener");
+    return;
+  }
+  const data = await fetchCvBlob(cvUrl);
+  const url = URL.createObjectURL(data);
+  saveBlob(url, fileName || cvUrl.split("/").pop() || "cv");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/**
+ * Opens the CV in the browser's own viewer instead of downloading it. The fetch needs the Bearer
+ * token, so the tab is opened inside the click (a popup opened after an await is blocked) and then
+ * pointed at the blob: URL. app-svc sends the file's MIME type, so a PDF renders in the browser's
+ * built-in viewer. A blocked popup falls back to the download.
+ */
+export async function viewCv(cvUrl: string, fileName?: string | null): Promise<void> {
+  if (!cvUrl.startsWith("/")) {
+    if (!/^(https?|blob):/i.test(cvUrl)) throw new Error(i18n.t("cv.invalidUrl"));
+    window.open(cvUrl, "_blank");
+    return;
+  }
+
+  const tab = window.open("", "_blank");
+  let url: string;
+  try {
+    const data = await fetchCvBlob(cvUrl);
+    url = URL.createObjectURL(data);
+  } catch (e) {
+    tab?.close();
+    throw e;
+  }
+
+  if (tab) {
+    tab.opener = null;
+    tab.location.href = url;
+  } else {
+    saveBlob(url, fileName || cvUrl.split("/").pop() || "cv");
+  }
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 

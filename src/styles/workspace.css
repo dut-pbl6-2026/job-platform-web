@@ -156,6 +156,8 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* A modal hides this scrollbar; reserving the gutter keeps the page from jumping sideways. */
+  scrollbar-gutter: stable;
 }
 
 @media (max-width: 1099px) {
