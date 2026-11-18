@@ -77,7 +77,7 @@
 .jp-wizard-pane { display: grid; gap: var(--sp-4); }
 .jp-wizard-title {
   margin: 0;
-  font-size: var(--fs-h3);
+  font-size: var(--fs-h2);
   line-height: 1.25;
   letter-spacing: -0.015em;
   outline: none;
@@ -268,18 +268,18 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--sp-4);
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-4) var(--sp-6);
   border-bottom: 1px solid var(--c-rule);
 }
 .jp-modal-title { margin: 0; font-size: var(--fs-title); letter-spacing: -0.01em; }
 .jp-modal-lead { margin: 4px 0 0; color: var(--c-muted); font-size: 13px; }
-.jp-modal-body { padding: var(--sp-5); overflow-y: auto; }
+.jp-modal-body { padding: var(--sp-6); overflow-y: auto; }
 .jp-modal-foot {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: var(--sp-2);
-  padding: var(--sp-3) var(--sp-5);
+  padding: var(--sp-3) var(--sp-6);
   border-top: 1px solid var(--c-rule);
   background: var(--c-ground);
 }
@@ -769,7 +769,7 @@
 }
 .jp-bell-head strong { font-size: 13px; }
 .jp-bell-head span { color: var(--c-muted); font-size: 11px; }
-.jp-bell-empty { margin: 0; padding: var(--sp-5) var(--sp-4); color: var(--c-muted); font-size: 13px; text-align: center; }
+.jp-bell-empty { margin: 0; padding: var(--sp-6) var(--sp-4); color: var(--c-muted); font-size: 13px; text-align: center; }
 .jp-bell-list { margin: 0; padding: 0; list-style: none; max-height: 380px; overflow-y: auto; }
 .jp-bell-list li + li { border-top: 1px solid var(--c-row-rule); }
 .jp-bell-list a {
