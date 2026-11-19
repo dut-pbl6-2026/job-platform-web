@@ -830,14 +830,6 @@
       "notCv": "File này không giống một CV nên điểm bị giới hạn."
     },
     "scoreLabel": "Điểm phù hợp {{value}} trên 100",
-    "disclaimer": "Điểm mang tính tham khảo, được tính bằng mô hình chạy nội bộ (không gửi CV cho dịch vụ AI bên ngoài). Nhà tuyển dụng vẫn là người quyết định.",
-    "parser": {
-      "ocr": "CV dạng ảnh, đọc bằng OCR",
-      "docx": "CV dạng DOCX",
-      "text": "CV có lớp chữ"
-    },
-    "meta": "• {{seconds}} giây{{cached}}",
-    "cachedNote": " • kết quả đã lưu tạm",
     "sections": {
       "skills": "Kỹ năng",
       "semantic": "Mức liên quan nội dung",

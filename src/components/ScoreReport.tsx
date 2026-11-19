@@ -123,18 +123,6 @@ export function ScoreReport({ detail, showSuggestions = true }: { detail: Resume
         <ScoreRing value={detail.overall_score} band={detail.band} />
         <div>
           <div className={`rs-band rs-${detail.band.toLowerCase()}`}>{t(BAND_KEYS[detail.band])}</div>
-          <p className="jp-muted">{t("resumeScore.disclaimer")}</p>
-          <p className="jp-muted">
-            {detail.meta.parser === "ocr"
-              ? t("resumeScore.parser.ocr")
-              : detail.meta.parser === "docx"
-                ? t("resumeScore.parser.docx")
-                : t("resumeScore.parser.text")}{" "}
-            {t("resumeScore.meta", {
-              seconds: (detail.meta.elapsed_ms / 1000).toFixed(1),
-              cached: detail.meta.cached ? t("resumeScore.cachedNote") : "",
-            })}
-          </p>
         </div>
       </Panel>
 
