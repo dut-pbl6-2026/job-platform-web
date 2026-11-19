@@ -331,6 +331,42 @@ test("the application page shows the cover letter, the CV in the page and the sc
   await expect(page.locator("canvas.jp-cv-page").first()).toBeVisible({ timeout: 15_000 });
 });
 
+test("the CV keeps the browser viewer's frame when the browser has one", async ({ page }) => {
+  await offlineBackend(page);
+  await signIn(page, "Recruiter");
+  await mockApplications(page);
+  // Chrome/Edge/Firefox report a built-in viewer; headless does not, which is why the default test
+  // above sees the pdf.js canvases instead.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "pdfViewerEnabled", { configurable: true, get: () => true });
+  });
+  await page.route(
+    (url) => url.pathname === `/api/applications/${APP_PENDING}`,
+    (route) =>
+      route.fulfill({
+        json: {
+          ...APPLICATIONS[0],
+          recruiterNotes: null,
+          score: 78,
+          scoreStatus: "done",
+          scoreDetail: SCORE_DETAIL,
+          statusHistory: [],
+          nextAllowedStatuses: ["reviewed"],
+        },
+      }),
+  );
+  await page.route("**/api/applications/cv/e2e.pdf", (route) =>
+    route.fulfill({ status: 200, contentType: "application/pdf", body: minimalPdf() }),
+  );
+
+  await page.goto(`/recruiter/applications/${APP_PENDING}`);
+
+  const frame = page.locator("iframe.jp-cv-frame");
+  await expect(frame).toBeVisible();
+  await expect.poll(() => frame.getAttribute("src")).toMatch(/^blob:/);
+  await expect(page.locator("canvas.jp-cv-page")).toHaveCount(0);
+});
+
 test("job list links to the job's applications", async ({ page }) => {
   await offlineBackend(page);
   await signIn(page, "Recruiter");

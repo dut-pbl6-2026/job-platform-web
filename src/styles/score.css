@@ -77,6 +77,14 @@
   min-width: 0;
 }
 .jp-cv-pages { display: grid; gap: var(--sp-3); min-width: 0; }
+/* Where the browser has its own PDF viewer: the frame (page nav, zoom, print, save) comes with it. */
+.jp-cv-frame {
+  width: 100%;
+  height: min(72vh, 720px);
+  border: 1px solid var(--c-rule);
+  border-radius: 10px;
+  background: var(--c-ground);
+}
 .jp-cv-page {
   display: block;
   width: 100%;
